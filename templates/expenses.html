@@ -1,0 +1,58 @@
+{% extends "base-new.html" %}
+
+{% block title %}支出管理{% endblock %}
+{% block page_title %}支出管理{% endblock %}
+
+{% block content %}
+<div class="expense-page-container">
+<!-- クイックアクション -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">クイックアクション</h3>
+    </div>
+    <div class="card-body" style="padding: var(--spacing-sm) 0;">
+        <div style="display: flex; flex-direction: column; gap: 12px; padding: 0 8px;">
+            <button onclick="location.href='/expenses/living'" class="btn" style="background-color: #F0F0F0; color: #333333; border: none; border-radius: 20px; display: flex; align-items: center; justify-content: flex-start; gap: 16px; padding: 20px 24px; font-size: 1.1rem; font-weight: 500; box-shadow: none;">
+                <i class="material-icons" style="font-size: 1.5rem; color: #333333;">home</i>
+                生活費管理
+            </button>
+            
+            <button onclick="location.href='/expenses/education'" class="btn" style="background-color: #F0F0F0; color: #333333; border: none; border-radius: 20px; display: flex; align-items: center; justify-content: flex-start; gap: 16px; padding: 20px 24px; font-size: 1.1rem; font-weight: 500; box-shadow: none;">
+                <i class="material-icons" style="font-size: 1.5rem; color: #333333;">school</i>
+                教育費管理
+            </button>
+            
+            <button onclick="location.href='/expenses/housing'" class="btn" style="background-color: #F0F0F0; color: #333333; border: none; border-radius: 20px; display: flex; align-items: center; justify-content: flex-start; gap: 16px; padding: 20px 24px; font-size: 1.1rem; font-weight: 500; box-shadow: none;">
+                <i class="material-icons" style="font-size: 1.5rem; color: #333333;">business</i>
+                住居費管理
+            </button>
+            
+            <button onclick="location.href='/expenses/insurance'" class="btn" style="background-color: #F0F0F0; color: #333333; border: none; border-radius: 20px; display: flex; align-items: center; justify-content: flex-start; gap: 16px; padding: 20px 24px; font-size: 1.1rem; font-weight: 500; box-shadow: none;">
+                <i class="material-icons" style="font-size: 1.5rem; color: #333333;">security</i>
+                保険管理
+            </button>
+            
+            <button onclick="location.href='/expenses/events'" class="btn" style="background-color: #F0F0F0; color: #333333; border: none; border-radius: 20px; display: flex; align-items: center; justify-content: flex-start; gap: 16px; padding: 20px 24px; font-size: 1.1rem; font-weight: 500; box-shadow: none;">
+                <i class="material-icons" style="font-size: 1.5rem; color: #333333;">event</i>
+                イベント管理
+            </button>
+        </div>
+    </div>
+</div>
+</div>
+
+<style>
+.expense-page-container {
+    max-height: calc(100vh - 140px);
+    overflow-y: auto;
+    padding-bottom: 80px;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// 支出管理画面用のJavaScript
+// 月次サマリーは削除済み
+</script>
+{% endblock %} 

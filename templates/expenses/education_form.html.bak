@@ -1,0 +1,524 @@
+{% extends "base.html" %}
+
+{% block title %}教育費 - {% if expense_id %}編集{% else %}新規登録{% endif %}{% endblock %}
+{% block page_title %}教育費 - {% if expense_id %}編集{% else %}新規登録{% endif %}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            {% if expense_id %}
+                教育費編集 <span class="badge badge-secondary">#{{ expense_id }}</span>
+            {% else %}
+                教育費新規登録
+            {% endif %}
+        </h3>
+        <a href="/expenses/education" class="btn btn-secondary btn-sm">
+            <i class="material-icons">arrow_back</i> 一覧に戻る
+        </a>
+    </div>
+    <div class="card-body">
+        <form id="educationExpenseForm">
+            <input type="hidden" name="id" value="{{ expense_id or '' }}">
+            
+            <div class="form-group">
+                <label class="form-label">教育プラン名 <span class="text-danger">*</span></label>
+                <input type="text" name="name" class="form-control" placeholder="例：太郎の教育費" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">説明</label>
+                <input type="text" name="description" class="form-control" placeholder="詳細説明（任意）">
+            </div>
+            
+            <!-- 子供情報 -->
+            <h5 class="mt-4 mb-3">子供情報</h5>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">子供の名前 <span class="text-danger">*</span></label>
+                        <input type="text" name="child_name" class="form-control" placeholder="例：太郎" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">生年月日 <span class="text-danger">*</span></label>
+                        <input type="date" name="child_birth_date" class="form-control" required>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 教育段階選択 -->
+            <h5 class="mt-4 mb-3">教育段階選択</h5>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">幼稚園</label>
+                        <div class="row">
+                            <div class="col-8">
+                                <select name="kindergarten_type" class="form-control">
+                                    <option value="未就園">未就園</option>
+                                    <option value="公立幼稚園">公立幼稚園</option>
+                                    <option value="私立幼稚園">私立幼稚園</option>
+                                </select>
+                            </div>
+                            <div class="col-4">
+                                <div class="input-group">
+                                    <input type="number" name="kindergarten_cost" class="form-control" placeholder="0" min="0" step="1" style="font-size: 14px;">
+                                    <div class="input-group-append">
+                                        <span class="input-group-text" style="font-size: 12px;">万円</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">小学校</label>
+                        <div class="row">
+                            <div class="col-8">
+                                <select name="elementary_type" class="form-control">
+                                    <option value="公立小学校">公立小学校</option>
+                                    <option value="私立小学校">私立小学校</option>
+                                </select>
+                            </div>
+                            <div class="col-4">
+                                <div class="input-group">
+                                    <input type="number" name="elementary_cost" class="form-control" placeholder="0" min="0" step="1" style="font-size: 14px;">
+                                    <div class="input-group-append">
+                                        <span class="input-group-text" style="font-size: 12px;">万円</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">中学校</label>
+                        <div class="row">
+                            <div class="col-8">
+                                <select name="junior_type" class="form-control">
+                                    <option value="公立中学校">公立中学校</option>
+                                    <option value="私立中学校">私立中学校</option>
+                                </select>
+                            </div>
+                            <div class="col-4">
+                                <div class="input-group">
+                                    <input type="number" name="junior_cost" class="form-control" placeholder="0" min="0" step="1" style="font-size: 14px;">
+                                    <div class="input-group-append">
+                                        <span class="input-group-text" style="font-size: 12px;">万円</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">高等学校</label>
+                        <div class="row">
+                            <div class="col-8">
+                                <select name="high_type" class="form-control">
+                                    <option value="公立高校">公立高校</option>
+                                    <option value="私立高校">私立高校</option>
+                                </select>
+                            </div>
+                            <div class="col-4">
+                                <div class="input-group">
+                                    <input type="number" name="high_cost" class="form-control" placeholder="0" min="0" step="1" style="font-size: 14px;">
+                                    <div class="input-group-append">
+                                        <span class="input-group-text" style="font-size: 12px;">万円</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">大学・専門学校</label>
+                <div class="row">
+                    <div class="col-8">
+                        <select name="college_type" class="form-control">
+                            <option value="進学しない">進学しない</option>
+                            <option value="国公立大学">国公立大学</option>
+                            <option value="私立文系">私立文系</option>
+                            <option value="私立理系">私立理系</option>
+                            <option value="短期大学">短期大学</option>
+                            <option value="専門学校">専門学校</option>
+                        </select>
+                    </div>
+                    <div class="col-4">
+                        <div class="input-group">
+                            <input type="number" name="college_cost" class="form-control" placeholder="0" min="0" step="1" style="font-size: 14px;">
+                            <div class="input-group-append">
+                                <span class="input-group-text" style="font-size: 12px;">万円</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- リアルタイム金額表示 -->
+            <div class="card mt-3" id="costPreview" style="background-color: #f8f9fa; border: 1px solid #dee2e6;">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="material-icons" style="font-size: 18px;">calculate</i>
+                        予想教育費
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="cost-item">
+                                <span class="cost-label">幼稚園:</span>
+                                <span class="cost-value" id="kindergartenCost">-</span>
+                            </div>
+                            <div class="cost-item">
+                                <span class="cost-label">小学校:</span>
+                                <span class="cost-value" id="elementaryCost">-</span>
+                            </div>
+                            <div class="cost-item">
+                                <span class="cost-label">中学校:</span>
+                                <span class="cost-value" id="juniorCost">-</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="cost-item">
+                                <span class="cost-label">高等学校:</span>
+                                <span class="cost-value" id="highCost">-</span>
+                            </div>
+                            <div class="cost-item">
+                                <span class="cost-label">大学・専門:</span>
+                                <span class="cost-value" id="collegeCost">-</span>
+                            </div>
+                            <div class="cost-item total-cost">
+                                <span class="cost-label"><strong>合計:</strong></span>
+                                <span class="cost-value" id="totalCost"><strong>-</strong></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <style>
+                .cost-item {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 8px;
+                    padding: 4px 0;
+                }
+                .cost-label {
+                    color: #666;
+                }
+                .cost-value {
+                    color: #333;
+                    font-weight: 500;
+                }
+                .total-cost {
+                    border-top: 1px solid #dee2e6;
+                    padding-top: 8px;
+                    margin-top: 8px;
+                }
+            </style>
+            
+            <div class="alert alert-info mt-3">
+                <i class="material-icons">info</i>
+                <strong>教育費の自動計算</strong><br>
+                選択した教育段階に基づいて、一般的な教育費が自動で計算されます。
+            </div>
+            
+            <div class="form-group mt-4">
+                <div class="row">
+                    <div class="col-md-6">
+                        <a href="/expenses/education" class="btn btn-secondary" id="cancelButton">キャンセル</a>
+                        <button type="submit" class="btn btn-primary" id="submitButton">保存</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- FAB -->
+<div class="form-fab-container" id="fabContainer">
+    <a href="/expenses/education" class="fab fab-cancel" id="cancelFabButton">
+        <i class="material-icons">close</i>
+    </a>
+    <button type="button" class="fab fab-add" id="formFabButton" onclick="submitFormViaFab()">
+        <i class="material-icons">save</i>
+    </button>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 編集モードの場合はデータを読み込み
+    const expenseId = document.querySelector('[name="id"]').value;
+    if (expenseId) {
+        loadExpenseData(expenseId);
+    }
+    
+    // フォーム送信イベント設定
+    setupFormHandler();
+    
+    // リアルタイム金額計算の設定
+    setupRealTimeCalculation();
+    
+    // 初期表示時に各段階の費用を設定し、金額を計算
+    initializeEducationCosts();
+    updateEducationCosts();
+});
+
+// フォーム送信イベント設定
+function setupFormHandler() {
+    const form = document.getElementById('educationExpenseForm');
+    if (form) {
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await handleFormSubmit(this);
+        });
+    }
+}
+
+// フォーム送信処理
+async function handleFormSubmit(form) {
+    if (!validateRequired(form)) {
+        return;
+    }
+    
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    
+    const isUpdate = data.id && data.id !== '';
+    let url = '/api/education-expenses';
+    let method = 'POST';
+    let messageType = '登録';
+    
+    if (isUpdate) {
+        method = 'PUT';
+        messageType = '更新';
+    }
+    
+    // 送信ボタンを無効化してローディング状態にする
+    const submitButton = form.querySelector('button[type="submit"]');
+    const submitText = submitButton.querySelector('.submit-text');
+    const originalText = submitText.textContent;
+    
+    submitButton.disabled = true;
+    submitText.textContent = '処理中...';
+    
+    try {
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast(`教育費を${messageType}しました`, 'success');
+            // 少し待ってから一覧ページに戻る
+            setTimeout(() => {
+                window.location.href = '/expenses/education';
+            }, 1500);
+        } else {
+            throw new Error(result.message || `教育費の${messageType}に失敗しました`);
+        }
+        
+    } catch (error) {
+        console.error(`教育費${messageType}エラー:`, error);
+        showToast(error.message || `教育費の${messageType}に失敗しました`, 'error');
+        
+        // ボタンを元に戻す
+        submitButton.disabled = false;
+        submitText.textContent = originalText;
+    }
+}
+
+// 編集時のデータ読み込み
+async function loadExpenseData(expenseId) {
+    try {
+        const response = await fetch(`/api/education-expenses/${expenseId}/detail`);
+        const result = await response.json();
+        
+        if (!result.success) {
+            showToast(result.message || 'データの読み込みに失敗しました', 'error');
+            return;
+        }
+        
+        const data = result.plan;
+        
+        // フォームに値を設定
+        document.querySelector('[name="name"]').value = data.name || '';
+        document.querySelector('[name="description"]').value = data.description || '';
+        document.querySelector('[name="child_name"]').value = data.child_name || '';
+        document.querySelector('[name="child_birth_date"]').value = data.child_birth_date || '';
+        
+        // 教育段階を設定
+        document.querySelector('[name="kindergarten_type"]').value = data.kindergarten_type || '未就園';
+        document.querySelector('[name="elementary_type"]').value = data.elementary_type || '公立小学校';
+        document.querySelector('[name="junior_type"]').value = data.junior_type || '公立中学校';
+        document.querySelector('[name="high_type"]').value = data.high_type || '公立高校';
+        document.querySelector('[name="college_type"]').value = data.college_type || '進学しない';
+        
+        // 各段階の費用を自動計算で設定
+        initializeEducationCosts();
+        
+        // 金額表示を更新
+        updateEducationCosts();
+        
+        console.log('教育プランデータを読み込みました:', data);
+        
+    } catch (error) {
+        console.error('データ読み込みエラー:', error);
+        showToast('データの読み込みに失敗しました', 'error');
+    }
+}
+
+// リアルタイム金額計算の設定
+function setupRealTimeCalculation() {
+    const selects = [
+        'kindergarten_type',
+        'elementary_type', 
+        'junior_type',
+        'high_type',
+        'college_type'
+    ];
+    
+    selects.forEach(selectName => {
+        const select = document.querySelector(`[name="${selectName}"]`);
+        if (select) {
+            select.addEventListener('change', function() {
+                updateCostInputForStage(selectName);
+                updateEducationCosts();
+            });
+        }
+    });
+    
+    // 各費用入力ボックスの変更時も合計を更新
+    const costInputs = [
+        'kindergarten_cost',
+        'elementary_cost',
+        'junior_cost', 
+        'high_cost',
+        'college_cost'
+    ];
+    
+    costInputs.forEach(inputName => {
+        const input = document.querySelector(`[name="${inputName}"]`);
+        if (input) {
+            input.addEventListener('input', updateEducationCosts);
+            input.addEventListener('change', updateEducationCosts);
+        }
+    });
+    
+    // 子供の生年月日変更時も更新
+    const birthDateField = document.querySelector('[name="child_birth_date"]');
+    if (birthDateField) {
+        birthDateField.addEventListener('change', updateEducationCosts);
+    }
+}
+
+// 教育段階選択時に対応する費用入力ボックスを更新
+function updateCostInputForStage(stageName) {
+    const stageValue = document.querySelector(`[name="${stageName}"]`).value;
+    
+    // 教育費の基準額（総額・万円）
+    const educationCosts = {
+        kindergarten_type: {
+            '未就園': 0,
+            '公立幼稚園': 66,  // 22万円/年 × 3年
+            '私立幼稚園': 159  // 53万円/年 × 3年
+        },
+        elementary_type: {
+            '公立小学校': 192,  // 32万円/年 × 6年
+            '私立小学校': 960   // 160万円/年 × 6年
+        },
+        junior_type: {
+            '公立中学校': 147,  // 49万円/年 × 3年
+            '私立中学校': 420   // 140万円/年 × 3年
+        },
+        high_type: {
+            '公立高校': 138,    // 46万円/年 × 3年
+            '私立高校': 291     // 97万円/年 × 3年
+        },
+        college_type: {
+            '進学しない': 0,
+            '国公立大学': 972,    // 243万円/年 × 4年
+            '私立文系': 1592,     // 398万円/年 × 4年
+            '私立理系': 2168,     // 542万円/年 × 4年
+            '短期大学': 442,      // 221万円/年 × 2年
+            '専門学校': 508       // 254万円/年 × 2年
+        }
+    };
+    
+    const cost = educationCosts[stageName] && educationCosts[stageName][stageValue] !== undefined 
+        ? educationCosts[stageName][stageValue] 
+        : 0;
+    
+    // 対応する入力ボックスを更新
+    const inputName = stageName.replace('_type', '_cost');
+    const input = document.querySelector(`[name="${inputName}"]`);
+    if (input) {
+        input.value = cost;
+    }
+}
+
+// 教育費を計算・更新
+function updateEducationCosts() {
+    // 入力ボックスから値を取得
+    const kindergartenCost = parseFloat(document.querySelector('[name="kindergarten_cost"]').value) || 0;
+    const elementaryCost = parseFloat(document.querySelector('[name="elementary_cost"]').value) || 0;
+    const juniorCost = parseFloat(document.querySelector('[name="junior_cost"]').value) || 0;
+    const highCost = parseFloat(document.querySelector('[name="high_cost"]').value) || 0;
+    const collegeCost = parseFloat(document.querySelector('[name="college_cost"]').value) || 0;
+    
+    // 合計計算
+    const total = kindergartenCost + elementaryCost + juniorCost + highCost + collegeCost;
+    
+    // 表示を更新
+    document.getElementById('kindergartenCost').textContent = formatCostDisplay(kindergartenCost);
+    document.getElementById('elementaryCost').textContent = formatCostDisplay(elementaryCost);
+    document.getElementById('juniorCost').textContent = formatCostDisplay(juniorCost);
+    document.getElementById('highCost').textContent = formatCostDisplay(highCost);
+    document.getElementById('collegeCost').textContent = formatCostDisplay(collegeCost);
+    document.getElementById('totalCost').textContent = formatCostDisplay(total);
+}
+
+// 金額表示のフォーマット
+function formatCostDisplay(amount) {
+    if (amount === 0) {
+        return '0万円';
+    }
+    return `${amount.toLocaleString()}万円`;
+}
+
+// 初期化時に各教育段階の費用を設定
+function initializeEducationCosts() {
+    const stages = [
+        'kindergarten_type',
+        'elementary_type',
+        'junior_type', 
+        'high_type',
+        'college_type'
+    ];
+    
+    stages.forEach(stageName => {
+        updateCostInputForStage(stageName);
+    });
+}
+</script>
+{% endblock %}

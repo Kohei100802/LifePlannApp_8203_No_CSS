@@ -1,0 +1,207 @@
+{% extends "base-new.html" %}
+
+{% block title %}支出・収入管理{% endblock %}
+{% block page_title %}支出・収入管理{% endblock %}
+{% block main_class %}has-modern-tab-navigation{% endblock %}
+
+{% block tab_navigation %}
+<!-- モダンタブナビゲーション（main-contentから独立） -->
+<div class="modern-tab-navigation">
+    <button class="modern-tab-item active" onclick="switchModernTab('expenses')" data-tab="expenses">
+        <div class="tab-icon-wrapper">
+        <i class="material-icons">account_balance_wallet</i>
+        </div>
+        <div class="tab-content-wrapper">
+            <span class="tab-title">支出管理</span>
+        </div>
+        <div class="tab-indicator"></div>
+    </button>
+    
+    <button class="modern-tab-item" onclick="switchModernTab('incomes')" data-tab="incomes">
+        <div class="tab-icon-wrapper">
+        <i class="material-icons">attach_money</i>
+        </div>
+        <div class="tab-content-wrapper">
+            <span class="tab-title">収入管理</span>
+        </div>
+        <div class="tab-indicator"></div>
+    </button>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="modern-tabs-container">
+
+    <!-- 支出タブコンテンツ -->
+    <div id="expenses-tab" class="modern-tab-content active">
+        <div class="content-section">
+            <div class="modern-menu-grid">
+                <a href="{{ url_for('expenses_living') }}" class="modern-menu-card">
+                    <div class="card-icon expenses-icon">
+                            <i class="material-icons">home</i>
+                        </div>
+                    <div class="card-content">
+                        <h3 class="card-title">生活費</h3>
+                        <p class="card-description">食費、光熱費、通信費など</p>
+                        </div>
+                    <i class="material-icons menu-arrow">chevron_right</i>
+                </a>
+                    
+                <a href="{{ url_for('expenses_housing') }}" class="modern-menu-card">
+                    <div class="card-icon expenses-icon">
+                            <i class="material-icons">apartment</i>
+                        </div>
+                    <div class="card-content">
+                        <h3 class="card-title">住居費</h3>
+                        <p class="card-description">家賃、住宅ローン、管理費など</p>
+                        </div>
+                    <i class="material-icons menu-arrow">chevron_right</i>
+                </a>
+                    
+                <a href="{{ url_for('expenses_education') }}" class="modern-menu-card">
+                    <div class="card-icon expenses-icon">
+                            <i class="material-icons">school</i>
+                        </div>
+                    <div class="card-content">
+                        <h3 class="card-title">教育費</h3>
+                        <p class="card-description">授業料、塾代、教材費など</p>
+                        </div>
+                    <i class="material-icons menu-arrow">chevron_right</i>
+                </a>
+                    
+                <a href="{{ url_for('expenses_insurance') }}" class="modern-menu-card">
+                    <div class="card-icon expenses-icon">
+                            <i class="material-icons">security</i>
+                        </div>
+                    <div class="card-content">
+                        <h3 class="card-title">保険料</h3>
+                        <p class="card-description">生命保険、医療保険、損害保険など</p>
+                        </div>
+                    <i class="material-icons menu-arrow">chevron_right</i>
+                </a>
+                    
+                <a href="{{ url_for('expenses_events') }}" class="modern-menu-card">
+                    <div class="card-icon expenses-icon">
+                            <i class="material-icons">event</i>
+                        </div>
+                    <div class="card-content">
+                        <h3 class="card-title">イベント費</h3>
+                        <p class="card-description">結婚、出産、旅行などの特別費用</p>
+                        </div>
+                    <i class="material-icons menu-arrow">chevron_right</i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 収入タブコンテンツ -->
+    <div id="incomes-tab" class="modern-tab-content">
+        <div class="content-section">
+            <div class="modern-menu-grid">
+                <a href="{{ url_for('incomes_salary') }}" class="modern-menu-card">
+                    <div class="card-icon incomes-icon">
+                            <i class="material-icons">work</i>
+                        </div>
+                    <div class="card-content">
+                        <h3 class="card-title">給与収入</h3>
+                        <p class="card-description">基本給、賞与、昇給率設定</p>
+                        </div>
+                    <i class="material-icons menu-arrow">chevron_right</i>
+                </a>
+                    
+                <a href="{{ url_for('incomes_sidejob') }}" class="modern-menu-card">
+                    <div class="card-icon incomes-icon">
+                            <i class="material-icons">business_center</i>
+                        </div>
+                    <div class="card-content">
+                        <h3 class="card-title">副業収入</h3>
+                        <p class="card-description">副業、フリーランス収入</p>
+                        </div>
+                    <i class="material-icons menu-arrow">chevron_right</i>
+                </a>
+                    
+                <a href="{{ url_for('incomes_investment') }}" class="modern-menu-card">
+                    <div class="card-icon incomes-icon">
+                            <i class="material-icons">trending_up</i>
+                        </div>
+                    <div class="card-content">
+                        <h3 class="card-title">投資収入</h3>
+                        <p class="card-description">配当、利息、運用益</p>
+                        </div>
+                    <i class="material-icons menu-arrow">chevron_right</i>
+                </a>
+                    
+                <a href="{{ url_for('incomes_pension') }}" class="modern-menu-card">
+                    <div class="card-icon incomes-icon">
+                            <i class="material-icons">elderly</i>
+                        </div>
+                    <div class="card-content">
+                        <h3 class="card-title">年金収入</h3>
+                        <p class="card-description">国民年金、厚生年金、企業年金</p>
+                        </div>
+                    <i class="material-icons menu-arrow">chevron_right</i>
+                </a>
+                    
+                <a href="{{ url_for('incomes_other') }}" class="modern-menu-card">
+                    <div class="card-icon incomes-icon">
+                            <i class="material-icons">more_horiz</i>
+                        </div>
+                    <div class="card-content">
+                        <h3 class="card-title">その他収入</h3>
+                        <p class="card-description">不動産収入、その他の収入源</p>
+                        </div>
+                    <i class="material-icons menu-arrow">chevron_right</i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function switchModernTab(tabName) {
+    // すべてのタブナビゲーションアイテムから active クラスを削除
+    document.querySelectorAll('.modern-tab-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    
+    // すべてのタブコンテンツから active クラスを削除
+    document.querySelectorAll('.modern-tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    
+    // クリックされたタブナビゲーションアイテムに active クラスを追加
+    event.target.closest('.modern-tab-item').classList.add('active');
+    
+    // 対応するタブコンテンツに active クラスを追加
+    document.getElementById(tabName + '-tab').classList.add('active');
+    
+    // アニメーション効果
+    const activeTab = document.getElementById(tabName + '-tab');
+    activeTab.style.opacity = '0';
+    activeTab.style.transform = 'translateY(10px)';
+    
+    setTimeout(() => {
+        activeTab.style.transition = 'all 0.3s ease';
+        activeTab.style.opacity = '1';
+        activeTab.style.transform = 'translateY(0)';
+    }, 50);
+}
+
+// ページ読み込み時のアニメーション
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.modern-menu-card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.4s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+});
+</script>
+{% endblock %} 

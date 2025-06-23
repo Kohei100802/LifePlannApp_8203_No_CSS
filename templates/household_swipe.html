@@ -1,0 +1,418 @@
+{% extends "base-new.html" %}
+
+{% block title %}スマート家計簿{% endblock %}
+{% block page_title %}スマート家計簿{% endblock %}
+
+{% block content %}
+<!-- カード進捗 -->
+<div style="padding: 16px 20px; background: #f8f9fa; border-bottom: 1px solid #e9ecef; position: sticky; top: 70px; z-index: 100;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <span style="font-size: 0.9rem; color: #666;">進捗</span>
+        <span id="card-progress" style="font-size: 0.9rem; color: #666;">1 / 3</span>
+    </div>
+    <div style="width: 100%; height: 4px; background: #e9ecef; border-radius: 2px; overflow: hidden;">
+        <div id="progress-bar" style="width: 33.33%; height: 100%; background: linear-gradient(90deg, #FF6B6B, #FF8E8E); transition: width 0.3s ease;"></div>
+    </div>
+</div>
+
+<!-- カードコンテナ -->
+<div id="card-container" style="min-height: 60vh; position: relative; overflow: hidden; background: #f8f9fa; padding: 20px;">
+    <!-- カードがここに動的に生成されます -->
+</div>
+
+<!-- 操作ガイド -->
+<div style="padding: 16px 20px; background: white; border-top: 1px solid #e9ecef; text-align: center; position: sticky; bottom: 0; z-index: 100;">
+    <div style="display: flex; justify-content: space-around; align-items: center; font-size: 0.85rem; color: #666;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 20px; height: 20px; background: #28a745; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <i class="material-icons" style="font-size: 12px; color: white;">arrow_forward</i>
+            </div>
+            右スワイプで確定
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 20px; height: 20px; background: #6c757d; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <i class="material-icons" style="font-size: 12px; color: white;">arrow_back</i>
+            </div>
+            左スワイプでスキップ
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// 家計簿ダミーデータ
+const householdBookData = [
+    {
+        id: 1,
+        category: "🍛",
+        categoryName: "ランチ",
+        time: "12:10",
+        location: "新宿駅付近",
+        previousAmount: 880,
+        suggestedAmount: 950
+    },
+    {
+        id: 2,
+        category: "☕",
+        categoryName: "カフェ",
+        time: "15:30",
+        location: "渋谷センター街",
+        previousAmount: 420,
+        suggestedAmount: 400
+    },
+    {
+        id: 3,
+        category: "🚊",
+        categoryName: "交通費",
+        time: "18:45",
+        location: "JR山手線",
+        previousAmount: 160,
+        suggestedAmount: 160
+    }
+];
+
+let currentCardIndex = 0;
+let startX = 0;
+let currentX = 0;
+let isDragging = false;
+let cardResults = [];
+
+// ページ読み込み時に家計簿を開始
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(() => {
+        startHouseholdBook();
+    }, 500);
+});
+
+function startHouseholdBook() {
+    currentCardIndex = 0;
+    cardResults = [];
+    renderCurrentCard();
+    updateProgress();
+}
+
+function renderCurrentCard() {
+    const container = document.getElementById('card-container');
+    const data = householdBookData[currentCardIndex];
+    
+    if (!data) {
+        showResults();
+        return;
+    }
+    
+    container.innerHTML = `
+        <div class="expense-card" id="current-card" style="
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 320px;
+            max-width: 90%;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            padding: 24px;
+            cursor: grab;
+            user-select: none;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        ">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div style="font-size: 3rem; margin-bottom: 8px;">${data.category}</div>
+                <h3 style="margin: 0; font-size: 1.3rem; color: #333; font-weight: 600;">${data.categoryName}</h3>
+            </div>
+            
+            <div style="background: #f8f9fa; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="color: #666; font-size: 0.9rem;">時刻</span>
+                    <span style="font-weight: 500;">${data.time}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="color: #666; font-size: 0.9rem;">場所</span>
+                    <span style="font-weight: 500;">${data.location}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: #666; font-size: 0.9rem;">前回</span>
+                    <span style="font-weight: 500; color: #FF6B6B;">¥${data.previousAmount.toLocaleString()}</span>
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 24px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 500; color: #333;">金額を入力</label>
+                <input type="number" 
+                       id="amount-input" 
+                       value="${data.suggestedAmount}"
+                       style="
+                           width: 100%;
+                           padding: 16px;
+                           border: 2px solid #e9ecef;
+                           border-radius: 12px;
+                           font-size: 1.2rem;
+                           font-weight: 600;
+                           text-align: center;
+                           color: #333;
+                           background: white;
+                           box-sizing: border-box;
+                       "
+                       inputmode="decimal"
+                       placeholder="0">
+            </div>
+            
+            <div style="display: flex; gap: 12px;">
+                <button onclick="skipCard()" style="
+                    flex: 1;
+                    padding: 12px;
+                    background: #6c757d;
+                    color: white;
+                    border: none;
+                    border-radius: 12px;
+                    font-weight: 500;
+                    cursor: pointer;
+                    transition: background 0.2s ease;
+                ">スキップ</button>
+                <button onclick="confirmCard()" style="
+                    flex: 1;
+                    padding: 12px;
+                    background: #28a745;
+                    color: white;
+                    border: none;
+                    border-radius: 12px;
+                    font-weight: 500;
+                    cursor: pointer;
+                    transition: background 0.2s ease;
+                ">確定</button>
+            </div>
+        </div>
+    `;
+    
+    // カードにスワイプイベントを追加
+    const card = document.getElementById('current-card');
+    addSwipeEvents(card);
+    
+    // 金額入力欄にフォーカス
+    setTimeout(() => {
+        const input = document.getElementById('amount-input');
+        if (input) {
+            input.focus();
+            input.select();
+        }
+    }, 100);
+}
+
+function addSwipeEvents(card) {
+    card.addEventListener('touchstart', handleTouchStart, { passive: false });
+    card.addEventListener('touchmove', handleTouchMove, { passive: false });
+    card.addEventListener('touchend', handleTouchEnd, { passive: false });
+    
+    card.addEventListener('mousedown', handleMouseStart);
+    card.addEventListener('mousemove', handleMouseMove);
+    card.addEventListener('mouseup', handleMouseEnd);
+    card.addEventListener('mouseleave', handleMouseEnd);
+}
+
+function handleTouchStart(e) {
+    startX = e.touches[0].clientX;
+    isDragging = true;
+    e.preventDefault();
+}
+
+function handleTouchMove(e) {
+    if (!isDragging) return;
+    
+    currentX = e.touches[0].clientX;
+    const deltaX = currentX - startX;
+    
+    updateCardPosition(deltaX);
+    e.preventDefault();
+}
+
+function handleTouchEnd(e) {
+    if (!isDragging) return;
+    
+    const deltaX = currentX - startX;
+    handleSwipeEnd(deltaX);
+    isDragging = false;
+}
+
+function handleMouseStart(e) {
+    startX = e.clientX;
+    isDragging = true;
+    e.preventDefault();
+}
+
+function handleMouseMove(e) {
+    if (!isDragging) return;
+    
+    currentX = e.clientX;
+    const deltaX = currentX - startX;
+    
+    updateCardPosition(deltaX);
+}
+
+function handleMouseEnd(e) {
+    if (!isDragging) return;
+    
+    const deltaX = currentX - startX;
+    handleSwipeEnd(deltaX);
+    isDragging = false;
+}
+
+function updateCardPosition(deltaX) {
+    const card = document.getElementById('current-card');
+    if (!card) return;
+    
+    const rotation = deltaX * 0.1;
+    const opacity = Math.max(0.7, 1 - Math.abs(deltaX) / 300);
+    
+    card.style.transform = `translate(-50%, -50%) translateX(${deltaX}px) rotate(${rotation}deg)`;
+    card.style.opacity = opacity;
+    
+    // 色のフィードバック
+    if (deltaX > 50) {
+        card.style.boxShadow = '0 8px 32px rgba(40, 167, 69, 0.3)';
+    } else if (deltaX < -50) {
+        card.style.boxShadow = '0 8px 32px rgba(108, 117, 125, 0.3)';
+    } else {
+        card.style.boxShadow = '0 8px 32px rgba(0,0,0,0.1)';
+    }
+}
+
+function handleSwipeEnd(deltaX) {
+    const card = document.getElementById('current-card');
+    if (!card) return;
+    
+    if (deltaX > 100) {
+        // 右スワイプ - 確定
+        animateCardExit(card, 'right', () => confirmCard());
+    } else if (deltaX < -100) {
+        // 左スワイプ - スキップ
+        animateCardExit(card, 'left', () => skipCard());
+    } else {
+        // 元の位置に戻す
+        card.style.transform = 'translate(-50%, -50%)';
+        card.style.opacity = '1';
+        card.style.boxShadow = '0 8px 32px rgba(0,0,0,0.1)';
+    }
+}
+
+function animateCardExit(card, direction, callback) {
+    const translateX = direction === 'right' ? '100vw' : '-100vw';
+    card.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+    card.style.transform = `translate(-50%, -50%) translateX(${translateX})`;
+    card.style.opacity = '0';
+    
+    setTimeout(callback, 300);
+}
+
+function confirmCard() {
+    const input = document.getElementById('amount-input');
+    const amount = input ? parseFloat(input.value) || 0 : 0;
+    
+    cardResults.push({
+        ...householdBookData[currentCardIndex],
+        amount: amount,
+        action: 'confirmed'
+    });
+    
+    nextCard();
+}
+
+function skipCard() {
+    cardResults.push({
+        ...householdBookData[currentCardIndex],
+        amount: 0,
+        action: 'skipped'
+    });
+    
+    nextCard();
+}
+
+function nextCard() {
+    currentCardIndex++;
+    updateProgress();
+    
+    if (currentCardIndex < householdBookData.length) {
+        setTimeout(() => {
+            renderCurrentCard();
+        }, 300);
+    } else {
+        setTimeout(() => {
+            showResults();
+        }, 300);
+    }
+}
+
+function updateProgress() {
+    const progressText = document.getElementById('card-progress');
+    const progressBar = document.getElementById('progress-bar');
+    
+    if (progressText) {
+        progressText.textContent = `${currentCardIndex + 1} / ${householdBookData.length}`;
+    }
+    
+    if (progressBar) {
+        const percentage = ((currentCardIndex + 1) / householdBookData.length) * 100;
+        progressBar.style.width = percentage + '%';
+    }
+}
+
+function showResults() {
+    const container = document.getElementById('card-container');
+    const confirmedItems = cardResults.filter(item => item.action === 'confirmed');
+    const totalAmount = confirmedItems.reduce((sum, item) => sum + item.amount, 0);
+    
+    container.innerHTML = `
+        <div style="
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 320px;
+            max-width: 90%;
+            text-align: center;
+            padding: 24px;
+        ">
+            <div style="font-size: 3rem; margin-bottom: 16px;">✅</div>
+            <h3 style="margin: 0 0 16px 0; font-size: 1.4rem; color: #333;">記録完了！</h3>
+            <div style="background: white; border-radius: 16px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.1);">
+                <div style="font-size: 1.1rem; color: #666; margin-bottom: 8px;">今日の支出</div>
+                <div style="font-size: 2rem; font-weight: bold; color: #FF6B6B;">¥${totalAmount.toLocaleString()}</div>
+                <div style="font-size: 0.9rem; color: #666; margin-top: 8px;">${confirmedItems.length}件を記録</div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px;">
+                ${confirmedItems.map(item => `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #f8f9fa; border-radius: 8px;">
+                        <span>${item.category} ${item.categoryName}</span>
+                        <span style="font-weight: 500;">¥${item.amount.toLocaleString()}</span>
+                    </div>
+                `).join('')}
+            </div>
+            <div style="display: flex; gap: 12px;">
+                <button onclick="window.location.href='/dashboard'" style="
+                    flex: 1;
+                    padding: 16px;
+                    background: #6c757d;
+                    color: white;
+                    border: none;
+                    border-radius: 12px;
+                    font-size: 1.1rem;
+                    font-weight: 500;
+                    cursor: pointer;
+                ">ダッシュボードに戻る</button>
+                <button onclick="startHouseholdBook()" style="
+                    flex: 1;
+                    padding: 16px;
+                    background: #FF6B6B;
+                    color: white;
+                    border: none;
+                    border-radius: 12px;
+                    font-size: 1.1rem;
+                    font-weight: 500;
+                    cursor: pointer;
+                ">もう一度</button>
+            </div>
+        </div>
+    `;
+}
+</script>
+{% endblock %} 

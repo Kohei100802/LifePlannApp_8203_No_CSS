@@ -1,0 +1,421 @@
+{% extends "base-new.html" %}
+
+{% block title %}住居費 - {% if expense_id %}編集{% else %}新規登録{% endif %}{% endblock %}
+{% block page_title %}住居費 - {% if expense_id %}編集{% else %}新規登録{% endif %}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            {% if expense_id %}
+                住居費編集 <span class="badge badge-secondary">#{{ expense_id }}</span>
+            {% else %}
+                住居費新規登録
+            {% endif %}
+        </h3>
+        <a href="/expenses/housing" class="btn btn-secondary btn-sm">
+            <i class="material-icons">arrow_back</i> 一覧に戻る
+        </a>
+    </div>
+    <div class="card-body">
+        <form id="housingExpenseForm">
+            <input type="hidden" name="id" value="{{ expense_id or '' }}">
+            
+            <div class="form-group">
+                <label class="form-label">項目名 <span class="text-danger">*</span></label>
+                <input type="text" name="name" class="form-control" placeholder="例：マンション家賃、住宅ローン" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">説明</label>
+                <input type="text" name="description" class="form-control" placeholder="詳細説明（任意）">
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">開始年 <span class="text-danger">*</span></label>
+                        <select name="start_year" class="form-control" required>
+                            <!-- JavaScript で動的に生成 -->
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">終了年 <span class="text-danger">*</span></label>
+                        <select name="end_year" class="form-control" required>
+                            <!-- JavaScript で動的に生成 -->
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">居住形態 <span class="text-danger">*</span></label>
+                <select name="residence_type" class="form-control" required onchange="toggleResidenceFields()">
+                    <option value="">選択してください</option>
+                    <option value="賃貸">賃貸</option>
+                    <option value="持家（ローンあり）">持家（ローンあり）</option>
+                    <option value="持家（ローンなし）">持家（ローンなし）</option>
+                </select>
+            </div>
+            
+            <!-- 賃貸用フィールド -->
+            <div id="rental-fields" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">月額家賃（万円） <span class="text-danger">*</span></label>
+                    <input type="number" name="rent_monthly" class="form-control" placeholder="10" min="0" step="0.1">
+                </div>
+            </div>
+            
+            <!-- 持家用フィールド -->
+            <div id="owned-fields" style="display: none;">
+                <!-- ローン計算用フィールドをここに移動 -->
+                <div id="loan-fields" style="display: none;">
+                    <h5 class="mt-4 mb-3">ローン計算設定</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">物件価格（万円）</label>
+                                <input type="number" name="purchase_price" class="form-control" placeholder="4000" min="0" step="1">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">頭金（万円）</label>
+                                <input type="number" name="down_payment" class="form-control" placeholder="800" min="0" step="1">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">金利（年率%）</label>
+                                <input type="number" name="loan_interest_rate" class="form-control" placeholder="1.5" min="0" max="10" step="0.1">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">返済期間（年）</label>
+                                <input type="number" name="loan_term_years" class="form-control" placeholder="35" min="1" max="50" step="1">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">返済方法</label>
+                        <select name="repayment_method" class="form-control">
+                            <option value="元利均等">元利均等</option>
+                            <option value="元金均等">元金均等</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <button type="button" class="btn btn-info" onclick="calculateMortgage()">
+                            <i class="material-icons">calculate</i> 月額返済額を計算
+                        </button>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">月額ローン返済（万円）</label>
+                            <input type="number" name="mortgage_monthly" class="form-control" placeholder="8" min="0" step="0.1">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">固定資産税（月額換算・万円）</label>
+                            <input type="number" name="property_tax_monthly" class="form-control" placeholder="1" min="0" step="0.1">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">管理費（万円）</label>
+                            <input type="number" name="management_fee_monthly" class="form-control" placeholder="1.5" min="0" step="0.1">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">修繕積立金（万円）</label>
+                            <input type="number" name="repair_reserve_monthly" class="form-control" placeholder="1" min="0" step="0.1">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">火災保険（月額換算・万円）</label>
+                    <input type="number" name="fire_insurance_monthly" class="form-control" placeholder="0.3" min="0" step="0.1">
+                </div>
+            </div>
+            
+            <!-- ローン計算用フィールド（持家ローンありの場合のみ表示） -->
+            <!-- このセクションは上に移動しました -->
+
+            
+            <div class="form-group mt-4">
+                <div class="row">
+                    <div class="col-md-6">
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <i class="material-icons">arrow_forward</i>
+                            <span class="submit-text">
+                                {% if expense_id %}住居費を更新{% else %}住居費を登録{% endif %}
+                            </span>
+                        </button>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="/expenses/housing" class="btn btn-secondary btn-block">
+                            <i class="material-icons">cancel</i> キャンセル
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- フローティングアクションボタン -->
+<div class="form-fab-container">
+    <a href="/expenses/housing" class="fab-button cancel" id="cancelFabButton" title="キャンセル">
+        <i class="material-icons">close</i>
+    </a>
+    <button type="button" class="fab-button submit" id="formFabButton" onclick="submitFormViaFab()" title="保存">
+        {% if expense_id %}
+            <i class="material-icons">arrow_forward</i>
+        {% else %}
+            <i class="material-icons">add</i>
+        {% endif %}
+    </button>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 年度セレクトボックスを初期化
+    initializeYearSelects();
+    
+    // 編集モードの場合はデータを読み込み
+    const expenseId = document.querySelector('[name="id"]').value;
+    if (expenseId) {
+        loadExpenseData(expenseId);
+    }
+    
+    // フォーム送信イベント設定
+    setupFormHandler();
+    
+    // フローティングボタンの初期設定
+    setupFormFab();
+
+});
+
+// 居住形態による表示切り替え
+function toggleResidenceFields() {
+    const residenceType = document.querySelector('[name="residence_type"]').value;
+    const rentalFields = document.getElementById('rental-fields');
+    const ownedFields = document.getElementById('owned-fields');
+    const loanFields = document.getElementById('loan-fields');
+    
+    // すべて非表示にする
+    rentalFields.style.display = 'none';
+    ownedFields.style.display = 'none';
+    loanFields.style.display = 'none';
+    
+    if (residenceType === '賃貸') {
+        rentalFields.style.display = 'block';
+    } else if (residenceType === '持家（ローンあり）') {
+        ownedFields.style.display = 'block';
+        loanFields.style.display = 'block';
+    } else if (residenceType === '持家（ローンなし）') {
+        ownedFields.style.display = 'block';
+    }
+}
+
+// 月額返済額計算
+function calculateMortgage() {
+    const purchasePrice = parseFloat(document.querySelector('[name="purchase_price"]').value) || 0;
+    const downPayment = parseFloat(document.querySelector('[name="down_payment"]').value) || 0;
+    const interestRate = parseFloat(document.querySelector('[name="loan_interest_rate"]').value) || 0;
+    const termYears = parseInt(document.querySelector('[name="loan_term_years"]').value) || 0;
+    
+    if (purchasePrice <= 0 || interestRate <= 0 || termYears <= 0) {
+        showToast('物件価格、金利、返済期間を正しく入力してください', 'error');
+        return;
+    }
+    
+    const loanAmount = (purchasePrice - downPayment) * 10000; // 万円を円に変換
+    const monthlyRate = interestRate / 100 / 12;
+    const totalPayments = termYears * 12;
+    
+    // 元利均等返済の計算
+    const monthlyPayment = loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, totalPayments)) / 
+                          (Math.pow(1 + monthlyRate, totalPayments) - 1);
+    
+    const monthlyPaymentManyen = monthlyPayment / 10000; // 円を万円に変換
+    
+    document.querySelector('[name="mortgage_monthly"]').value = monthlyPaymentManyen.toFixed(1);
+    showToast(`月額返済額: ${monthlyPaymentManyen.toFixed(1)}万円`, 'success');
+}
+
+// フォーム送信イベント設定
+function setupFormHandler() {
+    const form = document.getElementById('housingExpenseForm');
+    if (form) {
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await handleFormSubmit(this);
+        });
+    }
+}
+
+// フォーム送信処理
+async function handleFormSubmit(form) {
+    if (!validateRequired(form)) {
+        return;
+    }
+    
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    
+    // 数値変換（万円を円に変換）
+    const numericFields = [
+        'rent_monthly', 'mortgage_monthly', 'property_tax_monthly', 
+        'management_fee_monthly', 'repair_reserve_monthly', 'fire_insurance_monthly',
+        'purchase_price', 'down_payment'
+    ];
+    
+    numericFields.forEach(field => {
+        if (data[field]) {
+            data[field] = parseFloat(data[field]) * 10000;
+        } else {
+            data[field] = 0;
+        }
+    });
+    
+    // 月額合計を計算
+    const residenceType = data.residence_type;
+    if (residenceType === '賃貸') {
+        data.monthly_total_amount = data.rent_monthly;
+    } else {
+        data.monthly_total_amount = 
+            data.mortgage_monthly + 
+            data.property_tax_monthly + 
+            data.management_fee_monthly + 
+            data.repair_reserve_monthly + 
+            data.fire_insurance_monthly;
+    }
+    
+    data.start_year = parseInt(data.start_year) || 2024;
+    data.end_year = parseInt(data.end_year) || 2050;
+    data.loan_interest_rate = parseFloat(data.loan_interest_rate) || 0;
+    data.loan_term_years = parseInt(data.loan_term_years) || 0;
+    
+    const isUpdate = data.id && data.id !== '';
+    const method = isUpdate ? 'PUT' : 'POST';
+    const messageType = isUpdate ? '更新' : '登録';
+    
+    // 送信ボタンを無効化してローディング状態にする
+    const submitButton = form.querySelector('button[type="submit"]');
+    const submitText = submitButton.querySelector('.submit-text');
+    const originalText = submitText.textContent;
+    
+    submitButton.disabled = true;
+    submitText.textContent = '処理中...';
+    
+    try {
+        const response = await fetch('/api/housing-expenses', {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast(`住居費を${messageType}しました`, 'success');
+            // 一覧ページに戻る
+            setTimeout(() => {
+                window.location.href = '/expenses/housing';
+            }, 1000);
+        } else {
+            showToast(result.message || `住居費の${messageType}に失敗しました`, 'error');
+        }
+    } catch (error) {
+        console.error('Error submitting form:', error);
+        showToast(`住居費の${messageType}に失敗しました`, 'error');
+    } finally {
+        submitButton.disabled = false;
+        submitText.textContent = originalText;
+    }
+}
+
+// 編集時のデータ読み込み
+async function loadExpenseData(expenseId) {
+    try {
+        const response = await fetch('/api/housing-expenses');
+        const expenses = await response.json();
+        const expense = expenses.find(item => item.id == expenseId);
+        
+        if (expense) {
+            // フォームに値を設定（円を万円に変換）
+            document.querySelector('[name="name"]').value = expense.name || '';
+            document.querySelector('[name="description"]').value = expense.description || '';
+            document.querySelector('[name="start_year"]').value = expense.start_year;
+            document.querySelector('[name="end_year"]').value = expense.end_year;
+            document.querySelector('[name="residence_type"]').value = expense.residence_type;
+            
+            // 居住形態に応じてフィールドを表示
+            toggleResidenceFields();
+            
+            // 数値フィールドを設定（円を万円に変換）
+            if (expense.rent_monthly) {
+                document.querySelector('[name="rent_monthly"]').value = (expense.rent_monthly / 10000).toFixed(1);
+            }
+            if (expense.mortgage_monthly) {
+                document.querySelector('[name="mortgage_monthly"]').value = (expense.mortgage_monthly / 10000).toFixed(1);
+            }
+            if (expense.property_tax_monthly) {
+                document.querySelector('[name="property_tax_monthly"]').value = (expense.property_tax_monthly / 10000).toFixed(1);
+            }
+            if (expense.management_fee_monthly) {
+                document.querySelector('[name="management_fee_monthly"]').value = (expense.management_fee_monthly / 10000).toFixed(1);
+            }
+            if (expense.repair_reserve_monthly) {
+                document.querySelector('[name="repair_reserve_monthly"]').value = (expense.repair_reserve_monthly / 10000).toFixed(1);
+            }
+            if (expense.fire_insurance_monthly) {
+                document.querySelector('[name="fire_insurance_monthly"]').value = (expense.fire_insurance_monthly / 10000).toFixed(1);
+            }
+            if (expense.purchase_price) {
+                document.querySelector('[name="purchase_price"]').value = (expense.purchase_price / 10000).toFixed(0);
+            }
+            if (expense.down_payment) {
+                document.querySelector('[name="down_payment"]').value = (expense.down_payment / 10000).toFixed(0);
+            }
+            if (expense.loan_interest_rate) {
+                document.querySelector('[name="loan_interest_rate"]').value = expense.loan_interest_rate;
+            }
+            if (expense.loan_term_years) {
+                document.querySelector('[name="loan_term_years"]').value = expense.loan_term_years;
+            }
+            if (expense.repayment_method) {
+                document.querySelector('[name="repayment_method"]').value = expense.repayment_method;
+            }
+        }
+    } catch (error) {
+        console.error('Error loading expense data:', error);
+        showToast('データの読み込みに失敗しました', 'error');
+    }
+}
+
+
+
+</script>
+{% endblock %}

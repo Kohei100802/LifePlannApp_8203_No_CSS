@@ -1,0 +1,355 @@
+{% extends "base-new.html" %}
+
+{% block title %}シミュレーションプラン編集{% endblock %}
+{% block page_title %}シミュレーションプラン編集{% endblock %}
+
+{% block tab_navigation %}
+<!-- モダンタブナビゲーション（main-contentから独立） -->
+<div class="modern-tab-navigation">
+    <div class="modern-tab-item active" style="cursor: default;">
+        <div class="tab-icon-wrapper">
+            <i class="material-icons">edit</i>
+        </div>
+        <div class="tab-content-wrapper">
+            <span class="tab-title">プラン編集</span>
+            <span class="tab-description">シミュレーション条件を修正</span>
+        </div>
+        <div class="tab-indicator"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="modern-tabs-container">
+    <div class="modern-tab-content active">
+        <div class="content-section">
+            <form id="planForm">
+                <input type="hidden" id="planId" name="planId">
+                
+                <div class="form-group">
+                    <label class="form-label">プラン名</label>
+                    <input type="text" name="name" class="form-control" placeholder="例：基本プラン" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">説明</label>
+                    <textarea name="description" class="form-control" rows="3" placeholder="プランの説明や前提条件など（任意）"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">現在の年齢</label>
+                    <input type="number" name="base_age" class="form-control" placeholder="30" min="0" max="100" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">開始年</label>
+                    <select name="start_year" class="form-control" required>
+                        <!-- JavaScript で動的に生成 -->
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">終了年</label>
+                    <select name="end_year" class="form-control" required>
+                        <!-- JavaScript で動的に生成 -->
+                    </select>
+                </div>
+                
+                <!-- 支出項目選択 -->
+                <div class="form-group">
+                    <label class="form-label">シミュレーションに含める支出項目</label>
+                    <div id="expenseSelectionContainer">
+                        <!-- 動的に生成 -->
+                    </div>
+                </div>
+                
+                <!-- 収入項目選択 -->
+                <div class="form-group">
+                    <label class="form-label">シミュレーションに含める収入項目</label>
+                    <div id="incomeSelectionContainer">
+                        <!-- 動的に生成 -->
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-success" id="saveBtn">更新</button>
+                    <button type="button" class="btn btn-secondary" onclick="window.location.href='/simulation'">キャンセル</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let allExpenses = {};
+let allIncomes = {};
+let currentPlan = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // URLからプランIDを取得
+    const pathParts = window.location.pathname.split('/');
+    const planId = pathParts[pathParts.length - 1];
+    
+    // 年度セレクトボックスを初期化
+    initializeYearSelects();
+    
+    // データを読み込む
+    loadSelectionData().then(() => {
+        loadPlanData(planId);
+    });
+    
+    // イベントリスナー設定
+    document.getElementById('planForm').addEventListener('submit', updatePlan);
+});
+
+// プランデータの読み込み
+async function loadPlanData(planId) {
+    try {
+        currentPlan = await apiCall(`/api/simulation-plans/${planId}`);
+        
+        // フォームに値を設定
+        document.getElementById('planId').value = currentPlan.id;
+        document.querySelector('[name="name"]').value = currentPlan.name;
+        document.querySelector('[name="description"]').value = currentPlan.description || '';
+        document.querySelector('[name="base_age"]').value = currentPlan.base_age;
+        document.querySelector('[name="start_year"]').value = currentPlan.start_year;
+        document.querySelector('[name="end_year"]').value = currentPlan.end_year;
+        
+        // 選択項目を復元
+        restoreSelections(currentPlan.selected_expenses, currentPlan.selected_incomes);
+        
+    } catch (error) {
+        console.error('Error loading plan data:', error);
+        showToast('プランの読み込みに失敗しました', 'error');
+        window.location.href = '/simulation';
+    }
+}
+
+// 選択データのロード
+async function loadSelectionData() {
+    try {
+        [allExpenses, allIncomes] = await Promise.all([
+            apiCall('/api/all-expenses'),
+            apiCall('/api/all-incomes')
+        ]);
+        
+        // データが正常に取得できた場合のみ処理を続行
+        if (allExpenses && allIncomes) {
+            renderExpenseSelection(allExpenses);
+            renderIncomeSelection(allIncomes);
+        } else {
+            console.warn('Failed to load expense or income data');
+            allExpenses = {};
+            allIncomes = {};
+        }
+    } catch (error) {
+        console.error('Error loading selection data:', error);
+        allExpenses = {};
+        allIncomes = {};
+        showToast('データの読み込みに失敗しました', 'error');
+    }
+}
+
+// 支出項目選択UIの生成
+function renderExpenseSelection(expenses) {
+    const container = document.getElementById('expenseSelectionContainer');
+    const expenseTypes = {
+        'living': '生活費',
+        'education': '教育費',
+        'housing': '住居費',
+        'insurance': '保険費',
+        'event': 'イベント費'
+    };
+    
+    let html = '';
+    
+    Object.entries(expenseTypes).forEach(([type, typeName]) => {
+        if (expenses[type] && expenses[type].length > 0) {
+            html += `
+                <div class="form-group">
+                    <h5 class="form-subtitle">${typeName}</h5>
+                    <div class="checkbox-group">
+            `;
+            
+            expenses[type].forEach(expense => {
+                const periodText = `${expense.start_year}年-${expense.end_year}年`;
+                let amountText;
+                let displayDetails = '';
+                
+                if (type === 'event') {
+                    amountText = formatCurrency(expense.amount);
+                } else if (type === 'education') {
+                    amountText = `月額合計 ${formatCurrency(expense.monthly_amount)}`;
+                    displayDetails = expense.child_name ? ` (${expense.child_name})` : '';
+                } else {
+                    amountText = `月額 ${formatCurrency(expense.monthly_total_amount)}`;
+                }
+                
+                html += `
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="selected_expenses_${type}" value="${expense.id}" class="form-checkbox">
+                        <div class="checkbox-content">
+                            <div class="checkbox-title">${expense.name}${displayDetails}</div>
+                            <div class="checkbox-details text-small text-secondary">
+                                ${periodText} | ${amountText}
+                                ${expense.description ? `<br>${expense.description}` : ''}
+                            </div>
+                        </div>
+                    </label>
+                `;
+            });
+            
+            html += `
+                    </div>
+                </div>
+            `;
+        }
+    });
+    
+    if (html === '') {
+        html = '<p class="text-secondary">登録済みの支出項目がありません。</p>';
+    }
+    
+    container.innerHTML = html;
+}
+
+// 収入項目選択UIの生成
+function renderIncomeSelection(incomes) {
+    const container = document.getElementById('incomeSelectionContainer');
+    const incomeTypes = {
+        'salary': '給与収入',
+        'sidejob': '副業収入',
+        'investment': '投資収入',
+        'pension': '年金収入',
+        'other': 'その他収入'
+    };
+    
+    let html = '';
+    
+    Object.entries(incomeTypes).forEach(([type, typeName]) => {
+        if (incomes[type] && incomes[type].length > 0) {
+            html += `
+                <div class="form-group">
+                    <h5 class="form-subtitle">${typeName}</h5>
+                    <div class="checkbox-group">
+            `;
+            
+            incomes[type].forEach(income => {
+                const periodText = `${income.start_year}年-${income.end_year}年`;
+                const amountText = `月額 ${formatCurrency(income.monthly_amount)}`;
+                
+                html += `
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="selected_incomes_${type}" value="${income.id}" class="form-checkbox">
+                        <div class="checkbox-content">
+                            <div class="checkbox-title">${income.name}</div>
+                            <div class="checkbox-details text-small text-secondary">
+                                ${periodText} | ${amountText}
+                                ${income.description ? `<br>${income.description}` : ''}
+                            </div>
+                        </div>
+                    </label>
+                `;
+            });
+            
+            html += `
+                    </div>
+                </div>
+            `;
+        }
+    });
+    
+    if (html === '') {
+        html = '<p class="text-secondary">登録済みの収入項目がありません。</p>';
+    }
+    
+    container.innerHTML = html;
+}
+
+// 選択状態を復元
+function restoreSelections(selectedExpenses, selectedIncomes) {
+    // 支出項目の復元
+    Object.entries(selectedExpenses || {}).forEach(([type, ids]) => {
+        ids.forEach(id => {
+            const checkbox = document.querySelector(`input[name="selected_expenses_${type}"][value="${id}"]`);
+            if (checkbox) checkbox.checked = true;
+        });
+    });
+    
+    // 収入項目の復元
+    Object.entries(selectedIncomes || {}).forEach(([type, ids]) => {
+        ids.forEach(id => {
+            const checkbox = document.querySelector(`input[name="selected_incomes_${type}"][value="${id}"]`);
+            if (checkbox) checkbox.checked = true;
+        });
+    });
+}
+
+// プラン更新
+async function updatePlan(e) {
+    e.preventDefault();
+    
+    if (!validateRequired(e.target)) {
+        return;
+    }
+    
+    const formData = new FormData(e.target);
+    
+    // 選択された支出・収入項目を取得
+    const selectedExpenses = {};
+    const selectedIncomes = {};
+    
+    // 支出項目の収集
+    ['living', 'education', 'housing', 'insurance', 'event'].forEach(type => {
+        const checkboxes = document.querySelectorAll(`input[name="selected_expenses_${type}"]:checked`);
+        if (checkboxes.length > 0) {
+            selectedExpenses[type] = Array.from(checkboxes).map(cb => parseInt(cb.value));
+        }
+    });
+    
+    // 収入項目の収集
+    ['salary', 'sidejob', 'investment', 'pension', 'other'].forEach(type => {
+        const checkboxes = document.querySelectorAll(`input[name="selected_incomes_${type}"]:checked`);
+        if (checkboxes.length > 0) {
+            selectedIncomes[type] = Array.from(checkboxes).map(cb => parseInt(cb.value));
+        }
+    });
+    
+    // 項目が選択されているかチェック
+    const hasSelectedExpenses = Object.keys(selectedExpenses).length > 0;
+    const hasSelectedIncomes = Object.keys(selectedIncomes).length > 0;
+    
+    if (!hasSelectedExpenses && !hasSelectedIncomes) {
+        showToast('シミュレーションに含める支出または収入項目を選択してください', 'error');
+        return;
+    }
+    
+    const planData = {
+        id: currentPlan.id,
+        name: formData.get('name'),
+        description: formData.get('description'),
+        base_age: parseInt(formData.get('base_age')),
+        start_year: parseInt(formData.get('start_year')),
+        end_year: parseInt(formData.get('end_year')),
+        selected_expenses: selectedExpenses,
+        selected_incomes: selectedIncomes
+    };
+    
+    try {
+        await apiCall('/api/simulation-plans', {
+            method: 'PUT',
+            body: JSON.stringify(planData)
+        });
+        showToast('シミュレーションプランが更新されました', 'success');
+        
+        // 一覧ページに戻る
+        window.location.href = '/simulation';
+    } catch (error) {
+        console.error('Error updating plan:', error);
+        showToast('プランの更新に失敗しました', 'error');
+    }
+}
+</script>
+{% endblock %} 

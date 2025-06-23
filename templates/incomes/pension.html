@@ -1,0 +1,366 @@
+{% extends "base-new.html" %}
+
+{% block title %}年金収入管理{% endblock %}
+{% block page_title %}年金収入管理{% endblock %}
+
+{% block content %}
+<div class="modern-tabs-container">
+    <!-- プラン管理コンテンツ -->
+    <div class="modern-tab-content active">
+        <div class="content-section">
+            <!-- 登録済み年金収入一覧 -->
+            <div id="pension-income-list">
+                <!-- 動的に生成 -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- フローティングボタン -->
+<div class="fab-container">
+    <button id="toolsFab" class="fab-button tools" title="ツール">
+        <i class="material-icons">more_vert</i>
+    </button>
+    <a href="/incomes/pension/new" class="fab-button add" title="新規追加">
+        <i class="material-icons">add</i>
+    </a>
+</div>
+
+<!-- ツールメニュー -->
+<div id="toolsMenu" class="tools-menu" style="display: none;">
+    <div class="tools-menu-content">
+        <button id="copyToolBtn" class="tool-menu-item">
+            <i class="material-icons">content_copy</i>
+            <span>コピー</span>
+        </button>
+        <button id="deleteToolBtn" class="tool-menu-item">
+            <i class="material-icons">delete</i>
+            <span>削除</span>
+        </button>
+    </div>
+</div>
+
+<!-- データ選択モーダル -->
+<div id="dataSelectionModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalTitle">データを選択してください</h3>
+            <button class="close-button" onclick="closeDataSelectionModal()">
+                <i class="material-icons">close</i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div id="dataSelectionList">
+                <!-- 動的に生成 -->
+            </div>
+        </div>
+        <div class="modal-footer" style="padding: 16px; border-top: 1px solid #e0e0e0; display: flex; justify-content: flex-end; gap: 12px;">
+            <button class="btn btn-secondary" onclick="closeDataSelectionModal()">キャンセル</button>
+            <button id="executeActionBtn" class="btn btn-primary" style="display: none;">実行</button>
+        </div>
+    </div>
+</div>
+
+<!-- 年金収入登録フォーム（非表示） -->
+<div id="pension-form-container" class="card hidden">
+    <div class="card-header">
+        <h3 class="card-title">年金収入登録</h3>
+        <button class="btn btn-secondary btn-sm" onclick="hideAddPensionForm()">
+            <i class="material-icons">close</i> キャンセル
+        </button>
+    </div>
+    <div class="card-body">
+        <form id="pensionIncomeForm">
+            <input type="hidden" name="id" value="">
+            
+            <div class="form-group">
+                <label class="form-label">年金名</label>
+                <input type="text" name="name" class="form-control" placeholder="例：国民年金、厚生年金" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">説明</label>
+                <input type="text" name="description" class="form-control" placeholder="詳細説明（任意）">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">月額受給額（手取り）（万円）</label>
+                <input type="number" name="monthly_amount" class="form-control" placeholder="15" min="0" step="1" required>
+                <div class="text-small text-secondary mt-1">税金・社会保険料控除後の手取り額</div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">年額受給額（自動計算）</label>
+                <input type="text" id="annual_amount_display" class="form-control" readonly placeholder="月額×12で自動計算">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">受給開始年</label>
+                <select name="start_year" class="form-control" required>
+                    <!-- JavaScript で動的に生成 -->
+                </select>
+                <div class="text-small text-secondary mt-1">年金受給開始年度</div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">受給終了年</label>
+                <select name="end_year" class="form-control" required>
+                    <!-- JavaScript で動的に生成 -->
+                </select>
+                <div class="text-small text-secondary mt-1">想定される受給終了年度</div>
+            </div>
+            
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary btn-block">
+                    <span class="submit-text">年金収入を登録</span>
+                    <div class="loading-spinner hidden">
+                        <i class="material-icons">refresh</i>
+                    </div>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 年金収入統計 -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">年金収入統計</h3>
+    </div>
+    <div class="card-body">
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-value" id="total-pension-count" style="color: var(--color-accent);">0</div>
+                <div class="stat-label">登録年金数</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="total-pension-monthly" style="color: var(--color-accent);">¥0</div>
+                <div class="stat-label">月額合計</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="total-pension-annual" style="color: var(--color-accent);">¥0</div>
+                <div class="stat-label">年額合計</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 年度セレクトボックスを初期化
+    initializeYearSelects();
+    
+    loadPensionIncomes();
+    
+    // 月額収入の変更時に年額を自動計算（万円で入力されるので10000倍する）
+    document.querySelector('input[name="monthly_amount"]').addEventListener('input', function() {
+        const monthlyAmount = parseFloat(this.value) || 0;
+        const annualAmount = monthlyAmount * 12 * 10000; // 万円を円に変換
+        document.getElementById('annual_amount_display').value = formatCurrency(annualAmount);
+    });
+});
+
+// 年金収入データ読み込み
+async function loadPensionIncomes() {
+    try {
+        const pensionIncomes = await apiCall('/api/pension-incomes');
+        displayPensionIncomes(pensionIncomes);
+    } catch (error) {
+        console.error('Error loading pension incomes:', error);
+        showToast('年金収入の読み込みに失敗しました', 'error');
+    }
+}
+
+// 年金収入表示
+function displayPensionIncomes(pensionIncomes) {
+    const listContainer = document.getElementById('pension-income-list');
+    const toolsFab = document.getElementById('toolsFab');
+    
+    if (pensionIncomes.length === 0) {
+        listContainer.innerHTML = `
+            <div class="empty-state">
+                <div style="text-align: center; padding: 2rem; color: var(--color-secondary);">
+                    <i class="material-icons" style="font-size: 3rem; margin-bottom: 1rem;">elderly</i>
+                    <p>登録済みの年金収入がありません</p>
+                    <p class="text-small">右下の「+」ボタンから作成してください</p>
+                </div>
+            </div>
+        `;
+        // データがない場合はツールボタンを非表示
+        if (toolsFab) {
+            toolsFab.style.display = 'none';
+        }
+        return;
+    }
+    
+    // データがある場合はツールボタンを表示
+    if (toolsFab) {
+        toolsFab.style.display = 'inline-flex';
+    }
+    
+    const html = `
+        <div class="modern-menu-grid">
+            ${pensionIncomes.map(income => {
+                const monthlyAmount = (income.monthly_amount || 0) / 10000;
+                const annualTotal = monthlyAmount * 12;
+                const periodText = `${income.start_year}年-${income.end_year}年`;
+                
+                return `
+                    <div class="modern-menu-card plan-card" style="position: relative; cursor: pointer; display: flex; align-items: center; min-height: 80px;" onclick="showIncomeDetails(${income.id})">
+                        <div class="plan-actions" style="position: absolute; top: 12px; right: 12px; display: flex; gap: 8px; z-index: 10;" onclick="event.stopPropagation();">
+                            <button onclick="copyIncome(${income.id})" class="plan-action-btn" title="コピー" style="background: #FF9800; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; border: none; cursor: pointer; min-width: 50px; height: 28px;">
+                                <i class="material-icons" style="font-size: 14px; margin-right: 2px;">content_copy</i>コピー
+                            </button>
+                            <button onclick="deletePensionIncome(${income.id})" class="plan-action-btn" title="削除" style="background: #f44336; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; border: none; cursor: pointer; min-width: 50px; height: 28px;">
+                                <i class="material-icons" style="font-size: 14px; margin-right: 2px;">delete</i>削除
+                            </button>
+                        </div>
+                        <div class="card-content" style="flex: 1; padding-right: 140px;">
+                            <h3 class="card-title" style="margin-bottom: 8px; font-size: 1.1em; font-weight: 600;">${income.name}</h3>
+                            <p class="card-description" style="margin-bottom: 0; line-height: 1.4; color: var(--color-text-secondary);">
+                                ${periodText}<br>
+                                月額 ${monthlyAmount.toFixed(1)}万円 | 年収 ${annualTotal.toFixed(1)}万円
+                                ${income.description ? `<br><span style="color: var(--color-text-secondary); font-size: 0.9em; font-style: italic;">${income.description}</span>` : ''}
+                            </p>
+                        </div>
+                        <div class="card-arrow" style="position: absolute; right: 12px; bottom: 12px; color: var(--color-text-secondary); pointer-events: none;">
+                            <i class="material-icons" style="font-size: 20px;">arrow_forward_ios</i>
+                        </div>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+    `;
+    
+    listContainer.innerHTML = html;
+}
+
+// 年金収入詳細表示（カードクリック時）
+function showIncomeDetails(incomeId) {
+    // 編集ページに遷移
+    window.location.href = `/incomes/pension/edit/${incomeId}`;
+}
+
+// 年金収入削除
+async function deletePensionIncome(incomeId) {
+    if (!confirm('この年金収入を削除しますか？')) return;
+    
+    try {
+        const response = await fetch(`/api/pension-incomes/${incomeId}`, {
+            method: 'DELETE'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('年金収入を削除しました', 'success');
+            loadPensionIncomes(); // 一覧を再読み込み
+        } else {
+            showToast('年金収入の削除に失敗しました', 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting pension income:', error);
+        showToast('年金収入の削除に失敗しました', 'error');
+    }
+}
+
+// フォーム表示
+function showAddPensionForm() {
+    document.getElementById('pension-form-container').classList.remove('hidden');
+    document.getElementById('pensionIncomeForm').reset();
+    document.querySelector('input[name="id"]').value = '';
+    document.querySelector('.submit-text').textContent = '年金収入を登録';
+}
+
+// フォーム非表示
+function hideAddPensionForm() {
+    document.getElementById('pension-form-container').classList.add('hidden');
+}
+
+// 年金収入編集
+async function editPensionIncome(id) {
+    try {
+        const data = await apiCall('/api/pension-incomes');
+        const income = data.find(item => item.id === id);
+        if (!income) return;
+        
+        // フォームに値を設定（万円表示に変換）
+        document.querySelector('input[name="id"]').value = income.id;
+        document.querySelector('input[name="name"]').value = income.name;
+        document.querySelector('input[name="description"]').value = income.description || '';
+        document.querySelector('input[name="monthly_amount"]').value = parseFloat((income.monthly_amount / 10000).toFixed(1));
+        document.querySelector('input[name="start_year"]').value = income.start_year;
+        document.querySelector('input[name="end_year"]').value = income.end_year;
+        
+        // 年額を計算
+        document.getElementById('annual_amount_display').value = formatCurrency(income.monthly_amount * 12);
+        
+        document.querySelector('.submit-text').textContent = '年金収入を更新';
+        showAddPensionForm();
+    } catch (error) {
+        console.error('Error loading pension income:', error);
+        showToast('年金収入データの読み込みに失敗しました', 'error');
+    }
+}
+
+// フォーム送信
+document.getElementById('pensionIncomeForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = Object.fromEntries(formData.entries());
+    
+    // 数値変換（万円を円に変換）
+    data.monthly_amount = parseFloat(data.monthly_amount) * 10000 || 0;
+    data.start_year = parseInt(data.start_year) || 2060;
+    data.end_year = parseInt(data.end_year) || 2080;
+    
+    const submitButton = this.querySelector('button[type="submit"]');
+    const submitText = submitButton.querySelector('.submit-text');
+    const loadingSpinner = submitButton.querySelector('.loading-spinner');
+    
+    try {
+        submitText.style.display = 'none';
+        loadingSpinner.classList.remove('hidden');
+        submitButton.disabled = true;
+        
+        const method = data.id ? 'PUT' : 'POST';
+        await apiCall('/api/pension-incomes', method, data);
+        
+        showToast(data.id ? '年金収入を更新しました' : '年金収入を登録しました', 'success');
+        hideAddPensionForm();
+        loadPensionIncomes();
+    } catch (error) {
+        console.error('Error saving pension income:', error);
+        showToast('年金収入の保存に失敗しました', 'error');
+    } finally {
+        submitText.style.display = 'inline';
+        loadingSpinner.classList.add('hidden');
+        submitButton.disabled = false;
+    }
+});
+
+// 年金収入コピー
+async function copyIncome(incomeId) {
+    try {
+        const response = await fetch(`/api/pension-incomes/${incomeId}/copy`, {
+            method: 'POST'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('年金収入をコピーしました', 'success');
+            loadPensionIncomes(); // 一覧を再読み込み
+        } else {
+            showToast('年金収入のコピーに失敗しました', 'error');
+        }
+    } catch (error) {
+        console.error('Error copying pension income:', error);
+        showToast('年金収入のコピーに失敗しました', 'error');
+    }
+}
+</script>
+{% endblock %} 

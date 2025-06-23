@@ -1,0 +1,1082 @@
+{% extends "base-new.html" %}
+
+{% block title %}口座管理{% endblock %}
+{% block page_title %}口座管理{% endblock %}
+
+{% block content %}
+<div class="account-management-container">
+    <!-- 口座一覧セクション -->
+    <div class="accounts-section">
+        <div class="section-header">
+            <h3><i class="material-icons">account_balance</i> 口座一覧</h3>
+        </div>
+        
+        <div class="accounts-grid" id="accounts-grid">
+            <div class="accounts-content" id="accounts-content">
+                <!-- 口座カードは JavaScript で動的に生成 -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- 収入源セクション -->
+    <div class="income-sources-section">
+        <div class="section-header">
+            <h3><i class="material-icons">trending_up</i> 収入源</h3>
+        </div>
+        
+        <div class="income-sources-grid">
+            <div class="income-sources-content">
+                <div class="income-source" data-income-type="salary">
+                    <div class="income-icon">
+                        <i class="material-icons">work</i>
+                    </div>
+                    <div class="income-info">
+                        <div class="income-name">給与所得</div>
+                        <div class="income-description">会社からの給与・賞与</div>
+                    </div>
+                </div>
+                
+                <div class="income-source" data-income-type="sidejob">
+                    <div class="income-icon">
+                        <i class="material-icons">laptop</i>
+                    </div>
+                    <div class="income-info">
+                        <div class="income-name">副業収入</div>
+                        <div class="income-description">フリーランス・副業</div>
+                    </div>
+                </div>
+                
+                <div class="income-source" data-income-type="investment">
+                    <div class="income-icon">
+                        <i class="material-icons">show_chart</i>
+                    </div>
+                    <div class="income-info">
+                        <div class="income-name">投資収益</div>
+                        <div class="income-description">株式・投資信託</div>
+                    </div>
+                </div>
+                
+                <div class="income-source" data-income-type="rental">
+                    <div class="income-icon">
+                        <i class="material-icons">home</i>
+                    </div>
+                    <div class="income-info">
+                        <div class="income-name">不動産収入</div>
+                        <div class="income-description">賃貸・家賃収入</div>
+                    </div>
+                </div>
+                
+                <div class="income-source" data-income-type="pension">
+                    <div class="income-icon">
+                        <i class="material-icons">elderly</i>
+                    </div>
+                    <div class="income-info">
+                        <div class="income-name">年金</div>
+                        <div class="income-description">国民・厚生年金</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 支出項目セクション -->
+    <div class="expense-categories-section">
+        <div class="section-header">
+            <h3><i class="material-icons">receipt_long</i> 支出項目</h3>
+        </div>
+        <div class="expense-categories-grid">
+            <div class="expense-categories-content">
+                {% for category in expense_categories %}
+                    <div class="expense-category-card">
+                        <div class="expense-category-icon" style="background-color: {{ category.color }}30; color: {{ category.color }};">
+                            <i class="material-icons">{{ category.icon }}</i>
+                        </div>
+                        <div class="expense-category-name">{{ category.name }}</div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 長押しドラッグ用の遠景要素 -->
+<div id="drag-preview" class="drag-preview">
+    <div class="drag-preview-content">
+        <div class="drag-preview-icon"></div>
+        <div class="drag-preview-amount"></div>
+    </div>
+</div>
+
+<!-- フローティングアクションボタン -->
+<div class="fab-container multiple-buttons" id="fabContainer">
+    <button class="fab-button add" onclick="showCreateAccountModal()" title="新規口座作成">
+        <i class="material-icons">add</i>
+    </button>
+    <button id="toolsFab" class="fab-button tools" title="ツール" style="display: none;">
+        <i class="material-icons">more_horiz</i>
+    </button>
+</div>
+
+<!-- ツールメニュー -->
+<div id="toolsMenu" class="tools-menu" style="display: none;">
+    <div class="tools-menu-content">
+        <button id="editToolBtn" class="tool-menu-item">
+            <i class="material-icons">edit</i>
+            <span>編集</span>
+        </button>
+        <button id="deleteToolBtn" class="tool-menu-item">
+            <i class="material-icons">delete</i>
+            <span>削除</span>
+        </button>
+    </div>
+</div>
+
+<!-- 口座選択モーダル -->
+<div id="accountSelectionModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="accountModalTitle">口座を選択してください</h3>
+            <button class="close-button" onclick="closeAccountSelectionModal()">
+                <i class="material-icons">close</i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div id="accountSelectionList">
+                <!-- 動的に生成 -->
+            </div>
+        </div>
+        <div class="modal-footer" style="padding: 16px; border-top: 1px solid #e0e0e0; display: flex; justify-content: flex-end; gap: 12px;">
+            <button class="btn btn-secondary" onclick="closeAccountSelectionModal()">キャンセル</button>
+            <button id="executeAccountActionBtn" class="btn btn-primary" style="display: none;">実行</button>
+        </div>
+    </div>
+</div>
+
+<!-- 口座作成モーダル -->
+<div id="create-account-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>新しい口座を作成</h3>
+            <button class="modal-close" onclick="hideCreateAccountModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label">口座名</label>
+                <input type="text" id="account-name" class="form-control" placeholder="例：メイン口座">
+            </div>
+            <div class="form-group">
+                <label class="form-label">口座種別</label>
+                <select id="account-type" class="form-control">
+                    <option value="普通預金">普通預金</option>
+                    <option value="定期預金">定期預金</option>
+                    <option value="現金">現金</option>
+                    <option value="クレジット">クレジットカード</option>
+                    <option value="投資">投資口座</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">初期残高</label>
+                <input type="number" id="account-balance" class="form-control" placeholder="0" min="0">
+            </div>
+            <div class="form-group">
+                <label class="form-label">アイコン</label>
+                <div class="icon-selector">
+                    <div class="icon-option selected" data-icon="account_balance">
+                        <i class="material-icons">account_balance</i>
+                    </div>
+                    <div class="icon-option" data-icon="account_balance_wallet">
+                        <i class="material-icons">account_balance_wallet</i>
+                    </div>
+                    <div class="icon-option" data-icon="credit_card">
+                        <i class="material-icons">credit_card</i>
+                    </div>
+                    <div class="icon-option" data-icon="savings">
+                        <i class="material-icons">savings</i>
+                    </div>
+                    <div class="icon-option" data-icon="trending_up">
+                        <i class="material-icons">trending_up</i>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">カラー</label>
+                <div class="color-selector">
+                    <div class="color-option selected" data-color="#2196F3"></div>
+                    <div class="color-option" data-color="#4CAF50"></div>
+                    <div class="color-option" data-color="#FF9800"></div>
+                    <div class="color-option" data-color="#9C27B0"></div>
+                    <div class="color-option" data-color="#F44336"></div>
+                    <div class="color-option" data-color="#607D8B"></div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="hideCreateAccountModal()">キャンセル</button>
+            <button type="button" class="btn btn-primary" onclick="createAccount()">作成</button>
+        </div>
+    </div>
+</div>
+
+<!-- 資産移動確認モーダル -->
+<div id="transfer-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>資産移動の確認</h3>
+            <button class="modal-close" onclick="hideTransferModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="transfer-info">
+                <div class="transfer-from">
+                    <div class="transfer-label">移動元</div>
+                    <div class="transfer-account" id="transfer-from-account">
+                        <!-- 動的に設定 -->
+                    </div>
+                </div>
+                <div class="transfer-arrow">
+                    <i class="material-icons">arrow_forward</i>
+                </div>
+                <div class="transfer-to">
+                    <div class="transfer-label">移動先</div>
+                    <div class="transfer-account" id="transfer-to-account">
+                        <!-- 動的に設定 -->
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">移動金額</label>
+                <input type="number" id="transfer-amount" class="form-control" placeholder="金額を入力" min="1">
+            </div>
+            <div class="form-group">
+                <label class="form-label">メモ（任意）</label>
+                <input type="text" id="transfer-memo" class="form-control" placeholder="移動理由など">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="hideTransferModal()">キャンセル</button>
+            <button type="button" class="btn btn-primary" onclick="executeTransfer()">移動実行</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let accounts = [];
+let currentTransfer = {};
+
+// 長押しドラッグ関連の変数
+let longPressTimer = null;
+let isDragging = false;
+let dragStartPos = { x: 0, y: 0 };
+let currentDragElement = null;
+let dragPreview = null;
+
+// ページ読み込み時
+document.addEventListener('DOMContentLoaded', function() {
+    loadAccounts();
+    setupLongPressDrag();
+    setupToolsMenu();
+});
+
+// 長押しドラッグの設定
+function setupLongPressDrag() {
+    const container = document.querySelector('.account-management-container');
+    dragPreview = document.getElementById('drag-preview');
+    
+    if (!container || !dragPreview) {
+        console.error('Required elements not found');
+        return;
+    }
+    
+    // タッチイベントの設定
+    container.addEventListener('touchstart', handleTouchStart, { passive: false });
+    container.addEventListener('touchmove', handleTouchMove, { passive: false });
+    container.addEventListener('touchend', handleTouchEnd, { passive: false });
+    
+    // マウスイベントの設定（デスクトップ対応）
+    container.addEventListener('mousedown', handleMouseDown, { passive: false });
+    container.addEventListener('mousemove', handleMouseMove, { passive: false });
+    container.addEventListener('mouseup', handleMouseUp, { passive: false });
+    
+    // グローバルイベント（ドラッグ中に画面外に出た場合の対応）
+    document.addEventListener('touchmove', function(e) {
+        if (isDragging) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+    
+    document.addEventListener('mousemove', function(e) {
+        if (isDragging) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+}
+
+// タッチ開始
+function handleTouchStart(e) {
+    const target = e.target.closest('.account-card, .income-source');
+    if (!target) return;
+    
+    e.preventDefault();
+    const touch = e.touches[0];
+    startLongPress(target, touch.clientX, touch.clientY);
+}
+
+// マウス押下
+function handleMouseDown(e) {
+    const target = e.target.closest('.account-card, .income-source');
+    if (!target) return;
+    
+    e.preventDefault();
+    startLongPress(target, e.clientX, e.clientY);
+}
+
+// 長押し開始
+function startLongPress(element, x, y) {
+    if (longPressTimer) {
+        clearTimeout(longPressTimer);
+    }
+    
+    currentDragElement = element;
+    dragStartPos = { x, y };
+    
+    // 長押しタイマー開始（500ms）
+    longPressTimer = setTimeout(() => {
+        startDrag(element, x, y);
+    }, 500);
+    
+    // 長押し中の視覚フィードバック
+    element.classList.add('long-press-active');
+}
+
+// 強力な振動フィードバック関数（Twitterライク）
+function triggerStrongVibration() {
+    console.log('=== VIBRATION TEST START ===');
+    console.log('User Agent:', navigator.userAgent);
+    console.log('Vibrate support:', !!navigator.vibrate);
+    
+    // Android/Chrome用の強力な振動パターン
+    if (navigator.vibrate) {
+        // Twitterライクの強力な振動パターン：長い-短い-長い-短い-長い
+        const result = navigator.vibrate([200, 100, 300, 100, 200]);
+        console.log('Strong vibration pattern triggered, result:', result);
+        
+        // 追加の振動パターンで確実に感じられるように
+        setTimeout(() => {
+            if (navigator.vibrate) {
+                const result2 = navigator.vibrate([150]);
+                console.log('Additional vibration triggered, result:', result2);
+            }
+        }, 800);
+    } else {
+        console.log('navigator.vibrate not supported');
+    }
+    
+    // iOS Safari用のHaptic Feedback（iOS 13+）
+    if (window.DeviceMotionEvent && navigator.userAgent.match(/iPhone|iPad|iPod/)) {
+        console.log('iOS device detected, trying audio feedback');
+        try {
+            // Web Audio APIを使用した強力な音響フィードバック
+            if (window.AudioContext || window.webkitAudioContext) {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                console.log('AudioContext created');
+                
+                // より強力で長い音響フィードバック
+                const frequencies = [300, 500, 700, 900];
+                frequencies.forEach((freq, index) => {
+                    setTimeout(() => {
+                        const oscillator = audioContext.createOscillator();
+                        const gainNode = audioContext.createGain();
+                        
+                        oscillator.connect(gainNode);
+                        gainNode.connect(audioContext.destination);
+                        
+                        oscillator.frequency.value = freq;
+                        gainNode.gain.value = 0.08; // 音量を上げる
+                        
+                        oscillator.start();
+                        oscillator.stop(audioContext.currentTime + 0.12); // より長く
+                        console.log('Audio feedback triggered at frequency:', freq);
+                    }, index * 80);
+                });
+            }
+        } catch (e) {
+            console.log('iOS Haptic feedback not available:', e);
+        }
+    }
+    
+    // 代替案：古いデバイス用の連続振動
+    if (!navigator.vibrate && window.navigator && window.navigator.vibrate) {
+        console.log('Trying alternative vibration method');
+        window.navigator.vibrate([200, 100, 300, 100, 200]);
+    }
+    
+    // 追加の振動チェック（最大互換性のため）
+    try {
+        // 異なるAPIでも試行
+        if (window.navigator && typeof window.navigator.vibrate === 'function') {
+            console.log('Trying window.navigator.vibrate');
+            window.navigator.vibrate([250, 100, 350, 100, 250]);
+        }
+        
+        // Cordova/PhoneGap環境
+        if (window.navigator && window.navigator.notification && window.navigator.notification.vibrate) {
+            console.log('Trying Cordova vibration');
+            window.navigator.notification.vibrate(500);
+        }
+        
+        // 古いAndroid環境
+        if (window.navigator && window.navigator.vibrate && typeof window.navigator.vibrate === 'function') {
+            console.log('Trying old Android vibration');
+            window.navigator.vibrate(300);
+        }
+    } catch (e) {
+        console.log('Alternative vibration methods failed:', e);
+    }
+    
+    console.log('=== VIBRATION TEST END ===');
+}
+
+// ドラッグ開始
+function startDrag(element, x, y) {
+    console.log('Starting drag for element:', element);
+    
+    currentDragElement = element;
+    isDragging = true;
+    element.classList.remove('long-press-active');
+    element.classList.add('dragging');
+    
+    // 遠景プレビューを作成
+    createDragPreview(element, x, y);
+    
+    // 強力な振動フィードバック（Twitterライク）
+    triggerStrongVibration();
+}
+
+// 遠景プレビュー作成
+function createDragPreview(element, x, y) {
+    console.log('Creating drag preview at:', x, y);
+    
+    // プレビューの内容を設定
+    const icon = element.querySelector('.account-icon i, .income-icon i');
+    const name = element.querySelector('.account-info h4, .income-name');
+    const balance = element.querySelector('.account-balance');
+    
+    const previewIcon = dragPreview.querySelector('.drag-preview-icon');
+    const previewAmount = dragPreview.querySelector('.drag-preview-amount');
+    
+    if (icon && previewIcon) {
+        previewIcon.innerHTML = `<i class="material-icons">${icon.textContent}</i>`;
+    }
+    
+    if (balance && previewAmount) {
+        previewAmount.textContent = balance.textContent;
+    } else if (name && previewAmount) {
+        previewAmount.textContent = name.textContent;
+    }
+    
+    // プレビューの位置を設定（30pxサイズ、中心からオフセット）
+    dragPreview.style.left = (x - 15) + 'px';
+    dragPreview.style.top = (y - 15) + 'px';
+    dragPreview.style.display = 'block';
+    dragPreview.classList.add('active');
+    
+    console.log('Drag preview created and positioned');
+}
+
+// タッチ移動
+function handleTouchMove(e) {
+    if (longPressTimer && !isDragging) {
+        // 長押し中に移動した場合、長押しをキャンセル
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+        if (currentDragElement) {
+            currentDragElement.classList.remove('long-press-active');
+        }
+        return;
+    }
+    
+    if (!isDragging) return;
+    
+    e.preventDefault();
+    const touch = e.touches[0];
+    updateDragPreview(touch.clientX, touch.clientY);
+    checkDropTarget(touch.clientX, touch.clientY);
+}
+
+// マウス移動
+function handleMouseMove(e) {
+    if (longPressTimer && !isDragging) {
+        // 長押し中に移動した場合、長押しをキャンセル
+        const moveDistance = Math.sqrt(
+            Math.pow(e.clientX - dragStartPos.x, 2) + 
+            Math.pow(e.clientY - dragStartPos.y, 2)
+        );
+        
+        if (moveDistance > 10) { // 10px以上移動したらキャンセル
+            clearTimeout(longPressTimer);
+            longPressTimer = null;
+            if (currentDragElement) {
+                currentDragElement.classList.remove('long-press-active');
+            }
+        }
+        return;
+    }
+    
+    if (!isDragging) return;
+    
+    e.preventDefault();
+    updateDragPreview(e.clientX, e.clientY);
+    checkDropTarget(e.clientX, e.clientY);
+}
+
+// プレビュー位置更新
+function updateDragPreview(x, y) {
+    if (dragPreview) {
+        dragPreview.style.left = (x - 15) + 'px';
+        dragPreview.style.top = (y - 15) + 'px';
+    }
+}
+
+// ドロップターゲット確認
+function checkDropTarget(x, y) {
+    // 現在の要素を一時的に非表示にして、下の要素を取得
+    dragPreview.style.display = 'none';
+    const elementBelow = document.elementFromPoint(x, y);
+    dragPreview.style.display = 'block';
+    
+    // すべてのドロップターゲットをリセット
+    document.querySelectorAll('.drop-target').forEach(el => {
+        el.classList.remove('drop-target');
+    });
+    
+    // 新しいドロップターゲットを設定
+    const dropTarget = elementBelow?.closest('.account-card');
+    if (dropTarget && dropTarget !== currentDragElement) {
+        dropTarget.classList.add('drop-target');
+    }
+}
+
+// タッチ終了
+function handleTouchEnd(e) {
+    if (longPressTimer) {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+    }
+    
+    if (isDragging) {
+        const touch = e.changedTouches[0];
+        endDrag(touch.clientX, touch.clientY);
+    } else {
+        // 通常のタップ処理
+        if (currentDragElement) {
+            currentDragElement.classList.remove('long-press-active');
+        }
+    }
+    
+    resetDragState();
+}
+
+// マウス終了
+function handleMouseUp(e) {
+    if (longPressTimer) {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+    }
+    
+    if (isDragging) {
+        endDrag(e.clientX, e.clientY);
+    } else {
+        if (currentDragElement) {
+            currentDragElement.classList.remove('long-press-active');
+        }
+    }
+    
+    resetDragState();
+}
+
+// ドラッグ終了
+function endDrag(x, y) {
+    console.log('Ending drag at:', x, y);
+    
+    // ドロップターゲットを確認
+    dragPreview.style.display = 'none';
+    const elementBelow = document.elementFromPoint(x, y);
+    const dropTarget = elementBelow?.closest('.account-card');
+    
+    if (dropTarget && dropTarget !== currentDragElement) {
+        // 資産移動処理
+        console.log('Drop target found:', dropTarget);
+        initiateTransfer(currentDragElement, dropTarget);
+    }
+    
+    // 視覚効果をリセット
+    dragPreview.style.display = 'block';
+    setTimeout(() => {
+        dragPreview.classList.remove('active');
+        setTimeout(() => {
+            dragPreview.style.display = 'none';
+        }, 200);
+    }, 100);
+}
+
+// ドラッグ状態リセット
+function resetDragState() {
+    if (currentDragElement) {
+        currentDragElement.classList.remove('long-press-active', 'dragging');
+    }
+    
+    document.querySelectorAll('.drop-target').forEach(el => {
+        el.classList.remove('drop-target');
+    });
+    
+    isDragging = false;
+    currentDragElement = null;
+    dragStartPos = { x: 0, y: 0 };
+}
+
+// 資産移動開始
+function initiateTransfer(fromElement, toElement) {
+    const fromData = getElementData(fromElement);
+    const toData = getElementData(toElement);
+    
+    if (!fromData || !toData) return;
+    
+    currentTransfer = {
+        from: fromData,
+        to: toData
+    };
+    
+    showTransferModal(fromData, toData);
+}
+
+// 要素データ取得
+function getElementData(element) {
+    if (element.classList.contains('account-card')) {
+        const accountId = element.dataset.accountId;
+        return accounts.find(acc => acc.id == accountId);
+    } else if (element.classList.contains('income-source')) {
+        return {
+            type: 'income',
+            income_type: element.dataset.incomeType,
+            name: element.querySelector('.income-name').textContent,
+            icon: element.querySelector('.income-icon i').textContent
+        };
+    }
+    return null;
+}
+
+// 既存の関数（口座管理関連）
+function loadAccounts() {
+    fetch('/api/accounts')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                accounts = data.accounts || [];
+                renderAccounts();
+            } else {
+                throw new Error(data.error || '口座データの取得に失敗しました');
+            }
+        })
+        .catch(error => {
+            console.error('口座データの読み込みに失敗しました:', error);
+            showToast('口座データの読み込みに失敗しました: ' + error.message, 'error');
+            // 空の配列で初期化
+            accounts = [];
+            renderAccounts();
+        });
+}
+
+function renderAccounts() {
+    const content = document.getElementById('accounts-content');
+    content.innerHTML = '';
+    
+    accounts.forEach(account => {
+        const accountCard = createAccountCard(account);
+        content.appendChild(accountCard);
+    });
+    
+    // ツールボタンの表示を更新
+    const toolsFab = document.getElementById('toolsFab');
+    if (toolsFab) {
+        toolsFab.style.display = accounts.length > 0 ? 'block' : 'none';
+    }
+}
+
+function createAccountCard(account) {
+    const card = document.createElement('div');
+    card.className = 'account-card';
+    card.dataset.accountId = account.id;
+    
+    card.innerHTML = `
+        <div class="account-header">
+            <div class="account-icon" style="background-color: ${account.color}">
+                <i class="material-icons">${account.icon}</i>
+            </div>
+            <div class="account-info">
+                <h4>${account.name}</h4>
+                <div class="account-type">${account.account_type}</div>
+            </div>
+        </div>
+        <div class="account-balance">¥${account.balance.toLocaleString()}</div>
+    `;
+    
+    return card;
+}
+
+// モーダル関連の既存関数
+function showCreateAccountModal() {
+    document.getElementById('create-account-modal').style.display = 'block';
+}
+
+function hideCreateAccountModal() {
+    document.getElementById('create-account-modal').style.display = 'none';
+    resetCreateAccountForm();
+}
+
+function showTransferModal(fromData, toData) {
+    // 移動元と移動先の情報を表示
+    const fromAccount = document.getElementById('transfer-from-account');
+    const toAccount = document.getElementById('transfer-to-account');
+    
+    if (fromData.type === 'income') {
+        fromAccount.innerHTML = `
+            <div class="account-icon" style="background-color: #4CAF50">
+                <i class="material-icons">${fromData.icon}</i>
+            </div>
+            <div class="account-info">
+                <div class="account-name">${fromData.name}</div>
+                <div class="account-balance">収入源</div>
+            </div>
+        `;
+    } else {
+        fromAccount.innerHTML = `
+            <div class="account-icon" style="background-color: ${fromData.color}">
+                <i class="material-icons">${fromData.icon}</i>
+            </div>
+            <div class="account-info">
+                <div class="account-name">${fromData.name}</div>
+                <div class="account-balance">¥${fromData.balance.toLocaleString()}</div>
+            </div>
+        `;
+    }
+    
+    toAccount.innerHTML = `
+        <div class="account-icon" style="background-color: ${toData.color}">
+            <i class="material-icons">${toData.icon}</i>
+        </div>
+        <div class="account-info">
+            <div class="account-name">${toData.name}</div>
+            <div class="account-balance">¥${toData.balance.toLocaleString()}</div>
+        </div>
+    `;
+    
+    document.getElementById('transfer-modal').style.display = 'block';
+}
+
+function hideTransferModal() {
+    document.getElementById('transfer-modal').style.display = 'none';
+    document.getElementById('transfer-amount').value = '';
+    document.getElementById('transfer-memo').value = '';
+}
+
+// その他の既存関数（簡略化）
+function createAccount() {
+    const name = document.getElementById('account-name').value;
+    const type = document.getElementById('account-type').value;
+    const balance = parseFloat(document.getElementById('account-balance').value) || 0;
+    const icon = document.querySelector('.icon-option.selected').dataset.icon;
+    const color = document.querySelector('.color-option.selected').dataset.color;
+    
+    if (!name.trim()) {
+        showToast('口座名を入力してください', 'error');
+        return;
+    }
+    
+    const accountData = {
+        name: name,
+        account_type: type,
+        balance: balance,
+        icon: icon,
+        color: color
+    };
+    
+    fetch('/api/accounts', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(accountData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('口座が作成されました', 'success');
+            hideCreateAccountModal();
+            loadAccounts();
+        } else {
+            showToast('口座の作成に失敗しました', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('口座の作成に失敗しました', 'error');
+    });
+}
+
+function executeTransfer() {
+    const amount = parseFloat(document.getElementById('transfer-amount').value);
+    const memo = document.getElementById('transfer-memo').value;
+    
+    if (!amount || amount <= 0) {
+        showToast('正しい金額を入力してください', 'error');
+        return;
+    }
+    
+    const transferData = {
+        from_account_id: currentTransfer.from.type === 'income' ? null : currentTransfer.from.id,
+        to_account_id: currentTransfer.to.id,
+        amount: amount,
+        description: memo || `${currentTransfer.from.name}から${currentTransfer.to.name}への移動`,
+        income_type: currentTransfer.from.type === 'income' ? currentTransfer.from.income_type : null
+    };
+    
+    fetch('/api/account-transfer', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(transferData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('資産移動が完了しました', 'success');
+            hideTransferModal();
+            loadAccounts();
+        } else {
+            showToast('資産移動に失敗しました', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('資産移動に失敗しました', 'error');
+    });
+}
+
+// ユーティリティ関数
+function resetCreateAccountForm() {
+    document.getElementById('account-name').value = '';
+    document.getElementById('account-type').value = '普通預金';
+    document.getElementById('account-balance').value = '';
+    document.querySelector('.icon-option.selected').classList.remove('selected');
+    document.querySelector('.icon-option[data-icon="account_balance"]').classList.add('selected');
+    document.querySelector('.color-option.selected').classList.remove('selected');
+    document.querySelector('.color-option[data-color="#2196F3"]').classList.add('selected');
+}
+
+// アイコン・カラー選択
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.icon-option')) {
+        document.querySelectorAll('.icon-option').forEach(opt => opt.classList.remove('selected'));
+        e.target.closest('.icon-option').classList.add('selected');
+    }
+    
+    if (e.target.closest('.color-option')) {
+        document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
+        e.target.closest('.color-option').classList.add('selected');
+    }
+});
+
+function showToast(message, type = 'info') {
+    // トースト通知の実装（既存のcommon.jsの関数を使用）
+    if (typeof window.showToast === 'function') {
+        window.showToast(message, type);
+    } else {
+        alert(message);
+    }
+}
+
+function editAccount(accountId) {
+    // 編集機能の実装（必要に応じて）
+    console.log('Edit account:', accountId);
+}
+
+function deleteAccount(accountId) {
+    if (confirm('この口座を削除しますか？')) {
+        fetch(`/api/accounts/${accountId}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('口座が削除されました', 'success');
+                loadAccounts();
+            } else {
+                showToast('口座の削除に失敗しました', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('口座の削除に失敗しました', 'error');
+        });
+    }
+}
+
+// ツールメニューの設定
+function setupToolsMenu() {
+    const toolsFab = document.getElementById('toolsFab');
+    const toolsMenu = document.getElementById('toolsMenu');
+    const editToolBtn = document.getElementById('editToolBtn');
+    const deleteToolBtn = document.getElementById('deleteToolBtn');
+    
+    // 口座がある場合のみツールボタンを表示
+    if (accounts.length > 0) {
+        toolsFab.style.display = 'block';
+    }
+    
+    // ツールボタンクリック
+    toolsFab.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const isVisible = toolsMenu.style.display !== 'none';
+        toolsMenu.style.display = isVisible ? 'none' : 'block';
+        
+        if (!isVisible) {
+            // メニューの位置を調整
+            const fabRect = toolsFab.getBoundingClientRect();
+            toolsMenu.style.bottom = (window.innerHeight - fabRect.top + 10) + 'px';
+            toolsMenu.style.right = (window.innerWidth - fabRect.right) + 'px';
+        }
+    });
+    
+    // 編集ボタンクリック
+    editToolBtn.addEventListener('click', function() {
+        currentAction = 'edit';
+        toolsMenu.style.display = 'none';
+        showAccountSelectionModal('編集する口座を選択してください');
+    });
+    
+    // 削除ボタンクリック
+    deleteToolBtn.addEventListener('click', function() {
+        currentAction = 'delete';
+        toolsMenu.style.display = 'none';
+        showAccountSelectionModal('削除する口座を選択してください');
+    });
+    
+    // 外部クリックでメニューを閉じる
+    document.addEventListener('click', function() {
+        toolsMenu.style.display = 'none';
+    });
+    
+    toolsMenu.addEventListener('click', function(e) {
+        e.stopPropagation();
+    });
+}
+
+// 口座選択モーダルを表示
+function showAccountSelectionModal(title) {
+    if (accounts.length === 0) {
+        showToast('選択できる口座がありません', 'warning');
+        return;
+    }
+    
+    const modal = document.getElementById('accountSelectionModal');
+    const modalTitle = document.getElementById('accountModalTitle');
+    const accountList = document.getElementById('accountSelectionList');
+    const executeBtn = document.getElementById('executeAccountActionBtn');
+    
+    modalTitle.textContent = title;
+    selectedItems = [];
+    
+    // 口座リストを生成
+    let html = '<div class="account-selection-list">';
+    accounts.forEach(account => {
+        html += `
+            <label class="account-selection-item">
+                <input type="checkbox" value="${account.id}" onchange="updateSelectedAccounts()">
+                <div class="selection-item-content">
+                    <div class="selection-item-title">${account.name}</div>
+                    <div class="selection-item-details">
+                        ${account.account_type} | 残高 ¥${account.balance.toLocaleString()}
+                    </div>
+                </div>
+            </label>
+        `;
+    });
+    html += '</div>';
+    
+    accountList.innerHTML = html;
+    executeBtn.style.display = 'none';
+    executeBtn.textContent = currentAction === 'edit' ? '編集' : '削除';
+    executeBtn.onclick = executeSelectedAccountAction;
+    
+    modal.classList.add('show');
+}
+
+// 選択口座の更新
+function updateSelectedAccounts() {
+    const checkboxes = document.querySelectorAll('#accountSelectionList input[type="checkbox"]:checked');
+    selectedItems = Array.from(checkboxes).map(cb => parseInt(cb.value));
+    
+    const executeBtn = document.getElementById('executeAccountActionBtn');
+    executeBtn.style.display = selectedItems.length > 0 ? 'block' : 'none';
+}
+
+// 選択した口座アクションを実行
+async function executeSelectedAccountAction() {
+    if (selectedItems.length === 0) return;
+    
+    const actionText = currentAction === 'edit' ? '編集' : '削除';
+    const confirmMessage = `選択した${selectedItems.length}件の口座を${actionText}しますか？`;
+    
+    if (!confirm(confirmMessage)) return;
+    
+    try {
+        let successCount = 0;
+        
+        for (const id of selectedItems) {
+            let success = false;
+            
+            if (currentAction === 'edit') {
+                // 編集機能（現在は未実装）
+                console.log('Edit account:', id);
+                success = true;
+            } else if (currentAction === 'delete') {
+                const response = await fetch(`/api/accounts/${id}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                success = result.success;
+            }
+            
+            if (success) successCount++;
+        }
+        
+        if (successCount > 0) {
+            showToast(`${successCount}件の口座を${actionText}しました`, 'success');
+            loadAccounts(); // 一覧を再読み込み
+        }
+        
+        if (successCount < selectedItems.length) {
+            showToast(`${selectedItems.length - successCount}件の${actionText}に失敗しました`, 'error');
+        }
+        
+        closeAccountSelectionModal();
+        
+    } catch (error) {
+        console.error('Error:', error);
+        showToast(`${actionText}の実行中にエラーが発生しました`, 'error');
+    }
+}
+
+// 口座選択モーダルを閉じる
+function closeAccountSelectionModal() {
+    const modal = document.getElementById('accountSelectionModal');
+    modal.classList.remove('show');
+    selectedItems = [];
+}
+</script>
+{% endblock %} 

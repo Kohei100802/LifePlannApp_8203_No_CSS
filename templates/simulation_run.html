@@ -1,0 +1,946 @@
+{% extends "base-new.html" %}
+
+{% block title %}シミュレーション実行{% endblock %}
+{% block page_title %}シミュレーション実行{% endblock %}
+{% block main_class %}has-modern-tab-navigation{% endblock %}
+
+{% block head %}
+<script src="{{ url_for('static', filename='js/chart.min.js') }}"></script>
+{% endblock %}
+
+{% block tab_navigation %}
+<!-- シミュレーション結果タブナビゲーション -->
+<div class="modern-tab-navigation">
+    <div class="modern-tab-item active" style="cursor: default;">
+        <div class="tab-icon-wrapper">
+            <i class="material-icons">analytics</i>
+        </div>
+        <div class="tab-content-wrapper">
+            <span class="tab-title">シミュレーション結果</span>
+            <span class="tab-description" id="simulationSummary">ライフプランの将来予測結果</span>
+        </div>
+        <div class="tab-indicator"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- シミュレーション結果 -->
+<div id="simulationResults" class="modern-tabs-container">
+    <div class="modern-tab-content active">
+        <div class="content-section">
+            <!-- 概要統計 -->
+            <div class="modern-menu-grid" style="margin-bottom: var(--spacing-lg);">
+                <div class="modern-menu-card" style="cursor: default;">
+                    <div class="card-icon incomes-icon">
+                        <i class="material-icons">trending_up</i>
+                    </div>
+                    <div class="card-content">
+                        <h3 class="card-title" id="totalIncomeSum">-</h3>
+                        <p class="card-description">総収入合計</p>
+                    </div>
+                </div>
+                
+                <div class="modern-menu-card" style="cursor: default;">
+                    <div class="card-icon expenses-icon">
+                        <i class="material-icons">trending_down</i>
+                    </div>
+                    <div class="card-content">
+                        <h3 class="card-title" id="totalExpenseSum">-</h3>
+                        <p class="card-description">総支出合計</p>
+                    </div>
+                </div>
+                
+                <div class="modern-menu-card" style="cursor: default;">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #2196F3, #1976D2); color: white;">
+                        <i class="material-icons">account_balance</i>
+                    </div>
+                    <div class="card-content">
+                        <h3 class="card-title" id="totalBalance">-</h3>
+                        <p class="card-description">累積収支</p>
+                    </div>
+                </div>
+                
+                <div class="modern-menu-card" style="cursor: default;">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #9C27B0, #7B1FA2); color: white;">
+                        <i class="material-icons">bar_chart</i>
+                    </div>
+                    <div class="card-content">
+                        <h3 class="card-title" id="averageBalance">-</h3>
+                        <p class="card-description">年平均収支</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 収支推移グラフ -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">収支・収入・支出推移グラフ</h3>
+            <button class="chart-expand-btn" onclick="openChartExpandModal()" title="グラフを拡大表示">
+                <i class="material-icons">fullscreen</i>
+            </button>
+        </div>
+        <div class="card-body" style="padding-bottom: 8px;">
+            <div style="position: relative; margin-bottom: 0;" class="chart-container">
+                <canvas id="balanceChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 年次データテーブル -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">年次収支データ</h3>
+        </div>
+        <div class="card-body">
+            <div class="table-container">
+                <table class="table" id="simulationTable">
+                    <thead>
+                        <tr>
+                            <th>年</th>
+                            <th>年齢</th>
+                            <th>年間収入</th>
+                            <th>年間支出</th>
+                            <th>年間収支</th>
+                            <th>累積収支</th>
+                        </tr>
+                    </thead>
+                    <tbody id="simulationTableBody">
+                        <!-- 動的に生成 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- アクションボタン -->
+    <div class="form-actions" style="margin-top: var(--spacing-lg); display: flex; gap: var(--spacing-sm); flex-wrap: wrap;">
+        <button type="button" class="btn btn-primary" id="editPlanBtn" onclick="editSimulationPlan()" style="display: flex; align-items: center; gap: 8px;">
+            <i class="material-icons" style="font-size: 18px;">edit</i>
+            プランを編集
+        </button>
+        <button type="button" class="btn btn-secondary" onclick="window.location.href='/simulation'">シミュレーション一覧に戻る</button>
+    </div>
+</div>
+
+<!-- ローディング表示 -->
+<div id="loadingMessage" class="modern-tabs-container">
+    <div class="modern-tab-content active">
+        <div class="content-section" style="text-align: center; padding: 3rem;">
+            <div class="spinner" style="margin: 0 auto 1rem;"></div>
+            <p>シミュレーションを実行中です。しばらくお待ちください。</p>
+        </div>
+    </div>
+</div>
+
+<!-- グラフ拡大モーダル -->
+<div id="chartExpandModal" class="chart-expand-overlay">
+    <div class="chart-expand-container">
+        <div class="chart-expand-header">
+            <h3 class="chart-expand-title">収支・収入・支出推移グラフ</h3>
+            <button class="chart-expand-close" onclick="closeChartExpandModal()">
+                <i class="material-icons">close</i>
+            </button>
+        </div>
+        <div class="chart-expand-content">
+            <canvas id="balanceChartExpanded"></canvas>
+        </div>
+        <div class="chart-expand-rotate-hint">
+            <i class="material-icons">screen_rotation</i>
+            <span>画面を回転させるとより大きく表示されます</span>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let balanceChart = null;
+let balanceChartExpanded = null;
+let currentPlanId = null;
+let chartData = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Chart.js 読み込み確認
+    console.log('Chart.js 読み込み状況:', typeof Chart !== 'undefined' ? 'OK' : 'NG');
+    
+    // URLからプランIDを取得
+    const pathParts = window.location.pathname.split('/');
+    currentPlanId = pathParts[pathParts.length - 1];
+    
+    // シミュレーション実行
+    runSimulation(currentPlanId);
+    
+    // 画面回転の検出
+    window.addEventListener('orientationchange', function() {
+        setTimeout(() => {
+            if (document.getElementById('chartExpandModal').classList.contains('active')) {
+                updateExpandedChart();
+            }
+        }, 100);
+    });
+    
+    // ESCキーでモーダルを閉じる
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeChartExpandModal();
+        }
+    });
+});
+
+// プラン編集画面に移動
+function editSimulationPlan() {
+    if (currentPlanId) {
+        window.location.href = `/simulation/edit/${currentPlanId}`;
+    } else {
+        showToast('プランIDが取得できません', 'error');
+    }
+}
+
+// タブナビゲーションの更新
+function updateTabNavigation(title, description) {
+    const tabTitle = document.querySelector('.modern-tab-navigation .tab-title');
+    const tabDescription = document.querySelector('.modern-tab-navigation .tab-description');
+    
+    if (tabTitle) {
+        tabTitle.textContent = title;
+    }
+    if (tabDescription) {
+        tabDescription.textContent = description;
+    }
+}
+
+// シミュレーション実行
+async function runSimulation(planId) {
+    try {
+        // ローディング表示
+        document.getElementById('loadingMessage').style.display = 'block';
+        document.getElementById('simulationResults').style.display = 'none';
+        
+        // タブナビゲーションをローディング状態に更新
+        updateTabNavigation('シミュレーション実行中', '計算処理を実行しています...');
+        
+        const plan = await apiCall(`/api/simulation-plans/${planId}`);
+        
+        const simulationData = {
+            base_age: plan.base_age,
+            start_year: plan.start_year,
+            end_year: plan.end_year,
+            selected_expenses: plan.selected_expenses,
+            selected_incomes: plan.selected_incomes
+        };
+        
+        const results = await apiCall('/api/simulate', {
+            method: 'POST',
+            body: JSON.stringify(simulationData)
+        });
+        
+        // ローディング非表示
+        document.getElementById('loadingMessage').style.display = 'none';
+        document.getElementById('simulationResults').style.display = 'block';
+        
+        displaySimulationResults(results, simulationData, plan.name);
+    } catch (error) {
+        console.error('Simulation error:', error);
+        document.getElementById('loadingMessage').style.display = 'none';
+        showToast('シミュレーションの実行に失敗しました', 'error');
+        // エラー時は一覧ページに戻る
+        setTimeout(() => {
+            window.location.href = '/simulation';
+        }, 2000);
+    }
+}
+
+// シミュレーション結果表示
+function displaySimulationResults(response, simulationData, planName) {
+    if (!response || !response.simulation_data || response.simulation_data.length === 0) {
+        showToast('シミュレーション結果が取得できませんでした', 'error');
+        return;
+    }
+    
+    const results = response.simulation_data;
+    const summary = response.summary;
+    
+    // サマリー表示とタブナビゲーション更新
+    const summaryText = `プラン「${planName}」- ${simulationData.start_year}年〜${simulationData.end_year}年（${summary.total_years}年間）のシミュレーション結果`;
+    document.getElementById('simulationSummary').textContent = summaryText;
+    
+    // タブナビゲーションを結果表示状態に更新
+    updateTabNavigation('シミュレーション結果', `ライフプランの将来予測結果`);
+    
+    document.getElementById('totalIncomeSum').textContent = formatCurrency(summary.total_income);
+    document.getElementById('totalExpenseSum').textContent = formatCurrency(summary.total_expenses);
+    document.getElementById('totalBalance').textContent = formatCurrency(summary.final_cumulative_balance);
+    document.getElementById('averageBalance').textContent = formatCurrency(summary.avg_annual_balance);
+    
+    // 累積収支の色設定
+    const balanceElement = document.getElementById('totalBalance');
+    if (summary.final_cumulative_balance >= 0) {
+        balanceElement.className = 'card-title text-success';
+    } else {
+        balanceElement.className = 'card-title text-danger';
+    }
+    
+    // テーブル生成
+    const tableBody = document.getElementById('simulationTableBody');
+    
+    tableBody.innerHTML = results.map(row => {
+        const balanceClass = row.balance >= 0 ? 'text-success' : 'text-danger';
+        const cumulativeClass = row.cumulative_balance >= 0 ? 'text-success' : 'text-danger';
+        
+        return `
+            <tr>
+                <td>${row.year}</td>
+                <td>${row.age}歳</td>
+                <td>${formatCurrency(row.total_income)}</td>
+                <td>${formatCurrency(row.total_expenses)}</td>
+                <td class="${balanceClass}">${formatCurrency(row.balance)}</td>
+                <td class="${cumulativeClass}">${formatCurrency(row.cumulative_balance)}</td>
+            </tr>
+        `;
+    }).join('');
+    
+    // グラフ描画
+    createBalanceChart(results);
+    
+    // モーダル用にデータを保存
+    chartData = results;
+    
+    showToast('シミュレーションが完了しました', 'success');
+}
+
+// グラフの作成
+function createBalanceChart(data) {
+    if (typeof Chart === 'undefined') {
+        console.error('Chart.js が読み込まれていません');
+        // Chart.jsの代替表示
+        const canvas = document.getElementById('balanceChart');
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#f0f0f0';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#666';
+            ctx.font = '16px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('グラフライブラリが読み込まれていません', canvas.width/2, canvas.height/2);
+        }
+        return;
+    }
+    
+    const canvas = document.getElementById('balanceChart');
+    if (!canvas) {
+        console.error('canvas要素が見つからない');
+        return;
+    }
+    
+    if (!data || !Array.isArray(data) || data.length === 0) {
+        console.error('グラフデータが空または無効', data);
+        return;
+    }
+    
+    try {
+        // 既存のグラフインスタンスがあれば削除
+        if (balanceChart) {
+            balanceChart.destroy();
+        }
+        
+        // データを準備
+        const years = data.map(item => item.year);
+        const cumulativeBalances = data.map(item => item.cumulative_balance);
+        const yearlyBalances = data.map(item => item.balance);
+        const yearlyIncomes = data.map(item => item.total_income);
+        const yearlyExpenses = data.map(item => item.total_expenses);
+        
+        // Chart.jsでグラフを作成
+        const ctx = canvas.getContext('2d');
+        
+        // モバイル判定
+        const isMobile = window.innerWidth <= 768;
+        
+        // カスタムプラグイン：Y軸の上に項目名を表示
+        const yAxisLabelsPlugin = {
+            id: 'yAxisLabels',
+            afterDraw: function(chart) {
+                const ctx = chart.ctx;
+                const chartArea = chart.chartArea;
+                
+                // フォント設定
+                ctx.save();
+                ctx.font = `${isMobile ? '10px' : '12px'} -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+                ctx.fillStyle = '#6B7280';
+                ctx.textAlign = 'center';
+                
+                // Y軸の値から位置を計算
+                const leftScale = chart.scales.y;
+                const rightScale = chart.scales.y1;
+                
+                // 左Y軸のラベル（収支）- 1500万円付近の上に配置
+                const leftTargetValue = 15000000; // 1500万円
+                const leftPixelY = leftScale.getPixelForValue(leftTargetValue);
+                
+                // 左Y軸の中央位置を取得
+                const leftX = leftScale.left + (isMobile ? 15 : 20);
+                
+                // Y座標は目標値の少し上、ただしチャートエリア内に収める
+                let leftY = leftPixelY - (isMobile ? 15 : 20);
+                if (leftY < chartArea.top + (isMobile ? 10 : 15)) {
+                    leftY = chartArea.top + (isMobile ? 10 : 15);
+                }
+                
+                ctx.fillText('収支', leftX, leftY);
+                
+                // 右Y軸のラベル（収入/支出）- 2億円付近の上に配置
+                const rightTargetValue = 200000000; // 2億円
+                const rightPixelY = rightScale.getPixelForValue(rightTargetValue);
+                
+                // 右Y軸の位置を取得
+                const rightX = chartArea.right - (isMobile ? 15 : 20);
+                
+                // Y座標は目標値の少し上、ただしチャートエリア内に収める
+                let rightY = rightPixelY - (isMobile ? 15 : 20);
+                if (rightY < chartArea.top + (isMobile ? 10 : 15)) {
+                    rightY = chartArea.top + (isMobile ? 10 : 15);
+                }
+                
+                ctx.fillText(isMobile ? '収入/支出' : '収入・支出', rightX, rightY);
+                
+                ctx.restore();
+            }
+        };
+        
+        balanceChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: years,
+                datasets: [
+                    {
+                        label: '累積収支',
+                        data: cumulativeBalances,
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true,
+                        tension: 0.1,
+                        pointRadius: isMobile ? 2 : 3,
+                        pointHoverRadius: isMobile ? 4 : 6,
+                        borderWidth: isMobile ? 2 : 3,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: '年間収支',
+                        data: yearlyBalances,
+                        borderColor: 'rgb(16, 185, 129)',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        fill: false,
+                        tension: 0.1,
+                        pointRadius: isMobile ? 1 : 2,
+                        pointHoverRadius: isMobile ? 3 : 5,
+                        borderWidth: isMobile ? 2 : 2,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: '年間収入',
+                        data: yearlyIncomes,
+                        borderColor: 'rgb(34, 197, 94)',
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                        fill: false,
+                        tension: 0.1,
+                        pointRadius: isMobile ? 1 : 2,
+                        pointHoverRadius: isMobile ? 3 : 5,
+                        borderWidth: isMobile ? 2 : 2,
+                        yAxisID: 'y1'
+                    },
+                    {
+                        label: '年間支出',
+                        data: yearlyExpenses,
+                        borderColor: 'rgb(239, 68, 68)',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        fill: false,
+                        tension: 0.1,
+                        pointRadius: isMobile ? 1 : 2,
+                        pointHoverRadius: isMobile ? 3 : 5,
+                        borderWidth: isMobile ? 2 : 2,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            plugins: [yAxisLabelsPlugin],
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 1.1,
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '収支・収入・支出推移グラフ',
+                        font: {
+                            size: isMobile ? 14 : 16,
+                            weight: 'bold'
+                        },
+                        padding: {
+                            top: isMobile ? 5 : 8,
+                            bottom: isMobile ? 5 : 10
+                        }
+                    },
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            font: {
+                                size: isMobile ? 10 : 12
+                            },
+                            padding: isMobile ? 4 : 12,
+                            usePointStyle: true,
+                            pointStyle: 'line',
+                            boxHeight: isMobile ? 8 : 12
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleFont: {
+                            size: isMobile ? 12 : 14
+                        },
+                        bodyFont: {
+                            size: isMobile ? 11 : 12
+                        },
+                        padding: isMobile ? 8 : 12,
+                        cornerRadius: 6,
+                        displayColors: true,
+                        callbacks: {
+                            title: function(context) {
+                                return context[0].label + '年';
+                            },
+                            label: function(context) {
+                                const value = context.parsed.y;
+                                let formattedValue;
+                                
+                                // 金額に応じて単位を調整
+                                if (Math.abs(value) >= 100000000) {
+                                    // 1億円以上は億円単位
+                                    formattedValue = (value / 100000000).toFixed(1) + '億円';
+                                } else if (Math.abs(value) >= 10000) {
+                                    // 1万円以上は万円単位
+                                    formattedValue = (value / 10000).toFixed(0) + '万円';
+                                } else {
+                                    // 1万円未満は円単位
+                                    formattedValue = value.toLocaleString() + '円';
+                                }
+                                
+                                return context.dataset.label + ': ' + formattedValue;
+                            }
+                        }
+                    },
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: !isMobile, // モバイルでは非表示
+                            text: '年',
+                            font: {
+                                size: isMobile ? 10 : 12
+                            }
+                        },
+                        grid: {
+                            display: true,
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        ticks: {
+                            font: {
+                                size: isMobile ? 9 : 11
+                            },
+                            maxRotation: isMobile ? 45 : 0,
+                            minRotation: isMobile ? 45 : 0,
+                            maxTicksLimit: isMobile ? 8 : 15
+                        }
+                    },
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: false,
+                        },
+                        grid: {
+                            display: true,
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        },
+                        ticks: {
+                            font: {
+                                size: isMobile ? 8 : 10
+                            },
+                            maxTicksLimit: isMobile ? 5 : 7,
+                            padding: isMobile ? 2 : 5,
+                            callback: function(value) {
+                                // 金額に応じて単位を調整
+                                if (Math.abs(value) >= 100000000) {
+                                    return (value / 100000000).toFixed(1) + (isMobile ? '億' : '億円');
+                                } else if (Math.abs(value) >= 10000) {
+                                    return (value / 10000).toFixed(0) + (isMobile ? '万' : '万円');
+                                } else if (Math.abs(value) >= 1000) {
+                                    return (value / 1000).toFixed(0) + (isMobile ? 'k' : '千円');
+                                } else {
+                                    return value.toString();
+                                }
+                            }
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: false,
+                        },
+                        grid: {
+                            drawOnChartArea: false,
+                        },
+                        ticks: {
+                            font: {
+                                size: isMobile ? 8 : 10
+                            },
+                            maxTicksLimit: isMobile ? 5 : 7,
+                            padding: isMobile ? 2 : 5,
+                            callback: function(value) {
+                                // 金額に応じて単位を調整
+                                if (Math.abs(value) >= 100000000) {
+                                    return (value / 100000000).toFixed(1) + (isMobile ? '億' : '億円');
+                                } else if (Math.abs(value) >= 10000) {
+                                    return (value / 10000).toFixed(0) + (isMobile ? '万' : '万円');
+                                } else if (Math.abs(value) >= 1000) {
+                                    return (value / 1000).toFixed(0) + (isMobile ? 'k' : '千円');
+                                } else {
+                                    return value.toString();
+                                }
+                            }
+                        }
+                    }
+                },
+                elements: {
+                    point: {
+                        hoverBackgroundColor: 'white',
+                        hoverBorderWidth: 2
+                    },
+                    line: {
+                        borderWidth: isMobile ? 2 : 3
+                    }
+                },
+                layout: {
+                    padding: {
+                        left: isMobile ? 2 : 5,
+                        right: isMobile ? 2 : 5,
+                        top: isMobile ? 15 : 20,
+                        bottom: isMobile ? 2 : 5
+                    }
+                }
+            }
+        });
+        
+        console.log('グラフ作成完了');
+        
+    } catch (error) {
+        console.error('グラフ作成中にエラー:', error);
+        showToast('グラフの作成に失敗しました', 'error');
+    }
+}
+
+// グラフ拡大モーダルを開く
+function openChartExpandModal() {
+    if (!chartData) {
+        showToast('グラフデータが読み込まれていません', 'error');
+        return;
+    }
+    
+    const modal = document.getElementById('chartExpandModal');
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    
+    // モーダルが表示されてからグラフを作成
+    setTimeout(() => {
+        createExpandedChart();
+    }, 300);
+}
+
+// グラフ拡大モーダルを閉じる
+function closeChartExpandModal() {
+    const modal = document.getElementById('chartExpandModal');
+    modal.classList.remove('active');
+    document.body.style.overflow = '';
+    
+    // 拡大グラフを破棄
+    if (balanceChartExpanded) {
+        balanceChartExpanded.destroy();
+        balanceChartExpanded = null;
+    }
+}
+
+// 拡大グラフを作成
+function createExpandedChart() {
+    if (!chartData || !Array.isArray(chartData) || chartData.length === 0) {
+        console.error('拡大グラフ用データが無効', chartData);
+        return;
+    }
+    
+    const canvas = document.getElementById('balanceChartExpanded');
+    if (!canvas) {
+        console.error('拡大グラフ用canvas要素が見つからない');
+        return;
+    }
+    
+    try {
+        // 既存の拡大グラフがあれば削除
+        if (balanceChartExpanded) {
+            balanceChartExpanded.destroy();
+        }
+        
+        // データを準備
+        const years = chartData.map(item => item.year);
+        const cumulativeBalances = chartData.map(item => item.cumulative_balance);
+        const yearlyIncomes = chartData.map(item => item.total_income);
+        const yearlyExpenses = chartData.map(item => item.total_expenses);
+        
+        // デバイスと画面向きを検出
+        const isMobile = window.innerWidth <= 768;
+        const isLandscape = window.innerWidth > window.innerHeight;
+        const isPortrait = !isLandscape;
+        
+        // Chart.jsで拡大グラフを作成
+        const ctx = canvas.getContext('2d');
+        
+        balanceChartExpanded = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: years,
+                datasets: [
+                    {
+                        label: '累積収支',
+                        data: cumulativeBalances,
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true,
+                        tension: 0.1,
+                        pointRadius: isMobile && isLandscape ? 5 : 4,
+                        pointHoverRadius: isMobile && isLandscape ? 9 : 7,
+                        borderWidth: isMobile && isLandscape ? 4 : 3,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: '年間収入',
+                        data: yearlyIncomes,
+                        borderColor: 'rgb(34, 197, 94)',
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                        fill: false,
+                        tension: 0.1,
+                        pointRadius: isMobile && isLandscape ? 4 : 3,
+                        pointHoverRadius: isMobile && isLandscape ? 7 : 6,
+                        borderWidth: isMobile && isLandscape ? 3 : 2,
+                        yAxisID: 'y1'
+                    },
+                    {
+                        label: '年間支出',
+                        data: yearlyExpenses,
+                        borderColor: 'rgb(239, 68, 68)',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        fill: false,
+                        tension: 0.1,
+                        pointRadius: isMobile && isLandscape ? 4 : 3,
+                        pointHoverRadius: isMobile && isLandscape ? 7 : 6,
+                        borderWidth: isMobile && isLandscape ? 3 : 2,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '収支・収入・支出推移グラフ（拡大表示）',
+                        font: {
+                            size: isMobile && isLandscape ? 20 : 18,
+                            weight: 'bold'
+                        },
+                        padding: {
+                            top: 15,
+                            bottom: 20
+                        }
+                    },
+                    legend: {
+                        display: true,
+                        position: isMobile && isLandscape ? 'right' : 'top',
+                        labels: {
+                            font: {
+                                size: isMobile && isLandscape ? 16 : 14
+                            },
+                            padding: isMobile && isLandscape ? 25 : 20,
+                            usePointStyle: true,
+                            pointStyle: 'line',
+                            boxHeight: isMobile && isLandscape ? 20 : 16
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleFont: {
+                            size: isMobile && isLandscape ? 18 : 16
+                        },
+                        bodyFont: {
+                            size: isMobile && isLandscape ? 16 : 14
+                        },
+                        padding: isMobile && isLandscape ? 20 : 15,
+                        cornerRadius: 8,
+                        displayColors: true,
+                        callbacks: {
+                            title: function(context) {
+                                return context[0].label + '年';
+                            },
+                            label: function(context) {
+                                const value = context.parsed.y;
+                                let formattedValue;
+                                
+                                if (Math.abs(value) >= 100000000) {
+                                    formattedValue = (value / 100000000).toFixed(1) + '億円';
+                                } else if (Math.abs(value) >= 10000) {
+                                    formattedValue = (value / 10000).toFixed(0) + '万円';
+                                } else {
+                                    formattedValue = value.toLocaleString() + '円';
+                                }
+                                
+                                return context.dataset.label + ': ' + formattedValue;
+                            }
+                        }
+                    },
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: '年',
+                            font: {
+                                size: isMobile && isLandscape ? 16 : 14
+                            }
+                        },
+                        grid: {
+                            display: true,
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        ticks: {
+                            font: {
+                                size: isMobile && isLandscape ? 14 : 12
+                            },
+                            maxTicksLimit: isMobile && isLandscape ? 25 : 20
+                        }
+                    },
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: '累積収支',
+                            font: {
+                                size: isMobile && isLandscape ? 16 : 14
+                            }
+                        },
+                        grid: {
+                            display: true,
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        },
+                        ticks: {
+                            font: {
+                                size: isMobile && isLandscape ? 14 : 12
+                            },
+                            maxTicksLimit: isMobile && isLandscape ? 12 : 10,
+                            callback: function(value) {
+                                if (Math.abs(value) >= 100000000) {
+                                    return (value / 100000000).toFixed(1) + '億円';
+                                } else if (Math.abs(value) >= 10000) {
+                                    return (value / 10000).toFixed(0) + '万円';
+                                } else if (Math.abs(value) >= 1000) {
+                                    return (value / 1000).toFixed(0) + '千円';
+                                } else {
+                                    return value.toString();
+                                }
+                            }
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: '年間収入・支出',
+                            font: {
+                                size: isMobile && isLandscape ? 14 : 12
+                            }
+                        },
+                        grid: {
+                            drawOnChartArea: false,
+                        },
+                        ticks: {
+                            font: {
+                                size: isMobile && isLandscape ? 12 : 10
+                            },
+                            callback: function(value) {
+                                if (Math.abs(value) >= 100000000) {
+                                    return (value / 100000000).toFixed(1) + '億円';
+                                } else if (Math.abs(value) >= 10000) {
+                                    return (value / 10000).toFixed(0) + '万円';
+                                } else if (Math.abs(value) >= 1000) {
+                                    return (value / 1000).toFixed(0) + '千円';
+                                } else {
+                                    return value.toString();
+                                }
+                            }
+                        }
+                    }
+                },
+                elements: {
+                    point: {
+                        hoverBackgroundColor: 'white',
+                        hoverBorderWidth: isMobile && isLandscape ? 4 : 3
+                    },
+                    line: {
+                        borderWidth: isMobile && isLandscape ? 4 : 3
+                    }
+                },
+                layout: {
+                    padding: {
+                        left: isMobile && isLandscape ? 15 : 10,
+                        right: isMobile && isLandscape ? 15 : 10,
+                        top: isMobile && isLandscape ? 25 : 20,
+                        bottom: isMobile && isLandscape ? 15 : 10
+                    }
+                }
+            }
+        });
+        
+        console.log('拡大グラフ作成完了');
+        
+    } catch (error) {
+        console.error('拡大グラフ作成中にエラー:', error);
+        showToast('グラフの拡大表示に失敗しました', 'error');
+    }
+}
+
+// 拡大グラフを更新（画面回転時）
+function updateExpandedChart() {
+    if (balanceChartExpanded) {
+        balanceChartExpanded.destroy();
+        balanceChartExpanded = null;
+        setTimeout(() => {
+            createExpandedChart();
+        }, 100);
+    }
+}
+</script>
+{% endblock %} 

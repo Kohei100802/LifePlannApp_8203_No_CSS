@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <meta name="format-detection" content="telephone=no">
+    <title>家計簿 - 開発版</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        /* フッター非表示のスタイル */
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        
+        /* ズーム防止とタッチ最適化 */
+        * {
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        
+        /* ボタンのダブルタップズーム防止 */
+        .key-btn {
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        /* カードのタッチ最適化 */
+        .expense-card {
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        /* iOS Safari対応 */
+        html {
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+    </style>
+</head>
+<body>
+<div class="household-book-container" style="height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <!-- カード表示エリア（フル画面対応） -->
+    <div class="card-area" style="height: 100vh; position: relative; overflow: hidden; padding: 15px 15px 320px 15px;">
+        <div class="card-container" style="position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+            <!-- カード1 -->
+            <div class="expense-card" id="card-0" data-index="0" style="position: absolute; width: 320px; height: 200px; background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.25); display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; cursor: grab; transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); z-index: 10; transform: scale(1); backdrop-filter: blur(10px);">
+                <div class="card-decoration" style="position: absolute; top: 15px; right: 15px; width: 40px; height: 40px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <div style="width: 20px; height: 20px; background: rgba(255,255,255,0.3); border-radius: 50%;"></div>
+                </div>
+                <div class="card-emoji" style="font-size: 3.5rem; margin-bottom: 12px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));">🍛</div>
+                <div class="card-title" style="font-size: 1.3rem; font-weight: 700; margin-bottom: 8px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); letter-spacing: 0.5px;">ランチ</div>
+                <div class="card-amount" style="font-size: 2.2rem; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">¥<span id="amount-display-0">0</span></div>
+                <div class="card-pattern" style="position: absolute; bottom: -10px; right: -10px; width: 80px; height: 80px; background: rgba(255,255,255,0.1); border-radius: 50%; opacity: 0.5;"></div>
+            </div>
+            
+            <!-- カード2 -->
+            <div class="expense-card" id="card-1" data-index="1" style="position: absolute; width: 320px; height: 200px; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.2); display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; cursor: grab; transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); transform: translateY(12px) scale(0.95); opacity: 0.8; z-index: 5; backdrop-filter: blur(10px);">
+                <div class="card-decoration" style="position: absolute; top: 15px; right: 15px; width: 40px; height: 40px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <div style="width: 20px; height: 20px; background: rgba(255,255,255,0.3); border-radius: 50%;"></div>
+                </div>
+                <div class="card-emoji" style="font-size: 3.5rem; margin-bottom: 12px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));">☕</div>
+                <div class="card-title" style="font-size: 1.3rem; font-weight: 700; margin-bottom: 8px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); letter-spacing: 0.5px;">カフェ</div>
+                <div class="card-amount" style="font-size: 2.2rem; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">¥<span id="amount-display-1">0</span></div>
+                <div class="card-pattern" style="position: absolute; bottom: -10px; right: -10px; width: 80px; height: 80px; background: rgba(255,255,255,0.1); border-radius: 50%; opacity: 0.5;"></div>
+            </div>
+            
+            <!-- カード3 -->
+            <div class="expense-card" id="card-2" data-index="2" style="position: absolute; width: 320px; height: 200px; background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15); display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; cursor: grab; transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); transform: translateY(24px) scale(0.9); opacity: 0.6; z-index: 3; backdrop-filter: blur(10px);">
+                <div class="card-decoration" style="position: absolute; top: 15px; right: 15px; width: 40px; height: 40px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <div style="width: 20px; height: 20px; background: rgba(255,255,255,0.3); border-radius: 50%;"></div>
+                </div>
+                <div class="card-emoji" style="font-size: 3.5rem; margin-bottom: 12px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));">🚊</div>
+                <div class="card-title" style="font-size: 1.3rem; font-weight: 700; margin-bottom: 8px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); letter-spacing: 0.5px;">交通費</div>
+                <div class="card-amount" style="font-size: 2.2rem; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">¥<span id="amount-display-2">0</span></div>
+                <div class="card-pattern" style="position: absolute; bottom: -10px; right: -10px; width: 80px; height: 80px; background: rgba(255,255,255,0.1); border-radius: 50%; opacity: 0.5;"></div>
+            </div>
+        </div>
+        
+        <!-- 進捗インジケーター -->
+        <div class="progress-indicator" style="position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px;">
+            <div class="progress-dot active" style="width: 8px; height: 8px; border-radius: 50%; background-color: rgba(255,255,255,0.9); transition: all 0.3s ease;"></div>
+            <div class="progress-dot" style="width: 8px; height: 8px; border-radius: 50%; background-color: rgba(255,255,255,0.4); transition: all 0.3s ease;"></div>
+            <div class="progress-dot" style="width: 8px; height: 8px; border-radius: 50%; background-color: rgba(255,255,255,0.4); transition: all 0.3s ease;"></div>
+        </div>
+        
+        <!-- スワイプヒント -->
+        <div class="swipe-hint" style="position: absolute; top: 8px; left: 50%; transform: translateX(-50%); color: rgba(255,255,255,0.8); font-size: 0.8rem; text-align: center;">
+            ← スキップ　　　確定 →
+        </div>
+    </div>
+
+    <!-- カスタムキーボード（フッター固定） -->
+    <div class="keyboard-area" id="keyboard-area" style="position: fixed; bottom: 0; left: 0; right: 0; height: 40vh; min-height: 300px; max-height: 70vh; background-color: #ffffff; border-radius: 25px 25px 0 0; padding: 0 20px 30px 20px; display: flex; flex-direction: column; box-shadow: 0 -12px 35px rgba(0,0,0,0.15); z-index: 1000; transition: height 0.3s ease;">
+        <!-- ドラッグハンドル -->
+        <div class="drag-handle-area" style="padding: 20px; display: flex; justify-content: center; align-items: center; cursor: grab;">
+            <div class="drag-handle" id="drag-handle" style="width: 80px; height: 6px; background-color: #9ca3af; border-radius: 3px; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"></div>
+        </div>
+        <!-- キーボード -->
+        <div class="custom-keyboard" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; max-width: 300px; margin: 20px auto 0 auto; height: 240px; align-content: end;">
+            <!-- 数字キー（標準テンキー配置） -->
+            <button class="key-btn" data-key="1" style="background-color: #f8f9fa; border: none; border-radius: 12px; font-size: 1.4rem; font-weight: 600; color: #333; box-shadow: 0 3px 8px rgba(0,0,0,0.12); transition: all 0.2s ease; height: 50px; width: 90px;">1</button>
+            <button class="key-btn" data-key="2" style="background-color: #f8f9fa; border: none; border-radius: 12px; font-size: 1.4rem; font-weight: 600; color: #333; box-shadow: 0 3px 8px rgba(0,0,0,0.12); transition: all 0.2s ease; height: 50px; width: 90px;">2</button>
+            <button class="key-btn" data-key="3" style="background-color: #f8f9fa; border: none; border-radius: 12px; font-size: 1.4rem; font-weight: 600; color: #333; box-shadow: 0 3px 8px rgba(0,0,0,0.12); transition: all 0.2s ease; height: 50px; width: 90px;">3</button>
+            
+            <button class="key-btn" data-key="4" style="background-color: #f8f9fa; border: none; border-radius: 12px; font-size: 1.4rem; font-weight: 600; color: #333; box-shadow: 0 3px 8px rgba(0,0,0,0.12); transition: all 0.2s ease; height: 50px; width: 90px;">4</button>
+            <button class="key-btn" data-key="5" style="background-color: #f8f9fa; border: none; border-radius: 12px; font-size: 1.4rem; font-weight: 600; color: #333; box-shadow: 0 3px 8px rgba(0,0,0,0.12); transition: all 0.2s ease; height: 50px; width: 90px;">5</button>
+            <button class="key-btn" data-key="6" style="background-color: #f8f9fa; border: none; border-radius: 12px; font-size: 1.4rem; font-weight: 600; color: #333; box-shadow: 0 3px 8px rgba(0,0,0,0.12); transition: all 0.2s ease; height: 50px; width: 90px;">6</button>
+            
+            <button class="key-btn" data-key="7" style="background-color: #f8f9fa; border: none; border-radius: 12px; font-size: 1.4rem; font-weight: 600; color: #333; box-shadow: 0 3px 8px rgba(0,0,0,0.12); transition: all 0.2s ease; height: 50px; width: 90px;">7</button>
+            <button class="key-btn" data-key="8" style="background-color: #f8f9fa; border: none; border-radius: 12px; font-size: 1.4rem; font-weight: 600; color: #333; box-shadow: 0 3px 8px rgba(0,0,0,0.12); transition: all 0.2s ease; height: 50px; width: 90px;">8</button>
+            <button class="key-btn" data-key="9" style="background-color: #f8f9fa; border: none; border-radius: 12px; font-size: 1.4rem; font-weight: 600; color: #333; box-shadow: 0 3px 8px rgba(0,0,0,0.12); transition: all 0.2s ease; height: 50px; width: 90px;">9</button>
+            
+            <button class="key-btn" data-key="clear" style="background-color: #ff6b6b; border: none; border-radius: 12px; font-size: 1.2rem; font-weight: 600; color: white; box-shadow: 0 3px 8px rgba(255,107,107,0.4); transition: all 0.2s ease; height: 50px; width: 90px;">C</button>
+            <button class="key-btn" data-key="0" style="background-color: #f8f9fa; border: none; border-radius: 12px; font-size: 1.4rem; font-weight: 600; color: #333; box-shadow: 0 3px 8px rgba(0,0,0,0.12); transition: all 0.2s ease; height: 50px; width: 90px;">0</button>
+            <button class="key-btn" data-key="backspace" style="background-color: #ffa726; border: none; border-radius: 12px; font-size: 1.2rem; font-weight: 600; color: white; box-shadow: 0 3px 8px rgba(255,167,38,0.4); transition: all 0.2s ease; height: 50px; width: 90px;">⌫</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentAmount = 0;
+let currentCardIndex = 0;
+const totalCards = 3;
+let confirmedExpenses = [];
+let isDragging = false;
+let startX = 0;
+let startY = 0;
+let currentX = 0;
+let currentY = 0;
+
+// スワイプ機能の初期化
+document.addEventListener('DOMContentLoaded', function() {
+    initializeSwipe();
+    initializeKeyboard();
+    initializeKeyboardDrag();
+});
+
+function initializeSwipe() {
+    const cards = document.querySelectorAll('.expense-card');
+    
+    cards.forEach(card => {
+        // マウス/タッチイベント
+        card.addEventListener('mousedown', handleStart);
+        card.addEventListener('touchstart', handleStart, { passive: false });
+        
+        document.addEventListener('mousemove', handleMove);
+        document.addEventListener('touchmove', handleMove, { passive: false });
+        
+        document.addEventListener('mouseup', handleEnd);
+        document.addEventListener('touchend', handleEnd);
+    });
+}
+
+function handleStart(e) {
+    const card = e.currentTarget;
+    if (parseInt(card.dataset.index) !== currentCardIndex) return;
+    
+    isDragging = true;
+    card.style.cursor = 'grabbing';
+    
+    const clientX = e.type === 'mousedown' ? e.clientX : e.touches[0].clientX;
+    const clientY = e.type === 'mousedown' ? e.clientY : e.touches[0].clientY;
+    
+    startX = clientX;
+    startY = clientY;
+    currentX = clientX;
+    currentY = clientY;
+    
+    card.style.transition = 'none';
+    e.preventDefault();
+}
+
+function handleMove(e) {
+    if (!isDragging) return;
+    
+    const clientX = e.type === 'mousemove' ? e.clientX : e.touches[0].clientX;
+    const clientY = e.type === 'mousemove' ? e.clientY : e.touches[0].clientY;
+    
+    currentX = clientX;
+    currentY = clientY;
+    
+    const deltaX = currentX - startX;
+    const deltaY = currentY - startY;
+    
+    const card = document.getElementById(`card-${currentCardIndex}`);
+    if (!card) return;
+    
+    // カードの移動とローテーション
+    const rotation = deltaX * 0.1;
+    const opacity = Math.max(0.7, 1 - Math.abs(deltaX) / 300);
+    
+    card.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(${rotation}deg)`;
+    card.style.opacity = opacity;
+    
+    // スワイプ方向のフィードバック
+    if (Math.abs(deltaX) > 50) {
+        if (deltaX > 0) {
+            card.style.boxShadow = '0 15px 35px rgba(76, 175, 80, 0.4)'; // 右スワイプ（確定）
+        } else {
+            card.style.boxShadow = '0 15px 35px rgba(255, 107, 107, 0.4)'; // 左スワイプ（スキップ）
+        }
+    } else {
+        card.style.boxShadow = '0 15px 35px rgba(0,0,0,0.2)';
+    }
+    
+    e.preventDefault();
+}
+
+function handleEnd(e) {
+    if (!isDragging) return;
+    
+    isDragging = false;
+    const card = document.getElementById(`card-${currentCardIndex}`);
+    if (!card) return;
+    
+    card.style.cursor = 'grab';
+    
+    const deltaX = currentX - startX;
+    const threshold = 100;
+    
+    if (Math.abs(deltaX) > threshold) {
+        // スワイプが閾値を超えた場合
+        if (deltaX > 0) {
+            // 右スワイプ - 確定
+            confirmAmount();
+        } else {
+            // 左スワイプ - スキップ
+            skipCard();
+        }
+    } else {
+        // スワイプが不十分な場合、元の位置に戻す
+        resetCardPosition(card);
+    }
+}
+
+function resetCardPosition(card) {
+    card.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    card.style.transform = 'translate(0px, 0px) rotate(0deg)';
+    card.style.opacity = '1';
+    card.style.boxShadow = '0 15px 35px rgba(0,0,0,0.2)';
+}
+
+function initializeKeyboard() {
+    const keyButtons = document.querySelectorAll('.key-btn');
+    
+    keyButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const key = this.dataset.key;
+            handleKeyInput(key);
+            
+            // ボタンアニメーション
+            this.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                this.style.transform = 'scale(1)';
+            }, 100);
+        });
+        
+        // ホバー効果
+        button.addEventListener('mouseenter', function() {
+            if (!this.dataset.key.match(/clear|backspace/)) {
+                this.style.transform = 'translateY(-2px)';
+                this.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+            }
+        });
+        
+        button.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            if (this.dataset.key === 'clear') {
+                this.style.boxShadow = '0 2px 8px rgba(255,107,107,0.3)';
+            } else if (this.dataset.key === 'backspace') {
+                this.style.boxShadow = '0 2px 8px rgba(255,167,38,0.3)';
+            } else {
+                this.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+            }
+        });
+    });
+}
+
+// キーボードドラッグ機能の初期化
+function initializeKeyboardDrag() {
+    const keyboardArea = document.getElementById('keyboard-area');
+    const dragHandle = document.getElementById('drag-handle');
+    
+    if (!keyboardArea || !dragHandle) {
+        console.error('キーボードエリアまたはドラッグハンドルが見つかりません');
+        return;
+    }
+    
+    let isKeyboardDragging = false;
+    let keyboardStartY = 0;
+    let initialKeyboardHeight = 0;
+    
+    console.log('キーボードドラッグ機能を初期化しました');
+    
+    function startKeyboardDrag(e) {
+        console.log('キーボードドラッグ開始');
+        isKeyboardDragging = true;
+        
+        // カードのドラッグを無効化
+        isDragging = false;
+        
+        dragHandle.style.cursor = 'grabbing';
+        dragHandle.style.backgroundColor = '#9ca3af';
+        
+        const clientY = e.type === 'mousedown' ? e.clientY : e.touches[0].clientY;
+        keyboardStartY = clientY;
+        
+        const computedStyle = window.getComputedStyle(keyboardArea);
+        initialKeyboardHeight = parseInt(computedStyle.height);
+        
+        keyboardArea.style.transition = 'none';
+        
+        // イベントリスナーを追加
+        document.addEventListener('mousemove', handleKeyboardDrag, { passive: false });
+        document.addEventListener('touchmove', handleKeyboardDrag, { passive: false });
+        document.addEventListener('mouseup', endKeyboardDrag);
+        document.addEventListener('touchend', endKeyboardDrag);
+        
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    function handleKeyboardDrag(e) {
+        if (!isKeyboardDragging) return;
+        
+        const clientY = e.type === 'mousemove' ? e.clientY : e.touches[0].clientY;
+        const deltaY = keyboardStartY - clientY; // 上方向が正
+        const newHeight = Math.max(300, Math.min(window.innerHeight * 0.7, initialKeyboardHeight + deltaY));
+        
+        keyboardArea.style.height = newHeight + 'px';
+        
+        // カードエリアのパディング調整
+        const cardArea = document.querySelector('.card-area');
+        if (cardArea) {
+            cardArea.style.paddingBottom = (newHeight + 20) + 'px';
+        }
+        
+        console.log('キーボード高さ:', newHeight + 'px');
+        
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    function endKeyboardDrag() {
+        if (!isKeyboardDragging) return;
+        
+        console.log('キーボードドラッグ終了');
+        isKeyboardDragging = false;
+        dragHandle.style.cursor = 'grab';
+        dragHandle.style.backgroundColor = '#d1d5db';
+        keyboardArea.style.transition = 'height 0.3s ease';
+        
+        // イベントリスナーを削除
+        document.removeEventListener('mousemove', handleKeyboardDrag);
+        document.removeEventListener('touchmove', handleKeyboardDrag);
+        document.removeEventListener('mouseup', endKeyboardDrag);
+        document.removeEventListener('touchend', endKeyboardDrag);
+    }
+    
+    // ドラッグハンドルとエリアのイベント
+    const dragHandleArea = document.querySelector('.drag-handle-area');
+    
+    dragHandle.addEventListener('mousedown', startKeyboardDrag);
+    dragHandle.addEventListener('touchstart', startKeyboardDrag, { passive: false });
+    
+    if (dragHandleArea) {
+        dragHandleArea.addEventListener('mousedown', startKeyboardDrag);
+        dragHandleArea.addEventListener('touchstart', startKeyboardDrag, { passive: false });
+    }
+    
+    // ドラッグハンドルのホバー効果
+    dragHandle.addEventListener('mouseenter', function() {
+        if (!isKeyboardDragging) {
+            this.style.backgroundColor = '#9ca3af';
+        }
+    });
+    
+    dragHandle.addEventListener('mouseleave', function() {
+        if (!isKeyboardDragging) {
+            this.style.backgroundColor = '#d1d5db';
+        }
+    });
+    
+    // デバッグ用：クリックテスト
+    dragHandle.addEventListener('click', function() {
+        console.log('ドラッグハンドルがクリックされました');
+    });
+}
+
+function handleKeyInput(key) {
+    if (key === 'clear') {
+        currentAmount = 0;
+    } else if (key === 'backspace') {
+        currentAmount = Math.floor(currentAmount / 10);
+    } else if (key >= '0' && key <= '9') {
+        if (currentAmount < 999999) {
+            currentAmount = currentAmount * 10 + parseInt(key);
+        }
+    }
+    
+    updateDisplay();
+}
+
+function updateDisplay() {
+    const cardAmountDisplay = document.getElementById(`amount-display-${currentCardIndex}`);
+    
+    if (cardAmountDisplay) {
+        cardAmountDisplay.textContent = currentAmount.toLocaleString();
+    }
+}
+
+function confirmAmount() {
+    const currentCard = document.getElementById(`card-${currentCardIndex}`);
+    
+    if (currentAmount > 0) {
+        const cardTitle = currentCard.querySelector('.card-title').textContent;
+        const cardEmoji = currentCard.querySelector('.card-emoji').textContent;
+        
+        confirmedExpenses.push({
+            title: cardTitle,
+            emoji: cardEmoji,
+            amount: currentAmount
+        });
+        
+        // カード確定アニメーション
+        currentCard.style.transition = 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+        currentCard.style.transform = 'translateX(100vw) rotate(30deg) scale(0.8)';
+        currentCard.style.opacity = '0';
+        
+        setTimeout(() => {
+            nextCard();
+        }, 400);
+    } else {
+        // 金額が0の場合のフィードバック - カードを元の位置に戻してから揺らす
+        resetCardPosition(currentCard);
+        
+        // 位置が戻った後に揺らすアニメーション
+        setTimeout(() => {
+            currentCard.style.animation = 'shake 0.5s ease-in-out';
+            setTimeout(() => {
+                currentCard.style.animation = '';
+            }, 500);
+        }, 300);
+    }
+}
+
+function skipCard() {
+    const currentCard = document.getElementById(`card-${currentCardIndex}`);
+    
+    // カードスキップアニメーション
+    currentCard.style.transition = 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    currentCard.style.transform = 'translateX(-100vw) rotate(-30deg) scale(0.8)';
+    currentCard.style.opacity = '0';
+    
+    setTimeout(() => {
+        nextCard();
+    }, 400);
+}
+
+function nextCard() {
+    currentCardIndex++;
+    currentAmount = 0;
+    updateDisplay();
+    
+    if (currentCardIndex >= totalCards) {
+        showResults();
+        return;
+    }
+    
+    // 進捗ドット更新
+    const progressDots = document.querySelectorAll('.progress-dot');
+    progressDots.forEach((dot, index) => {
+        if (index === currentCardIndex) {
+            dot.style.backgroundColor = 'rgba(255,255,255,0.9)';
+        } else if (index < currentCardIndex) {
+            dot.style.backgroundColor = 'rgba(76,175,80,0.8)';
+        } else {
+            dot.style.backgroundColor = 'rgba(255,255,255,0.4)';
+        }
+    });
+    
+    // 次のカードを前面に
+    updateCardPositions();
+}
+
+function updateCardPositions() {
+    for (let i = currentCardIndex; i < totalCards; i++) {
+        const card = document.getElementById(`card-${i}`);
+        if (card) {
+            const offset = (i - currentCardIndex) * 10;
+            const scale = 1 - (i - currentCardIndex) * 0.05;
+            const opacity = 1 - (i - currentCardIndex) * 0.2;
+            
+            card.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            card.style.transform = `translateY(${offset}px) scale(${scale})`;
+            card.style.opacity = opacity;
+            card.style.zIndex = 10 - (i - currentCardIndex);
+        }
+    }
+}
+
+function showResults() {
+    const container = document.querySelector('.household-book-container');
+    const totalAmount = confirmedExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+    
+    container.innerHTML = `
+        <div style="height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-align: center; padding: 20px;">
+            <div style="font-size: 4rem; margin-bottom: 30px;">🎉</div>
+            <h2 style="margin-bottom: 20px; font-size: 1.8rem; font-weight: 700;">記録完了！</h2>
+            <div style="font-size: 2.5rem; font-weight: 800; margin-bottom: 30px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">合計: ¥${totalAmount.toLocaleString()}</div>
+            <div style="font-size: 1.1rem; opacity: 0.9; margin-bottom: 40px;">${confirmedExpenses.length}件の支出を記録しました</div>
+            
+            <div style="display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 300px; margin-bottom: 40px;">
+                ${confirmedExpenses.map(expense => `
+                    <div style="background-color: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border-radius: 15px; padding: 15px; display: flex; align-items: center; gap: 15px;">
+                        <div style="font-size: 1.5rem;">${expense.emoji}</div>
+                        <div style="flex: 1; text-align: left;">
+                            <div style="font-weight: 600;">${expense.title}</div>
+                            <div style="opacity: 0.8; font-size: 0.9rem;">¥${expense.amount.toLocaleString()}</div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+            
+            <button onclick="location.href='/dashboard'" style="background-color: rgba(255,255,255,0.2); backdrop-filter: blur(10px); color: white; border: 2px solid rgba(255,255,255,0.3); border-radius: 25px; font-size: 1.1rem; font-weight: 600; padding: 15px 30px; transition: all 0.3s ease;">
+                ダッシュボードに戻る
+            </button>
+        </div>
+    `;
+}
+
+// カード揺らしアニメーション用CSS
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-10px); }
+        75% { transform: translateX(10px); }
+    }
+`;
+document.head.appendChild(style);
+</script>
+</body>
+</html> 

@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+
+{% block title %}事業収入 - {% if income_id %}編集{% else %}新規登録{% endif %}{% endblock %}
+{% block page_title %}事業収入 - {% if income_id %}編集{% else %}新規登録{% endif %}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            {% if income_id %}
+                事業収入編集 <span class="badge badge-secondary">#{{ income_id }}</span>
+            {% else %}
+                事業収入新規登録
+            {% endif %}
+        </h3>
+        <a href="/incomes/business" class="btn btn-secondary btn-sm">
+            <i class="material-icons">arrow_back</i> 一覧に戻る
+        </a>
+    </div>
+    <div class="card-body">
+        <form id="businessIncomeForm">
+            <input type="hidden" name="id" value="{{ income_id or '' }}">
+            
+            <div class="form-group">
+                <label class="form-label">事業名 <span class="text-danger">*</span></label>
+                <input type="text" name="name" class="form-control" placeholder="例：コンサルティング事業、小売業" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">説明</label>
+                <input type="text" name="description" class="form-control" placeholder="事業の詳細説明（任意）">
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">開始年 <span class="text-danger">*</span></label>
+                        <select name="start_year" class="form-control" required>
+                            <!-- JavaScript で動的に生成 -->
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">終了年 <span class="text-danger">*</span></label>
+                        <select name="end_year" class="form-control" required>
+                            <!-- JavaScript で動的に生成 -->
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">月額収入（万円） <span class="text-danger">*</span></label>
+                <input type="number" name="monthly_amount" class="form-control" placeholder="50" min="0" step="0.1" required>
+                <small class="form-text text-muted">事業からの月平均収入額</small>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">収入増加率（年率%）</label>
+                <input type="number" name="income_increase_rate" class="form-control" placeholder="5.0" min="0" max="20" step="0.1" value="0.0">
+                <small class="form-text text-muted">事業収入の年間増加率</small>
+            </div>
+            
+            <!-- 上限設定 -->
+            <div class="form-group">
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="has_cap" name="has_cap" onchange="toggleCapInputs()">
+                    <label class="form-check-label" for="has_cap">
+                        収入に上限を設定する
+                    </label>
+                </div>
+            </div>
+            
+            <div id="cap-settings" class="cap-settings" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">年間収入上限（万円）</label>
+                    <input type="number" name="annual_income_cap" class="form-control" placeholder="1000" min="0" step="0.1">
+                    <small class="form-text text-muted">年間の総収入の上限額</small>
+                </div>
+            </div>
+            
+            <div class="form-group mt-4">
+                <div class="row">
+                    <div class="col-md-6">
+                        <a href="/incomes/business" class="btn btn-secondary" id="cancelButton">キャンセル</a>
+                        <button type="submit" class="btn btn-primary" id="submitButton">保存</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- FAB -->
+<div class="form-fab-container" id="fabContainer">
+    <a href="/incomes/business" class="fab fab-cancel" id="cancelFabButton">
+        <i class="material-icons">close</i>
+    </a>
+    <button type="button" class="fab fab-add" id="formFabButton" onclick="submitFormViaFab()">
+        <i class="material-icons">save</i>
+    </button>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 年度セレクトボックスを初期化
+    initializeYearSelects();
+    
+    // 編集モードの場合はデータを読み込み
+    const incomeId = document.querySelector('[name="id"]').value;
+    if (incomeId) {
+        loadIncomeData(incomeId);
+    }
+    
+    // フォーム送信イベント設定
+    setupFormHandler();
+});
+
+// 上限設定の表示切り替え
+function toggleCapInputs() {
+    const hasCapCheckbox = document.getElementById('has_cap');
+    const capSettings = document.getElementById('cap-settings');
+    
+    if (hasCapCheckbox.checked) {
+        capSettings.style.display = 'block';
+    } else {
+        capSettings.style.display = 'none';
+        // チェックを外した場合は値をクリア
+        document.querySelector('[name="annual_income_cap"]').value = '';
+    }
+}
+
+// フォーム送信イベント設定
+function setupFormHandler() {
+    const form = document.getElementById('businessIncomeForm');
+    if (form) {
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await handleFormSubmit(this);
+        });
+    }
+}
+
+// フォーム送信処理
+async function handleFormSubmit(form) {
+    if (!validateRequired(form)) {
+        return;
+    }
+    
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    
+    // 数値変換（万円を円に変換）
+    data.monthly_amount = (parseFloat(data.monthly_amount) || 0) * 10000;
+    data.annual_amount = data.monthly_amount * 12;
+    
+    // 上限設定
+    data.has_cap = document.getElementById('has_cap').checked;
+    if (data.has_cap) {
+        data.annual_income_cap = (parseFloat(data.annual_income_cap) || 0) * 10000;
+    } else {
+        data.annual_income_cap = 0;
+    }
+    
+    data.start_year = parseInt(data.start_year) || 2024;
+    data.end_year = parseInt(data.end_year) || 2050;
+    data.income_increase_rate = parseFloat(data.income_increase_rate) || 0.0;
+    
+    const isUpdate = data.id && data.id !== '';
+    const method = isUpdate ? 'PUT' : 'POST';
+    const messageType = isUpdate ? '更新' : '登録';
+    
+    // 送信ボタンを無効化してローディング状態にする
+    const submitButton = form.querySelector('button[type="submit"]');
+    const submitText = submitButton.querySelector('.submit-text');
+    const originalText = submitText.textContent;
+    
+    submitButton.disabled = true;
+    submitText.textContent = '処理中...';
+    
+    try {
+        const response = await fetch('/api/business-incomes', {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast(`事業収入を${messageType}しました`, 'success');
+            // 少し待ってから一覧ページに戻る
+            setTimeout(() => {
+                window.location.href = '/incomes/business';
+            }, 1500);
+        } else {
+            throw new Error(result.message || `事業収入の${messageType}に失敗しました`);
+        }
+        
+    } catch (error) {
+        console.error('Error submitting form:', error);
+        showToast(error.message || `事業収入の${messageType}に失敗しました`, 'error');
+    } finally {
+        // ボタンを元に戻す
+        submitButton.disabled = false;
+        submitText.textContent = originalText;
+    }
+}
+
+// 収入データ読み込み（編集時）
+async function loadIncomeData(incomeId) {
+    try {
+        const response = await fetch(`/api/business-incomes/${incomeId}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            const income = result.data;
+            
+            // フォームに値を設定
+            document.querySelector('[name="name"]').value = income.name || '';
+            document.querySelector('[name="description"]').value = income.description || '';
+            document.querySelector('[name="start_year"]').value = income.start_year || '';
+            document.querySelector('[name="end_year"]').value = income.end_year || '';
+            document.querySelector('[name="monthly_amount"]').value = (income.monthly_amount || 0) / 10000;
+            document.querySelector('[name="income_increase_rate"]').value = income.income_increase_rate || 0;
+            
+            // 上限設定
+            const hasCapCheckbox = document.getElementById('has_cap');
+            const annualCapInput = document.querySelector('[name="annual_income_cap"]');
+            
+            if (income.has_cap && income.annual_income_cap > 0) {
+                hasCapCheckbox.checked = true;
+                annualCapInput.value = income.annual_income_cap / 10000;
+                toggleCapInputs();
+            }
+            
+        } else {
+            throw new Error(result.message || '事業収入データの読み込みに失敗しました');
+        }
+        
+    } catch (error) {
+        console.error('Error loading income data:', error);
+        showToast('事業収入データの読み込みに失敗しました', 'error');
+    }
+}
+</script>
+{% endblock %} 

@@ -1,0 +1,237 @@
+{% extends "base-new.html" %}
+
+{% block title %}ダッシュボード{% endblock %}
+{% block page_title %}ダッシュボード{% endblock %}
+
+{% block content %}
+<div class="mypage-container">
+    <!-- 今日のQuote -->
+    <div class="quote-card mb-3 fade-in">
+        <div class="quote-content">
+            <div class="quote-icon">
+                <i class="material-icons">format_quote</i>
+            </div>
+            <div class="quote-text" id="daily-quote">
+                <!-- ランダムQuoteが表示されます -->
+            </div>
+            <div class="quote-author" id="quote-author">
+                <!-- 著者が表示されます -->
+            </div>
+        </div>
+    </div>
+
+    <!-- メニューリスト -->
+    <div class="menu-list">
+        <!-- ライフプランシミュレーター -->
+        <div class="menu-section">
+            <h4 class="menu-section-title">ライフプランシミュレーター</h4>
+            <div class="menu-items">
+                <a href="{{ url_for('expenses_incomes') }}" class="menu-item">
+                    <div class="menu-item-icon">
+                        <i class="material-icons">account_balance_wallet</i>
+                    </div>
+                    <div class="menu-item-content">
+                        <div class="menu-item-title">支出・収入管理</div>
+                        <div class="menu-item-subtitle">生活費、住居費、給与、投資収入など</div>
+                    </div>
+                    <div class="menu-item-arrow">
+                        <i class="material-icons">chevron_right</i>
+                    </div>
+                </a>
+                
+                <a href="{{ url_for('simulation') }}" class="menu-item">
+                    <div class="menu-item-icon">
+                        <i class="material-icons">trending_up</i>
+                    </div>
+                    <div class="menu-item-content">
+                        <div class="menu-item-title">ライフプランシミュレーション</div>
+                        <div class="menu-item-subtitle">将来の収支予測とグラフ表示</div>
+                    </div>
+                    <div class="menu-item-arrow">
+                        <i class="material-icons">chevron_right</i>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- スマート家計簿 -->
+        <div class="menu-section">
+            <h4 class="menu-section-title">スマート家計簿</h4>
+            <div class="menu-items">
+                <a href="{{ url_for('household_books') }}" class="menu-item">
+                    <div class="menu-item-icon">
+                        <i class="material-icons">receipt_long</i>
+                    </div>
+                    <div class="menu-item-content">
+                        <div class="menu-item-title">家計簿</div>
+                        <div class="menu-item-subtitle">スワイプ操作で支出を素早く記録</div>
+                    </div>
+                    <div class="menu-item-arrow">
+                        <i class="material-icons">chevron_right</i>
+                    </div>
+                </a>
+                
+                <a href="{{ url_for('account_management') }}" class="menu-item">
+                    <div class="menu-item-icon">
+                        <i class="material-icons">account_balance</i>
+                    </div>
+                    <div class="menu-item-content">
+                        <div class="menu-item-title">口座管理</div>
+                        <div class="menu-item-subtitle">ドラッグ&ドロップで直感的な資産移動</div>
+                    </div>
+                    <div class="menu-item-arrow">
+                        <i class="material-icons">chevron_right</i>
+                    </div>
+                </a>
+                
+                <a href="{{ url_for('household_swipe_dev') }}" class="menu-item">
+                    <div class="menu-item-icon">
+                        <i class="material-icons">developer_mode</i>
+                    </div>
+                    <div class="menu-item-content">
+                        <div class="menu-item-title">家計簿（開発版）</div>
+                        <div class="menu-item-subtitle">カード機能とカスタムキーボード付き</div>
+                    </div>
+                    <div class="menu-item-arrow">
+                        <i class="material-icons">chevron_right</i>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+
+<!-- アカウント削除確認モーダル -->
+<div id="deleteAccountModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="text-danger">アカウント削除の確認</h3>
+            <button type="button" class="modal-close" onclick="hideDeleteAccountModal()">
+                <i class="material-icons">close</i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="alert alert-danger">
+                <p><strong>警告：この操作は取り消せません</strong></p>
+                <p>アカウントを削除すると、以下のデータが完全に削除されます：</p>
+                <ul>
+                    <li>すべての収入・支出データ</li>
+                    <li>シミュレーション結果</li>
+                    <li>ユーザー設定</li>
+                    <li>その他すべての個人データ</li>
+                </ul>
+            </div>
+            <form id="account-deletion-form" onsubmit="confirmDeleteAccount(event)">
+                <div class="form-group">
+                    <label class="form-label">削除を確認するため、パスワードを入力してください</label>
+                    <input type="password" class="form-control" id="deletePassword" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="hideDeleteAccountModal()">キャンセル</button>
+                    <button type="submit" class="btn btn-danger">アカウントを削除</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// モーダル表示関数
+function showDeleteAccountModal() {
+    document.getElementById('deleteAccountModal').style.display = 'flex';
+}
+
+function hideDeleteAccountModal() {
+    document.getElementById('deleteAccountModal').style.display = 'none';
+    document.getElementById('deletePassword').value = '';
+}
+
+// アカウント削除
+async function confirmDeleteAccount(event) {
+    event.preventDefault();
+    
+    const password = document.getElementById('deletePassword').value;
+    
+    if (!confirm('本当にアカウントを削除しますか？この操作は取り消せません。')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/delete-account', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                password: password
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showToast('アカウントを削除しました', 'success');
+            setTimeout(() => {
+                window.location.href = '/login';
+            }, 2000);
+        } else {
+            showToast(data.error || 'アカウント削除に失敗しました', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('アカウント削除中にエラーが発生しました', 'error');
+    }
+}
+
+// モーダル外クリックで閉じる
+window.onclick = function(event) {
+    const modal = document.getElementById('deleteAccountModal');
+    if (event.target === modal) {
+        hideDeleteAccountModal();
+    }
+}
+
+
+
+// ランダムQuoteの表示
+const quotes = [
+    { text: "未来は、今日我々が何をするかにかかっている。", author: "マハトマ・ガンジー" },
+    { text: "計画は何でもない。計画することがすべてだ。", author: "ドワイト・D・アイゼンハワー" },
+    { text: "成功への道のりは、小さな一歩から始まる。", author: "ラオ・ツー" },
+    { text: "お金は良い召使いだが、悪い主人である。", author: "フランシス・ベーコン" },
+    { text: "投資で最も重要なことは、時間である。", author: "ウォーレン・バフェット" },
+    { text: "複利は人類最大の発見である。", author: "アルベルト・アインシュタイン" },
+    { text: "リスクは、自分が何をやっているかよくわからない時に起こる。", author: "ウォーレン・バフェット" },
+    { text: "他人が貪欲になっている時は恐れ、他人が恐れている時は貪欲になれ。", author: "ウォーレン・バフェット" }
+];
+
+function displayRandomQuote() {
+    const quote = quotes[Math.floor(Math.random() * quotes.length)];
+    const quoteElement = document.getElementById('daily-quote');
+    const authorElement = document.getElementById('quote-author');
+    
+    quoteElement.textContent = quote.text;
+    authorElement.textContent = quote.author;
+    
+    // フェードイン効果
+    setTimeout(() => {
+        quoteElement.style.opacity = '1';
+        quoteElement.style.transform = 'translateY(0)';
+    }, 300);
+    
+    setTimeout(() => {
+        authorElement.style.opacity = '1';
+        authorElement.style.transform = 'translateY(0)';
+    }, 800);
+}
+
+// ページ読み込み時の処理
+document.addEventListener('DOMContentLoaded', function() {
+    displayRandomQuote();
+});
+</script>
+{% endblock %} 

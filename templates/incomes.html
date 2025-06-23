@@ -1,0 +1,57 @@
+{% extends "base-new.html" %}
+
+{% block title %}収入管理{% endblock %}
+{% block page_title %}収入管理{% endblock %}
+
+{% block content %}
+<div class="income-page-container">
+<!-- クイックアクション -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">クイックアクション</h3>
+    </div>
+    <div class="card-body" style="padding: var(--spacing-sm) 0;">
+        <div style="display: flex; flex-direction: column; gap: 12px; padding: 0 8px;">
+            <button onclick="location.href='/incomes/salary'" class="btn" style="background-color: #F0F0F0; color: #333333; border: none; border-radius: 20px; display: flex; align-items: center; justify-content: flex-start; gap: 16px; padding: 20px 24px; font-size: 1.1rem; font-weight: 500; box-shadow: none;">
+                <i class="material-icons" style="font-size: 1.5rem; color: #333333;">work</i>
+                給与収入
+            </button>
+            
+            <button onclick="location.href='/incomes/sidejob'" class="btn" style="background-color: #F0F0F0; color: #333333; border: none; border-radius: 20px; display: flex; align-items: center; justify-content: flex-start; gap: 16px; padding: 20px 24px; font-size: 1.1rem; font-weight: 500; box-shadow: none;">
+                <i class="material-icons" style="font-size: 1.5rem; color: #333333;">business_center</i>
+                副業収入
+            </button>
+            
+            <button onclick="location.href='/incomes/investment'" class="btn" style="background-color: #F0F0F0; color: #333333; border: none; border-radius: 20px; display: flex; align-items: center; justify-content: flex-start; gap: 16px; padding: 20px 24px; font-size: 1.1rem; font-weight: 500; box-shadow: none;">
+                <i class="material-icons" style="font-size: 1.5rem; color: #333333;">trending_up</i>
+                投資収入
+            </button>
+            
+            <button onclick="location.href='/incomes/pension'" class="btn" style="background-color: #F0F0F0; color: #333333; border: none; border-radius: 20px; display: flex; align-items: center; justify-content: flex-start; gap: 16px; padding: 20px 24px; font-size: 1.1rem; font-weight: 500; box-shadow: none;">
+                <i class="material-icons" style="font-size: 1.5rem; color: #333333;">elderly</i>
+                年金収入
+            </button>
+            
+            <button onclick="location.href='/incomes/other'" class="btn" style="background-color: #F0F0F0; color: #333333; border: none; border-radius: 20px; display: flex; align-items: center; justify-content: flex-start; gap: 16px; padding: 20px 24px; font-size: 1.1rem; font-weight: 500; box-shadow: none;">
+                <i class="material-icons" style="font-size: 1.5rem; color: #333333;">more_horiz</i>
+                その他収入
+            </button>
+        </div>
+    </div>
+</div>
+</div>
+
+<style>
+.income-page-container {
+    max-height: calc(100vh - 140px);
+    overflow-y: auto;
+    padding-bottom: 80px;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// 収入管理画面用のJavaScript
+</script>
+{% endblock %}

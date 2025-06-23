@@ -1,0 +1,1029 @@
+{% extends "base-new.html" %}
+
+{% block title %}マイページ{% endblock %}
+{% block page_title %}マイページ{% endblock %}
+
+{% block content %}
+<div class="mypage-container">
+    <!-- ユーザー情報セクション -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="user-profile">
+                <div class="user-avatar">
+                    <i class="material-icons">account_circle</i>
+                </div>
+                <div class="user-info">
+                    <h3 class="user-name">{{ current_user.username }}</h3>
+                    <p class="user-email">{{ current_user.email }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- メニューリスト -->
+    <div class="menu-list">
+        <!-- アカウント設定 -->
+        <div class="menu-section">
+            <h4 class="menu-section-title">アカウント</h4>
+            <div class="menu-items">
+                <a href="#" class="menu-item" onclick="showProfileEdit()">
+                    <div class="menu-item-icon">
+                        <i class="material-icons">edit</i>
+                    </div>
+                    <div class="menu-item-content">
+                        <div class="menu-item-title">プロフィール編集</div>
+                        <div class="menu-item-subtitle">ユーザー名・メールアドレスの変更</div>
+                    </div>
+                    <div class="menu-item-arrow">
+                        <i class="material-icons">chevron_right</i>
+                    </div>
+                </a>
+                
+                <a href="#" class="menu-item" onclick="showPasswordChange()">
+                    <div class="menu-item-icon">
+                        <i class="material-icons">lock</i>
+                    </div>
+                    <div class="menu-item-content">
+                        <div class="menu-item-title">パスワード変更</div>
+                        <div class="menu-item-subtitle">セキュリティ設定</div>
+                    </div>
+                    <div class="menu-item-arrow">
+                        <i class="material-icons">chevron_right</i>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- データ管理 -->
+        <div class="menu-section">
+            <h4 class="menu-section-title">データ管理</h4>
+            <div class="menu-items">
+                <a href="#" class="menu-item" onclick="showDataExport()">
+                    <div class="menu-item-icon">
+                        <i class="material-icons">download</i>
+                    </div>
+                    <div class="menu-item-content">
+                        <div class="menu-item-title">データエクスポート</div>
+                        <div class="menu-item-subtitle">データのバックアップ</div>
+                    </div>
+                    <div class="menu-item-arrow">
+                        <i class="material-icons">chevron_right</i>
+                    </div>
+                </a>
+                
+                <a href="#" class="menu-item" onclick="showDataImport()">
+                    <div class="menu-item-icon">
+                        <i class="material-icons">upload</i>
+                    </div>
+                    <div class="menu-item-content">
+                        <div class="menu-item-title">データインポート</div>
+                        <div class="menu-item-subtitle">データの復元</div>
+                    </div>
+                    <div class="menu-item-arrow">
+                        <i class="material-icons">chevron_right</i>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- アプリ設定 -->
+        <div class="menu-section">
+            <h4 class="menu-section-title">設定</h4>
+            <div class="menu-items">
+                <a href="#" class="menu-item" onclick="showNotificationSettings()">
+                    <div class="menu-item-icon">
+                        <i class="material-icons">notifications</i>
+                    </div>
+                    <div class="menu-item-content">
+                        <div class="menu-item-title">通知設定</div>
+                        <div class="menu-item-subtitle">リマインダーや更新通知</div>
+                    </div>
+                    <div class="menu-item-arrow">
+                        <i class="material-icons">chevron_right</i>
+                    </div>
+                </a>
+                
+                <a href="#" class="menu-item" onclick="showThemeSettings()">
+                    <div class="menu-item-icon">
+                        <i class="material-icons">palette</i>
+                    </div>
+                    <div class="menu-item-content">
+                        <div class="menu-item-title">テーマ設定</div>
+                        <div class="menu-item-subtitle">ダークモード・表示設定</div>
+                    </div>
+                    <div class="menu-item-arrow">
+                        <i class="material-icons">chevron_right</i>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- サポート -->
+        <div class="menu-section">
+            <h4 class="menu-section-title">サポート</h4>
+            <div class="menu-items">
+                <a href="#" class="menu-item" onclick="showHelp()">
+                    <div class="menu-item-icon">
+                        <i class="material-icons">help</i>
+                    </div>
+                    <div class="menu-item-content">
+                        <div class="menu-item-title">ヘルプ・使い方</div>
+                        <div class="menu-item-subtitle">操作方法やFAQ</div>
+                    </div>
+                    <div class="menu-item-arrow">
+                        <i class="material-icons">chevron_right</i>
+                    </div>
+                </a>
+                
+                <a href="#" class="menu-item" onclick="showAbout()">
+                    <div class="menu-item-icon">
+                        <i class="material-icons">info</i>
+                    </div>
+                    <div class="menu-item-content">
+                        <div class="menu-item-title">アプリについて</div>
+                        <div class="menu-item-subtitle">バージョン情報・利用規約</div>
+                    </div>
+                    <div class="menu-item-arrow">
+                        <i class="material-icons">chevron_right</i>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- アカウント管理 -->
+        <div class="menu-section">
+            <h4 class="menu-section-title">アカウント管理</h4>
+            <div class="menu-items">
+                <a href="#" class="menu-item" onclick="showLogoutConfirmation()">
+                    <div class="menu-item-icon">
+                        <i class="material-icons">logout</i>
+                    </div>
+                    <div class="menu-item-content">
+                        <div class="menu-item-title">ログアウト</div>
+                        <div class="menu-item-subtitle">アプリからログアウトします</div>
+                    </div>
+                    <div class="menu-item-arrow">
+                        <i class="material-icons">chevron_right</i>
+                    </div>
+                </a>
+                
+                <a href="#" class="menu-item menu-item-danger" onclick="showAccountDeletion()">
+                    <div class="menu-item-icon">
+                        <i class="material-icons">delete_forever</i>
+                    </div>
+                    <div class="menu-item-content">
+                        <div class="menu-item-title">アカウント削除</div>
+                        <div class="menu-item-subtitle">全データが削除されます</div>
+                    </div>
+                    <div class="menu-item-arrow">
+                        <i class="material-icons">chevron_right</i>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- プロフィール編集モーダル -->
+<div id="profile-edit-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>プロフィール編集</h3>
+            <button type="button" class="modal-close" onclick="closeModal('profile-edit-modal')">
+                <i class="material-icons">close</i>
+            </button>
+        </div>
+        <form id="profile-edit-form" onsubmit="updateProfile(event)">
+            <div class="form-group">
+                <label class="form-label">ユーザー名</label>
+                <input type="text" class="form-control" id="edit-username" value="{{ current_user.username }}" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">メールアドレス</label>
+                <input type="email" class="form-control" id="edit-email" value="{{ current_user.email }}" required>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('profile-edit-modal')">キャンセル</button>
+                <button type="submit" class="btn btn-primary">保存</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- パスワード変更モーダル -->
+<div id="password-change-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>パスワード変更</h3>
+            <button type="button" class="modal-close" onclick="closeModal('password-change-modal')">
+                <i class="material-icons">close</i>
+            </button>
+        </div>
+        <form id="password-change-form" onsubmit="changePassword(event)">
+            <div class="form-group">
+                <label class="form-label">現在のパスワード</label>
+                <input type="password" class="form-control" id="current-password" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">新しいパスワード</label>
+                <input type="password" class="form-control" id="new-password" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">新しいパスワード（確認）</label>
+                <input type="password" class="form-control" id="confirm-password" required>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('password-change-modal')">キャンセル</button>
+                <button type="submit" class="btn btn-primary">変更</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ログアウト確認モーダル -->
+<div id="logout-confirmation-modal" class="modal" style="align-items: flex-start; padding-top: 15vh;">
+    <div class="modal-content" style="margin-top: 0; transform: none; max-width: 90%; width: 400px;">
+        <div class="modal-header">
+            <h3>ログアウトの確認</h3>
+            <button type="button" class="modal-close" onclick="closeModal('logout-confirmation-modal')">
+                <i class="material-icons">close</i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <p>ログアウトしますか？</p>
+            <p class="text-muted">再度ログインするには、ユーザー名とパスワードが必要です。</p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('logout-confirmation-modal')">キャンセル</button>
+            <button type="button" class="btn btn-primary" onclick="performLogout()">ログアウト</button>
+        </div>
+    </div>
+</div>
+
+<style>
+/* マイページモーダル統一スタイル */
+.mypage-container .modal .modal-content {
+    max-width: 90vw !important;
+    width: 480px !important;
+    max-height: 85vh !important;
+}
+
+/* ログアウトモーダル最適化 */
+#logout-confirmation-modal {
+    align-items: flex-start !important;
+    padding-top: 10vh !important;
+}
+
+#logout-confirmation-modal .modal-content {
+    margin-top: 0 !important;
+    transform: none !important;
+    max-width: 85% !important;
+    width: 380px !important;
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+/* モバイル対応 */
+@media (max-width: 768px) {
+    .mypage-container .modal .modal-content {
+        width: 95vw !important;
+        max-width: 95vw !important;
+        max-height: 90vh !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .mypage-container .modal .modal-content {
+        width: 98vw !important;
+        max-width: 98vw !important;
+        max-height: 95vh !important;
+    }
+    
+    #logout-confirmation-modal {
+        padding-top: 8vh !important;
+    }
+    
+    #logout-confirmation-modal .modal-content {
+        width: 340px !important;
+        max-width: 90% !important;
+    }
+}
+
+/* タブレット対応 */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .mypage-container .modal .modal-content {
+        width: 520px !important;
+        max-width: 80vw !important;
+    }
+}
+
+/* デスクトップ対応 */
+@media (min-width: 1025px) {
+    .mypage-container .modal .modal-content {
+        width: 550px !important;
+        max-width: 70vw !important;
+    }
+}
+</style>
+
+<!-- アカウント削除確認モーダル -->
+<div id="account-deletion-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="text-danger">アカウント削除の確認</h3>
+            <button type="button" class="modal-close" onclick="closeModal('account-deletion-modal')">
+                <i class="material-icons">close</i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="alert alert-danger">
+                <p><strong>警告：この操作は取り消せません</strong></p>
+                <p>アカウントを削除すると、以下のデータが完全に削除されます：</p>
+                <ul>
+                    <li>すべての収入・支出データ</li>
+                    <li>シミュレーション結果</li>
+                    <li>ユーザー設定</li>
+                    <li>その他すべての個人データ</li>
+                </ul>
+            </div>
+            <form id="account-deletion-form" onsubmit="deleteAccount(event)">
+                <div class="form-group">
+                    <label class="form-label">削除を確認するため、パスワードを入力してください</label>
+                    <input type="password" class="form-control" id="deletion-password" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('account-deletion-modal')">キャンセル</button>
+                    <button type="submit" class="btn btn-danger">アカウントを削除</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- データインポートモーダル -->
+<div id="data-import-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>データインポート</h3>
+            <button type="button" class="modal-close" onclick="closeModal('data-import-modal')">
+                <i class="material-icons">close</i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="alert alert-info">
+                <p><strong>注意事項</strong></p>
+                <ul>
+                    <li>インポートできるのは、このアプリでエクスポートしたJSONファイルのみです</li>
+                    <li>既存のデータは保持され、新しいデータが追加されます</li>
+                    <li>同じ名前のデータがある場合は重複して登録されます</li>
+                </ul>
+            </div>
+            <form id="data-import-form" onsubmit="importData(event)">
+                <div class="form-group">
+                    <label class="form-label">インポートファイル（JSON）</label>
+                    <input type="file" class="form-control" id="import-file" accept=".json" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('data-import-modal')">キャンセル</button>
+                    <button type="submit" class="btn btn-primary">インポート</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 通知設定モーダル -->
+<div id="notification-settings-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>通知設定</h3>
+            <button type="button" class="modal-close" onclick="closeModal('notification-settings-modal')">
+                <i class="material-icons">close</i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-check">
+                    <input type="checkbox" class="form-check-input" id="enable-notifications" checked>
+                    <span class="form-check-label">通知を有効にする</span>
+                </label>
+            </div>
+            <div class="form-group">
+                <label class="form-check">
+                    <input type="checkbox" class="form-check-input" id="monthly-reminder" checked>
+                    <span class="form-check-label">月次データ入力リマインダー</span>
+                </label>
+            </div>
+            <div class="form-group">
+                <label class="form-check">
+                    <input type="checkbox" class="form-check-input" id="backup-reminder" checked>
+                    <span class="form-check-label">データバックアップリマインダー</span>
+                </label>
+            </div>
+            <div class="form-group">
+                <label class="form-check">
+                    <input type="checkbox" class="form-check-input" id="update-notifications">
+                    <span class="form-check-label">アプリ更新通知</span>
+                </label>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('notification-settings-modal')">キャンセル</button>
+                <button type="button" class="btn btn-primary" onclick="saveNotificationSettings()">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- テーマ設定モーダル -->
+<div id="theme-settings-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>テーマ設定</h3>
+            <button type="button" class="modal-close" onclick="closeModal('theme-settings-modal')">
+                <i class="material-icons">close</i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label">カラーテーマ</label>
+                <div class="theme-options">
+                    <label class="theme-option">
+                        <input type="radio" name="theme" value="light" checked>
+                        <div class="theme-preview light-theme">
+                            <div class="theme-header"></div>
+                            <div class="theme-content"></div>
+                        </div>
+                        <span>ライト</span>
+                    </label>
+                    <label class="theme-option">
+                        <input type="radio" name="theme" value="dark">
+                        <div class="theme-preview dark-theme">
+                            <div class="theme-header"></div>
+                            <div class="theme-content"></div>
+                        </div>
+                        <span>ダーク</span>
+                    </label>
+                    <label class="theme-option">
+                        <input type="radio" name="theme" value="auto">
+                        <div class="theme-preview auto-theme">
+                            <div class="theme-header"></div>
+                            <div class="theme-content"></div>
+                        </div>
+                        <span>自動</span>
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">フォントサイズ</label>
+                <select class="form-control" id="font-size">
+                    <option value="small">小</option>
+                    <option value="medium" selected>中</option>
+                    <option value="large">大</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('theme-settings-modal')">キャンセル</button>
+                <button type="button" class="btn btn-primary" onclick="saveThemeSettings()">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ヘルプモーダル -->
+<div id="help-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>ヘルプ・使い方</h3>
+            <button type="button" class="modal-close" onclick="closeModal('help-modal')">
+                <i class="material-icons">close</i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="help-sections">
+                <div class="help-section">
+                    <h4><i class="material-icons">dashboard</i> ダッシュボード</h4>
+                    <p>収入・支出の概要と最近の活動を確認できます。</p>
+                </div>
+                <div class="help-section">
+                    <h4><i class="material-icons">attach_money</i> 収入管理</h4>
+                    <p>給与、副業、投資、年金などの収入を登録・管理します。</p>
+                </div>
+                <div class="help-section">
+                    <h4><i class="material-icons">money_off</i> 支出管理</h4>
+                    <p>住居費、生活費、教育費、保険料などの支出を登録・管理します。</p>
+                </div>
+                <div class="help-section">
+                    <h4><i class="material-icons">trending_up</i> シミュレーション</h4>
+                    <p>将来の資産推移をシミュレーションして、ライフプランを立てます。</p>
+                </div>
+                <div class="help-section">
+                    <h4><i class="material-icons">book</i> 家計簿</h4>
+                    <p>日々の収入・支出を記録して、家計管理を行います。</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="closeModal('help-modal')">閉じる</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- アプリについてモーダル -->
+<div id="about-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>アプリについて</h3>
+            <button type="button" class="modal-close" onclick="closeModal('about-modal')">
+                <i class="material-icons">close</i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="about-content">
+                <div class="app-info">
+                    <h4>ライフプランナー</h4>
+                    <p class="version">バージョン 1.0.0</p>
+                    <p class="description">
+                        将来の収入・支出を管理し、ライフプランをシミュレーションするためのWebアプリケーションです。
+                    </p>
+                </div>
+                <div class="features">
+                    <h5>主な機能</h5>
+                    <ul>
+                        <li>収入・支出の詳細管理</li>
+                        <li>将来の資産推移シミュレーション</li>
+                        <li>家計簿機能</li>
+                        <li>データのエクスポート・インポート</li>
+                        <li>レスポンシブデザイン</li>
+                    </ul>
+                </div>
+                <div class="tech-info">
+                    <h5>技術情報</h5>
+                    <ul>
+                        <li>フロントエンド: HTML5, CSS3, JavaScript</li>
+                        <li>バックエンド: Python Flask</li>
+                        <li>データベース: SQLite</li>
+                        <li>チャート: Chart.js</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="closeModal('about-modal')">閉じる</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// モーダル表示関数（エラーハンドリング付き）
+function showProfileEdit() {
+    const modal = document.getElementById('profile-edit-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+    }
+}
+
+function showPasswordChange() {
+    const modal = document.getElementById('password-change-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+    }
+}
+
+function showLogoutConfirmation() {
+    const modal = document.getElementById('logout-confirmation-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+    }
+}
+
+function showAccountDeletion() {
+    const modal = document.getElementById('account-deletion-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+    }
+}
+
+// データエクスポート機能
+async function showDataExport() {
+    try {
+        showToast('データをエクスポート中...', 'info');
+        
+        // まず簡素化版を試行
+        let response = await fetch('/api/export-data-simple', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        
+        // 簡素化版が失敗した場合は完全版を試行
+        if (!response.ok) {
+            console.log('簡素化版エクスポートに失敗、完全版を試行中...');
+            response = await fetch('/api/export-data', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+        }
+        
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            
+            // ファイル名を取得（Content-Dispositionヘッダーから）
+            const contentDisposition = response.headers.get('Content-Disposition');
+            let filename = 'lifeplan_data.json';
+            if (contentDisposition) {
+                const matches = contentDisposition.match(/filename="(.+)"/);
+                if (matches) {
+                    filename = matches[1];
+                }
+            }
+            
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            
+            showToast('データエクスポートが完了しました', 'success');
+        } else {
+            const data = await response.json();
+            showToast(data.error || 'データエクスポートに失敗しました', 'error');
+        }
+    } catch (error) {
+        console.error('Export error:', error);
+        showToast('データエクスポート中にエラーが発生しました', 'error');
+    }
+}
+
+// データインポート機能
+function showDataImport() {
+    const modal = document.getElementById('data-import-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+    }
+}
+
+// 通知設定機能
+function showNotificationSettings() {
+    const modal = document.getElementById('notification-settings-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+    }
+}
+
+// テーマ設定機能
+function showThemeSettings() {
+    const modal = document.getElementById('theme-settings-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+    }
+}
+
+// ヘルプ機能
+function showHelp() {
+    const modal = document.getElementById('help-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+    }
+}
+
+// アプリについて機能
+function showAbout() {
+    const modal = document.getElementById('about-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+    }
+}
+
+// モーダル閉じる関数（エラーハンドリング付き）
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// ログアウト実行
+async function performLogout() {
+    try {
+        // モーダルを閉じる
+        closeModal('logout-confirmation-modal');
+        
+        // まずセッションをクリア
+        if (typeof(Storage) !== "undefined") {
+            localStorage.clear();
+            sessionStorage.clear();
+        }
+        
+        // 複数のログアウトエンドポイントを試行
+        const logoutEndpoints = ['/logout', '/auth/logout', '/api/logout'];
+        let logoutSuccess = false;
+        
+        for (const endpoint of logoutEndpoints) {
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'same-origin'
+                });
+                
+                if (response.ok) {
+                    logoutSuccess = true;
+                    console.log(`Logout successful with endpoint: ${endpoint}`);
+                    break;
+                }
+            } catch (fetchError) {
+                console.log(`Logout failed with endpoint ${endpoint}:`, fetchError);
+            }
+        }
+        
+        // GETリクエストでのログアウトも試行
+        if (!logoutSuccess) {
+            try {
+                window.location.href = '/logout';
+                return; // GETリクエストなのでここで終了
+            } catch (getError) {
+                console.log('GET logout failed:', getError);
+            }
+        }
+        
+        showToast('ログアウトしました', 'success');
+        
+        // ログインページにリダイレクト
+        setTimeout(() => {
+            window.location.href = '/login';
+        }, 1000);
+        
+    } catch (error) {
+        console.error('Logout error:', error);
+        // エラーが発生してもログアウト処理を続行
+        showToast('ログアウトしました', 'success');
+        setTimeout(() => {
+            window.location.href = '/login';
+        }, 1000);
+    }
+}
+
+// プロフィール更新
+async function updateProfile(event) {
+    event.preventDefault();
+    
+    const username = document.getElementById('edit-username').value;
+    const email = document.getElementById('edit-email').value;
+    
+    try {
+        const response = await fetch('/api/update-profile', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                username: username,
+                email: email
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showToast('プロフィールを更新しました', 'success');
+            closeModal('profile-edit-modal');
+            // ページをリロードして更新された情報を表示
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            showToast(data.error || 'プロフィール更新に失敗しました', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('プロフィール更新中にエラーが発生しました', 'error');
+    }
+}
+
+// パスワード変更
+async function changePassword(event) {
+    event.preventDefault();
+    
+    const currentPassword = document.getElementById('current-password').value;
+    const newPassword = document.getElementById('new-password').value;
+    const confirmPassword = document.getElementById('confirm-password').value;
+    
+    if (newPassword !== confirmPassword) {
+        showToast('新しいパスワードが一致しません', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/change-password', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                current_password: currentPassword,
+                new_password: newPassword
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showToast('パスワードを変更しました', 'success');
+            closeModal('password-change-modal');
+            document.getElementById('password-change-form').reset();
+        } else {
+            showToast(data.error || 'パスワード変更に失敗しました', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('パスワード変更中にエラーが発生しました', 'error');
+    }
+}
+
+// アカウント削除
+async function deleteAccount(event) {
+    event.preventDefault();
+    
+    const password = document.getElementById('deletion-password').value;
+    
+    if (!confirm('本当にアカウントを削除しますか？この操作は取り消せません。')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/delete-account', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                password: password
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showToast('アカウントを削除しました', 'success');
+            setTimeout(() => {
+                window.location.href = '/login';
+            }, 2000);
+        } else {
+            showToast(data.error || 'アカウント削除に失敗しました', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('アカウント削除中にエラーが発生しました', 'error');
+    }
+}
+
+// データインポート機能
+async function importData(event) {
+    event.preventDefault();
+    
+    const fileInput = document.getElementById('import-file');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        showToast('ファイルを選択してください', 'error');
+        return;
+    }
+    
+    try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        
+        // データ形式の簡単な検証
+        if (!data.user_info || !data.income_data || !data.expense_data) {
+            showToast('無効なデータ形式です', 'error');
+            return;
+        }
+        
+        showToast('データインポート機能は準備中です', 'info');
+        closeModal('data-import-modal');
+        
+    } catch (error) {
+        console.error('Import error:', error);
+        showToast('ファイルの読み込みに失敗しました', 'error');
+    }
+}
+
+// 通知設定保存
+function saveNotificationSettings() {
+    const settings = {
+        enableNotifications: document.getElementById('enable-notifications').checked,
+        monthlyReminder: document.getElementById('monthly-reminder').checked,
+        backupReminder: document.getElementById('backup-reminder').checked,
+        updateNotifications: document.getElementById('update-notifications').checked
+    };
+    
+    // ローカルストレージに保存
+    localStorage.setItem('notificationSettings', JSON.stringify(settings));
+    
+    showToast('通知設定を保存しました', 'success');
+    closeModal('notification-settings-modal');
+}
+
+// テーマ設定保存
+function saveThemeSettings() {
+    const theme = document.querySelector('input[name="theme"]:checked').value;
+    const fontSize = document.getElementById('font-size').value;
+    
+    const settings = {
+        theme: theme,
+        fontSize: fontSize
+    };
+    
+    // ローカルストレージに保存
+    localStorage.setItem('themeSettings', JSON.stringify(settings));
+    
+    // テーマを適用
+    applyTheme(theme, fontSize);
+    
+    showToast('テーマ設定を保存しました', 'success');
+    closeModal('theme-settings-modal');
+}
+
+// テーマ適用
+function applyTheme(theme, fontSize) {
+    const body = document.body;
+    
+    // テーマクラスをリセット
+    body.classList.remove('theme-light', 'theme-dark', 'theme-auto');
+    body.classList.remove('font-small', 'font-medium', 'font-large');
+    
+    // 新しいテーマを適用
+    body.classList.add(`theme-${theme}`);
+    body.classList.add(`font-${fontSize}`);
+    
+    // ダークモードの処理
+    if (theme === 'dark') {
+        body.classList.add('dark-mode');
+    } else if (theme === 'auto') {
+        // システムの設定に従う
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            body.classList.add('dark-mode');
+        } else {
+            body.classList.remove('dark-mode');
+        }
+    } else {
+        body.classList.remove('dark-mode');
+    }
+}
+
+// 設定の読み込み
+function loadSettings() {
+    // 通知設定の読み込み
+    const notificationSettings = localStorage.getItem('notificationSettings');
+    if (notificationSettings) {
+        const settings = JSON.parse(notificationSettings);
+        document.getElementById('enable-notifications').checked = settings.enableNotifications;
+        document.getElementById('monthly-reminder').checked = settings.monthlyReminder;
+        document.getElementById('backup-reminder').checked = settings.backupReminder;
+        document.getElementById('update-notifications').checked = settings.updateNotifications;
+    }
+    
+    // テーマ設定の読み込み
+    const themeSettings = localStorage.getItem('themeSettings');
+    if (themeSettings) {
+        const settings = JSON.parse(themeSettings);
+        document.querySelector(`input[name="theme"][value="${settings.theme}"]`).checked = true;
+        document.getElementById('font-size').value = settings.fontSize;
+        applyTheme(settings.theme, settings.fontSize);
+    }
+}
+
+// ページ読み込み時に設定を適用
+document.addEventListener('DOMContentLoaded', function() {
+    loadSettings();
+    
+    // 各モーダルを初期状態で非表示にする
+    const modals = document.getElementsByClassName('modal');
+    for (let modal of modals) {
+        modal.style.display = 'none';
+    }
+});
+
+// モーダル外クリックで閉じる（特定のモーダルのみ対象）
+document.addEventListener('click', function(event) {
+    const modals = document.getElementsByClassName('modal');
+    for (let modal of modals) {
+        if (event.target === modal && modal.style.display === 'flex') {
+            modal.style.display = 'none';
+        }
+    }
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,181 @@
+{% extends "base-new.html" %}
+
+{% block title %}{{ year }}年{{ month }}月の家計簿{% endblock %}
+
+{% block body_class %}has-monthly-header has-tab-navigation{% endblock %}
+
+{% block page_title %}家計簿{% endblock %}
+
+{% block monthly_header %}
+<!-- 月次ヘッダーコンポーネント -->
+<div class="monthly-header">
+    <div class="monthly-header-nav">
+        <button class="monthly-nav-btn" onclick="goToPreviousMonth()">
+            <i class="material-icons">chevron_left</i>
+        </button>
+        <div class="monthly-header-info">
+            <h1 class="monthly-title" id="monthlyTitle">{{ year }}年{{ month }}月</h1>
+        </div>
+        <button class="monthly-nav-btn" onclick="goToNextMonth()">
+            <i class="material-icons">chevron_right</i>
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block tab_navigation %}
+<!-- フィルタータブナビゲーション -->
+<div class="filter-tab-navigation">
+    <div class="filter-tab-container">
+        <button class="filter-tab active" data-filter="all" onclick="setFilter('all')">すべて</button>
+        <button class="filter-tab" data-filter="income" onclick="setFilter('income')">収入</button>
+        <button class="filter-tab" data-filter="expense" onclick="setFilter('expense')">支出</button>
+        <button class="filter-tab" onclick="toggleSearch()">
+            <i class="material-icons" style="font-size: 16px; margin-right: 4px;">search</i>
+            検索
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block main_class %}monthly-content{% endblock %}
+
+{% block content %}
+<div class="monthly-container">
+    
+    <!-- 収支サマリー -->
+    <div class="balance-summary">
+        <div class="balance-cards">
+            <div class="balance-card income">
+                <i class="material-icons">trending_up</i>
+                <div class="balance-text">
+                    <div class="balance-label">収入</div>
+                    <div class="balance-amount" id="totalIncome">¥0</div>
+                </div>
+            </div>
+            <div class="balance-card expense">
+                <i class="material-icons">trending_down</i>
+                <div class="balance-text">
+                    <div class="balance-label">支出</div>
+                    <div class="balance-amount" id="totalExpense">¥0</div>
+                </div>
+            </div>
+            <div class="balance-card balance" id="balanceCard">
+                <i class="material-icons">account_balance</i>
+                <div class="balance-text">
+                    <div class="balance-label">収支</div>
+                    <div class="balance-amount" id="totalBalance">¥0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 検索ボックス -->
+    <div class="content-section" id="searchBox" style="display: none;">
+        <input type="text" id="searchInput" placeholder="説明やカテゴリで検索..." onkeyup="searchEntries()" 
+               style="width: 100%; padding: 12px; border: 1px solid var(--color-separator); border-radius: 8px;">
+    </div>
+
+    <!-- エントリーリスト -->
+    <div class="entries-section">
+        <div class="entries-header">
+            <h2 class="entries-title">取引履歴</h2>
+            <span class="entries-count" id="entriesCount">0件</span>
+        </div>
+        <div class="entries-list" id="entriesList">
+            <!-- エントリーがここに動的に挿入されます -->
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block floating_buttons %}
+<!-- フローティングボタン（独立コンポーネント） -->
+<div class="fab-container">
+    <button class="fab-button tools" onclick="showToolsMenu()" title="ツールメニュー">
+        <i class="material-icons">more_vert</i>
+    </button>
+    <button class="fab-button add" onclick="showEntryModal('expense')" title="支出・収入を追加">
+        <i class="material-icons">add</i>
+    </button>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// 家計簿専用JavaScript
+let currentYear = {{ year }};
+let currentMonth = {{ month }};
+
+function goToPreviousMonth() {
+    let prevMonth = currentMonth - 1;
+    let prevYear = currentYear;
+    
+    if (prevMonth < 1) {
+        prevMonth = 12;
+        prevYear--;
+    }
+    
+    window.location.href = `/household-books/${prevYear}/${prevMonth}`;
+}
+
+function goToNextMonth() {
+    let nextMonth = currentMonth + 1;
+    let nextYear = currentYear;
+    
+    if (nextMonth > 12) {
+        nextMonth = 1;
+        nextYear++;
+    }
+    
+    window.location.href = `/household-books/${nextYear}/${nextMonth}`;
+}
+
+function setFilter(filterType) {
+    // フィルタータブの切り替え
+    document.querySelectorAll('.filter-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.querySelector(`[data-filter="${filterType}"]`).classList.add('active');
+    
+    // フィルター処理
+    console.log('Filter set to:', filterType);
+}
+
+function toggleSearch() {
+    const searchBox = document.getElementById('searchBox');
+    const searchInput = document.getElementById('searchInput');
+    
+    if (searchBox.style.display === 'none') {
+        searchBox.style.display = 'block';
+        searchInput.focus();
+    } else {
+        searchBox.style.display = 'none';
+        searchInput.value = '';
+    }
+}
+
+function searchEntries() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    console.log('Search term:', searchTerm);
+    // 検索処理を実装
+}
+
+function showEntryModal(type) {
+    console.log('Show entry modal:', type);
+    // エントリー追加モーダルを表示
+}
+
+function showToolsMenu() {
+    console.log('Show tools menu');
+    // ツールメニューを表示
+}
+
+// ページ読み込み時の初期化
+document.addEventListener('DOMContentLoaded', function() {
+    // 初期データの読み込みなど
+    console.log('Household book page loaded');
+});
+</script>
+{% endblock %} 

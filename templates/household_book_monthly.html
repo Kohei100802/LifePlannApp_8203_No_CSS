@@ -1,0 +1,1621 @@
+{% extends "base-new.html" %}
+
+{% block title %}{{ year }}年{{ month }}月の家計簿 - LifePlanner{% endblock %}
+
+{% block monthly_header %}
+<!-- ヘッダー直下の月次ナビゲーション -->
+<div class="mf-header-nav">
+    <button class="mf-nav-btn" onclick="goToPreviousMonth()">
+        <i class="material-icons">chevron_left</i>
+    </button>
+    <div class="mf-header-info">
+        <h1 class="mf-monthly-title" id="monthlyTitle">{{ year }}年{{ month }}月</h1>
+    </div>
+    <button class="mf-nav-btn" onclick="goToNextMonth()">
+        <i class="material-icons">chevron_right</i>
+    </button>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="mf-monthly-container">
+
+    <!-- 収支サマリー -->
+    <div class="mf-balance-summary">
+        <div class="mf-balance-cards-compact">
+            <div class="mf-balance-card-compact income">
+                <i class="material-icons">trending_up</i>
+                <div class="mf-balance-text">
+                    <div class="mf-balance-label">収入</div>
+                    <div class="mf-balance-amount-compact" id="totalIncome">¥0</div>
+                </div>
+            </div>
+            <div class="mf-balance-card-compact expense">
+                <i class="material-icons">trending_down</i>
+                <div class="mf-balance-text">
+                    <div class="mf-balance-label">支出</div>
+                    <div class="mf-balance-amount-compact" id="totalExpense">¥0</div>
+                </div>
+            </div>
+            <div class="mf-balance-card-compact balance" id="balanceCard">
+                <i class="material-icons">account_balance</i>
+                <div class="mf-balance-text">
+                    <div class="mf-balance-label">収支</div>
+                    <div class="mf-balance-amount-compact" id="totalBalance">¥0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- フィルター・検索 -->
+    <div class="mf-filter-section">
+        <div class="mf-filter-controls">
+            <div class="mf-filter-tabs">
+                <button class="mf-filter-tab active" data-filter="all" onclick="setFilter('all')">すべて</button>
+                <button class="mf-filter-tab" data-filter="income" onclick="setFilter('income')">収入</button>
+                <button class="mf-filter-tab" data-filter="expense" onclick="setFilter('expense')">支出</button>
+            </div>
+            <button class="mf-search-btn" onclick="toggleSearch()">
+                <i class="material-icons">search</i>
+            </button>
+        </div>
+        <div class="mf-search-box" id="searchBox" style="display: none;">
+            <input type="text" id="searchInput" placeholder="説明やカテゴリで検索..." onkeyup="searchEntries()">
+        </div>
+    </div>
+
+    <!-- エントリーリスト -->
+    <div class="mf-entries-section">
+        <div class="mf-entries-header">
+            <h2>取引履歴</h2>
+            <span class="mf-entries-count" id="entriesCount">0件</span>
+        </div>
+        <div class="mf-entries-list" id="entriesList">
+            <!-- エントリーがここに動的に挿入されます -->
+        </div>
+    </div>
+
+    <!-- フローティングアクションボタン -->
+    <div class="fab-container multiple-buttons">
+        <button class="fab-button tools" onclick="switchToCalendarView()" title="カレンダー表示に切り替え">
+            <i class="material-icons">calendar_month</i>
+        </button>
+        <button class="fab-button add" onclick="showEntryModal('expense')" title="支出・収入を追加">
+            <i class="material-icons">add</i>
+        </button>
+    </div>
+</div>
+
+<!-- データ連携モーダル -->
+<div id="syncModal" class="mf-modal">
+    <div class="mf-modal-content">
+        <div class="mf-modal-header">
+            <h3>
+                <i class="material-icons">sync</i>
+                <span>家計簿データ連携</span>
+            </h3>
+            <button class="mf-modal-close" onclick="closeSyncModal()">
+                <i class="material-icons">close</i>
+            </button>
+        </div>
+        <div class="mf-sync-content">
+            <div class="mf-sync-info">
+                <div class="mf-sync-card">
+                    <div class="mf-sync-icon">
+                        <i class="material-icons">assignment</i>
+                    </div>
+                    <div class="mf-sync-text">
+                        <h4>家計簿２からデータを取得</h4>
+                        <p>家計簿２（household-book-dev）のデータをこの家計簿に連携します</p>
+                    </div>
+                </div>
+            </div>
+            <div class="mf-sync-actions">
+                <button type="button" class="mf-btn-secondary" onclick="closeSyncModal()">キャンセル</button>
+                <button type="button" class="mf-btn-primary" onclick="syncHouseholdData()">
+                    <i class="material-icons">sync</i>
+                    データを連携
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- エントリー追加・編集モーダル -->
+<div id="entryModal" class="mf-modal">
+    <div class="mf-modal-content">
+        <div class="mf-modal-header">
+            <h3 id="modalTitle">
+                <i class="material-icons" id="modalIcon">add</i>
+                <span id="modalTitleText">収支を追加</span>
+            </h3>
+            <button class="mf-modal-close" onclick="closeEntryModal()">
+                <i class="material-icons">close</i>
+            </button>
+        </div>
+        <form id="entryForm" class="mf-entry-form">
+            <input type="hidden" id="entryId" name="id">
+            <input type="hidden" id="householdBookId" name="household_book_id">
+            
+            <!-- タイプ選択 -->
+            <div class="mf-type-selector">
+                <button type="button" class="mf-type-btn income" id="incomeBtn" onclick="setEntryType('income')">
+                    <i class="material-icons">trending_up</i>
+                    <span>収入</span>
+                </button>
+                <button type="button" class="mf-type-btn expense" id="expenseBtn" onclick="setEntryType('expense')">
+                    <i class="material-icons">trending_down</i>
+                    <span>支出</span>
+                </button>
+            </div>
+            
+            <!-- 金額入力 -->
+            <div class="mf-amount-input">
+                <label for="entryAmount">金額</label>
+                <div class="mf-amount-field">
+                    <span class="mf-currency">¥</span>
+                    <input type="number" id="entryAmount" name="amount" placeholder="0" required min="0" step="1">
+                </div>
+            </div>
+            
+            <!-- カテゴリ選択 -->
+            <div class="mf-form-group">
+                <label for="entryCategory">カテゴリ</label>
+                <div class="mf-category-grid" id="categoryGrid">
+                    <!-- カテゴリがここに動的に挿入されます -->
+                </div>
+            </div>
+            
+            <!-- 日付選択 -->
+            <div class="mf-form-group">
+                <label for="entryDate">日付</label>
+                <input type="date" id="entryDate" name="entry_date" required>
+            </div>
+            
+            <!-- 説明入力 -->
+            <div class="mf-form-group">
+                <label for="entryDescription">説明（任意）</label>
+                <input type="text" id="entryDescription" name="description" placeholder="例：スーパーでの買い物">
+            </div>
+            
+            <div class="mf-modal-actions">
+                <button type="button" class="mf-btn-secondary" onclick="closeEntryModal()">キャンセル</button>
+                <button type="button" class="mf-btn-danger" id="deleteBtn" onclick="deleteEntry()" style="display: none;">削除</button>
+                <button type="submit" class="mf-btn-primary" id="submitBtn">追加</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+
+    
+    /* メインコンテンツ調整（web版統一） */
+    .mf-monthly-container {
+        margin-top: 72px; /* mf-header-nav の高さ分 */
+        padding-top: 20px;
+        padding-bottom: 100px;
+        min-height: calc(100vh - 192px); /* ヘッダー + mf-header-nav + フッター */
+        max-height: none;
+        overflow-y: visible;
+    }
+    
+
+    
+    /* 収支サマリー */
+    .mf-balance-summary {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        margin-bottom: 20px;
+    }
+    
+    .mf-balance-cards-compact {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 16px;
+    }
+    
+    .mf-balance-card-compact {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px;
+        border-radius: 12px;
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+    }
+    
+    .mf-balance-card-compact.income {
+        background: linear-gradient(135deg, #e8f5e8, #f1f8f1);
+        border-color: #4CAF50;
+    }
+    
+    .mf-balance-card-compact.expense {
+        background: linear-gradient(135deg, #ffeaea, #fff0f0);
+        border-color: #F44336;
+    }
+    
+    .mf-balance-card-compact.balance {
+        background: linear-gradient(135deg, #e3f2fd, #f0f8ff);
+        border-color: #2196F3;
+    }
+    
+    .mf-balance-card-compact.balance.negative {
+        background: linear-gradient(135deg, #ffeaea, #fff0f0);
+        border-color: #F44336;
+    }
+    
+    .mf-balance-card-compact .material-icons {
+        font-size: 18px;
+        color: #666;
+    }
+    
+    .mf-balance-card-compact.income .material-icons {
+        color: #4CAF50;
+    }
+    
+    .mf-balance-card-compact.expense .material-icons {
+        color: #F44336;
+    }
+    
+    .mf-balance-card-compact.balance .material-icons {
+        color: #2196F3;
+    }
+    
+    .mf-balance-card-compact.balance.negative .material-icons {
+        color: #F44336;
+    }
+    
+    .mf-balance-text {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .mf-balance-label {
+        font-size: 11px;
+        color: #666;
+        margin-bottom: 2px;
+        font-weight: 500;
+    }
+    
+    .mf-balance-amount-compact {
+        font-size: 13px;
+        font-weight: 600;
+        color: #333;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    /* クイック入力 */
+    .mf-quick-input {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+    
+    .mf-quick-input-btn {
+        flex: 1;
+        background: white;
+        border: none;
+        border-radius: 12px;
+        padding: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        font-weight: 500;
+    }
+    
+    .mf-quick-input-btn.income {
+        color: #4CAF50;
+        border: 2px solid #4CAF50;
+    }
+    
+    .mf-quick-input-btn.expense {
+        color: #f44336;
+        border: 2px solid #f44336;
+    }
+    
+    .mf-quick-input-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    }
+    
+    /* フィルター */
+    .mf-filter-section {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        margin-bottom: 20px;
+    }
+    
+    .mf-filter-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+    
+    .mf-filter-tabs {
+        display: flex;
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 4px;
+    }
+    
+    .mf-filter-tab {
+        background: none;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-weight: 500;
+        color: #666;
+    }
+    
+    .mf-filter-tab.active {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+    }
+    
+    .mf-search-btn {
+        background: #f8f9fa;
+        border: none;
+        border-radius: 50%;
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        color: #666;
+    }
+    
+    .mf-search-btn:hover {
+        transform: scale(1.05);
+        color: #333;
+    }
+    
+    .mf-search-box {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 16px;
+        margin-top: 12px;
+    }
+    
+    .mf-search-box input {
+        width: 100%;
+        border: none;
+        outline: none;
+        font-size: 1rem;
+        background: none;
+    }
+    
+    /* エントリーセクション */
+    .mf-entries-section {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        flex: 1;
+        overflow-y: visible; /* 内部スクロールを無効化 */
+    }
+    
+    .mf-entries-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+    }
+    
+    .mf-entries-header h2 {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #333;
+        margin: 0;
+    }
+    
+    .mf-entries-count {
+        font-size: 0.9rem;
+        color: #666;
+    }
+    
+    .mf-entries-list {
+        max-height: none;
+        overflow: visible;
+    }
+    
+    /* エントリーアイテム */
+    .mf-entry-item {
+        display: flex;
+        align-items: center;
+        padding: 8px 16px;
+        background: white;
+        border-radius: 8px;
+        margin-bottom: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: 1px solid #f0f0f0;
+        min-height: 48px;
+    }
+    
+    .mf-entry-item:hover {
+        background: #f8f9fa;
+        border-color: #e0e0e0;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .mf-entry-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 12px;
+        flex-shrink: 0;
+    }
+    
+    .mf-entry-icon.income {
+        background: linear-gradient(135deg, #4CAF50, #66BB6A);
+        color: white;
+    }
+    
+    .mf-entry-icon.expense {
+        background: linear-gradient(135deg, #F44336, #EF5350);
+        color: white;
+    }
+    
+    .mf-entry-icon .material-icons {
+        font-size: 16px;
+    }
+    
+    .mf-entry-info {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .mf-entry-category {
+        font-size: 14px;
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 2px;
+    }
+    
+    .mf-entry-description {
+        font-size: 12px;
+        color: #666;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .mf-entry-amount {
+        font-size: 14px;
+        font-weight: 600;
+        flex-shrink: 0;
+        margin-left: 8px;
+    }
+    
+    .mf-entry-amount.income {
+        color: #4CAF50;
+    }
+    
+    .mf-entry-amount.expense {
+        color: #F44336;
+    }
+    
+    /* 日付グループ */
+    .mf-date-group {
+        margin-bottom: 24px;
+    }
+    
+    .mf-date-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        background: #e3f2fd;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #1976d2;
+    }
+    
+    .mf-date-total {
+        font-weight: 700;
+    }
+    
+    /* モーダル */
+    .mf-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .mf-modal.active {
+        display: flex;
+    }
+    
+    .mf-modal-content {
+        background: white;
+        border-radius: 16px;
+        width: 90%;
+        max-width: 500px;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    }
+    
+    .mf-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 24px 24px 0 24px;
+        border-bottom: 1px solid #eee;
+        margin-bottom: 24px;
+    }
+    
+    .mf-modal-header h3 {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: #333;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .mf-modal-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: #666;
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 50%;
+        transition: all 0.2s ease;
+    }
+    
+    .mf-modal-close:hover {
+        background: #f5f5f5;
+    }
+    
+    /* エントリーフォーム */
+    .mf-entry-form {
+        padding: 0 24px 24px 24px;
+    }
+    
+    .mf-type-selector {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 24px;
+    }
+    
+    .mf-type-btn {
+        flex: 1;
+        background: #f8f9fa;
+        border: 2px solid #ddd;
+        border-radius: 12px;
+        padding: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-weight: 500;
+        color: #666;
+    }
+    
+    .mf-type-btn.active.income {
+        background: #e8f5e8;
+        border-color: #4CAF50;
+        color: #4CAF50;
+    }
+    
+    .mf-type-btn.active.expense {
+        background: #ffeaea;
+        border-color: #f44336;
+        color: #f44336;
+    }
+    
+    .mf-type-btn:hover {
+        background: #e9ecef;
+        transform: translateY(-1px);
+    }
+    
+    .mf-amount-input {
+        margin-bottom: 24px;
+    }
+    
+    .mf-amount-input label {
+        display: block;
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 8px;
+    }
+    
+    .mf-amount-field {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+    
+    .mf-currency {
+        position: absolute;
+        left: 16px;
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #666;
+        z-index: 1;
+    }
+    
+    .mf-amount-field input {
+        width: 100%;
+        padding: 16px 16px 16px 40px;
+        border: 2px solid #e0e0e0;
+        border-radius: 12px;
+        font-size: 1.2rem;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        box-sizing: border-box;
+    }
+    
+    .mf-amount-field input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .mf-form-group {
+        margin-bottom: 20px;
+    }
+    
+    .mf-form-group label {
+        display: block;
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 8px;
+    }
+    
+    .mf-form-group input {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+        box-sizing: border-box;
+    }
+    
+    .mf-form-group input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .mf-category-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 8px;
+    }
+    
+    .mf-category-item {
+        background: #f8f9fa;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        padding: 12px 8px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 0.8rem;
+    }
+    
+    .mf-category-item:hover {
+        background: #e9ecef;
+    }
+    
+    .mf-category-item.selected {
+        background: #e3f2fd;
+        border-color: #2196F3;
+        color: #2196F3;
+    }
+    
+    .mf-category-item .material-icons {
+        font-size: 20px;
+        margin-bottom: 4px;
+        display: block;
+    }
+    
+    /* ボタン */
+    .mf-btn-primary, .mf-btn-secondary, .mf-btn-danger {
+        border: none;
+        border-radius: 8px;
+        padding: 12px 24px;
+        font-size: 0.95rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .mf-btn-primary {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+    }
+    
+    .mf-btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+    }
+    
+    .mf-btn-secondary {
+        background: #f8f9fa;
+        color: #666;
+        border: 1px solid #ddd;
+    }
+    
+    .mf-btn-secondary:hover {
+        background: #e9ecef;
+        transform: translateY(-1px);
+    }
+    
+    .mf-btn-danger {
+        background: #f44336;
+        color: white;
+    }
+    
+    .mf-btn-danger:hover {
+        background: #d32f2f;
+        transform: translateY(-1px);
+    }
+    
+    .mf-modal-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        margin-top: 24px;
+        padding-top: 24px;
+        border-top: 1px solid #eee;
+    }
+    
+    /* 空状態 */
+    .mf-empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #666;
+    }
+    
+    .mf-empty-state .material-icons {
+        font-size: 4rem;
+        color: #ddd;
+        margin-bottom: 16px;
+    }
+    
+    .mf-empty-state h3 {
+        font-size: 1.2rem;
+        margin: 0 0 8px 0;
+    }
+    
+    .mf-empty-state p {
+        margin: 0 0 24px 0;
+        opacity: 0.8;
+    }
+    
+    /* レスポンシブ */
+    @media (max-width: 768px) {
+        .mf-monthly-container {
+            padding: 10px;
+            padding-bottom: 80px;
+        }
+        
+        .mf-balance-summary {
+            padding: 16px;
+        }
+        
+        .mf-balance-cards-compact {
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+        }
+        
+        .mf-balance-card-compact {
+            padding: 12px 8px;
+            gap: 6px;
+        }
+        
+        .mf-balance-card-compact .material-icons {
+            font-size: 16px;
+        }
+        
+        .mf-balance-label {
+            font-size: 10px;
+        }
+        
+        .mf-balance-amount-compact {
+            font-size: 12px;
+        }
+        
+        .mf-filter-section,
+        .mf-entries-section {
+            padding: 16px;
+        }
+    }
+    
+    /* フローティングボタンのスタイルはfab-unified.cssで統一管理 */
+    
+    /* データ連携モーダル */
+    .mf-sync-content {
+        padding: 20px 0;
+    }
+    
+    .mf-sync-info {
+        margin-bottom: 24px;
+    }
+    
+    .mf-sync-card {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 12px;
+        border: 2px dashed #4CAF50;
+    }
+    
+    .mf-sync-icon {
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, #4CAF50, #45a049);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        flex-shrink: 0;
+    }
+    
+    .mf-sync-icon i {
+        font-size: 24px;
+    }
+    
+    .mf-sync-text h4 {
+        margin: 0 0 8px 0;
+        color: #333;
+        font-size: 16px;
+        font-weight: 600;
+    }
+    
+    .mf-sync-text p {
+        margin: 0;
+        color: #666;
+        font-size: 14px;
+        line-height: 1.4;
+    }
+    
+    .mf-sync-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        padding-top: 16px;
+        border-top: 1px solid #eee;
+    }
+    
+    .mf-btn-primary i {
+        margin-right: 6px;
+        font-size: 18px;
+    }
+    
+    /* フローティングボタンのスタイルはfab-unified.cssで統一管理 */
+    
+    </style>
+    
+    <script>
+    let currentFilter = 'all';
+    let currentEntryType = 'expense';
+    let currentEntries = [];
+    let expenseCategories = [];
+    let incomeCategories = [];
+    let selectedCategoryId = null;
+    let editingEntryId = null;
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeMonthlyPage();
+    });
+    
+    function initializeMonthlyPage() {
+        loadCategories();
+        loadEntries();
+        setupEventListeners();
+        setDefaultDate();
+    }
+    
+    function loadCategories() {
+        Promise.all([
+            fetch('/api/expense-categories').then(r => r.json()),
+            fetch('/api/income-categories').then(r => r.json())
+        ])
+        .then(([expenseData, incomeData]) => {
+            // APIレスポンス形式に対応
+            expenseCategories = expenseData.success ? expenseData.categories : expenseData;
+            incomeCategories = incomeData.success ? incomeData.categories : incomeData;
+            updateCategoryGrid();
+        })
+        .catch(error => {
+            console.error('カテゴリ読み込みエラー:', error);
+            showToast('カテゴリの読み込みに失敗しました', 'error');
+        });
+    }
+    
+    function loadEntries() {
+        getHouseholdBookId()
+            .then(householdBookId => {
+                if (!householdBookId) {
+                    throw new Error('家計簿IDが取得できませんでした');
+                }
+                
+                return fetch(`/api/household-entries?household_book_id=${householdBookId}`);
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('データの取得に失敗しました');
+                }
+                return response.json();
+            })
+            .then(data => {
+                currentEntries = data || [];
+                displayEntries(currentEntries);
+                updateSummary(currentEntries);
+            })
+            .catch(error => {
+                console.error('エントリー読み込みエラー:', error);
+                showToast('データの読み込みに失敗しました', 'error');
+                
+                // エラー時は空の状態を表示
+                currentEntries = [];
+                displayEntries(currentEntries);
+                updateSummary(currentEntries);
+            });
+    }
+    
+    function getHouseholdBookId() {
+        // URLから年月を取得して家計簿IDを特定
+        const pathParts = window.location.pathname.split('/');
+        const year = parseInt(pathParts[2]);
+        const month = parseInt(pathParts[3]);
+        
+        // 家計簿IDを取得するAPIを呼び出す
+        return fetch('/api/household-books')
+            .then(response => response.json())
+            .then(books => {
+                const book = books.find(b => b.year == year && b.month == month);
+                if (book) {
+                    // DOM要素の存在確認
+                    const householdBookIdEl = document.getElementById('householdBookId');
+                    const householdBookNameEl = document.getElementById('householdBookName');
+                    
+                    if (householdBookIdEl) {
+                        householdBookIdEl.value = book.id;
+                    }
+                    if (householdBookNameEl) {
+                        householdBookNameEl.textContent = book.name;
+                    }
+                    return book.id;
+                }
+                
+                // 家計簿が存在しない場合は自動作成
+                return createHouseholdBook(year, month);
+            });
+    }
+    
+    function createHouseholdBook(year, month) {
+        const bookData = {
+            year: year,
+            month: month,
+            name: `${year}年${month}月の家計簿`,
+            description: `${year}年${month}月の収支管理`
+        };
+        
+        return fetch('/api/household-books', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(bookData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('家計簿の作成に失敗しました');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // DOM要素の存在確認
+            const householdBookIdEl = document.getElementById('householdBookId');
+            const householdBookNameEl = document.getElementById('householdBookName');
+            
+            if (householdBookIdEl) {
+                householdBookIdEl.value = data.id;
+            }
+            if (householdBookNameEl) {
+                householdBookNameEl.textContent = data.name;
+            }
+            showToast('家計簿を作成しました', 'success');
+            return data.id;
+        })
+        .catch(error => {
+            console.error('家計簿作成エラー:', error);
+            showToast('家計簿の作成に失敗しました', 'error');
+            throw error;
+        });
+    }
+    
+    function displayEntries(entries) {
+        const container = document.getElementById('entriesList');
+        const entriesCountEl = document.getElementById('entriesCount');
+        
+        if (!container) {
+            console.error('entriesList要素が見つかりません');
+            return;
+        }
+        
+        const filteredEntries = filterEntries(entries);
+        
+        if (entriesCountEl) {
+            entriesCountEl.textContent = `${filteredEntries.length}件`;
+        }
+        
+        if (filteredEntries.length === 0) {
+            container.innerHTML = `
+                <div class="mf-empty-state">
+                    <i class="material-icons">receipt_long</i>
+                    <h3>取引がありません</h3>
+                    <p>上のボタンから収入や支出を追加してみましょう</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // 日付でグループ化
+        const groupedEntries = groupEntriesByDate(filteredEntries);
+        
+        container.innerHTML = Object.entries(groupedEntries)
+            .sort(([a], [b]) => new Date(b) - new Date(a))
+            .map(([date, dayEntries]) => `
+                <div class="mf-date-group">
+                    <div class="mf-date-header">
+                        <span>${formatDateHeader(date)}</span>
+                        <span class="mf-date-total">¥${calculateDayTotal(dayEntries).toLocaleString()}</span>
+                    </div>
+                    ${dayEntries.map(entry => `
+                        <div class="mf-entry-item" onclick="editEntry(${entry.id})">
+                            <div class="mf-entry-icon ${entry.entry_type}">
+                                <i class="material-icons">${getCategoryIcon(entry)}</i>
+                            </div>
+                            <div class="mf-entry-info">
+                                <div class="mf-entry-category">${getCategoryName(entry)}</div>
+                                <div class="mf-entry-description">${entry.description || ''}</div>
+                            </div>
+                            <div class="mf-entry-amount ${entry.entry_type}">${formatAmount(entry.amount)}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `).join('');
+    }
+    
+    function groupEntriesByDate(entries) {
+        return entries.reduce((groups, entry) => {
+            const date = entry.entry_date.split('T')[0];
+            if (!groups[date]) groups[date] = [];
+            groups[date].push(entry);
+            return groups;
+        }, {});
+    }
+    
+    function calculateDayTotal(entries) {
+        return entries.reduce((total, entry) => {
+            return total + (entry.entry_type === 'income' ? entry.amount : -entry.amount);
+        }, 0);
+    }
+    
+    function formatDateHeader(dateString) {
+        const date = new Date(dateString);
+        const today = new Date();
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        
+        if (date.toDateString() === today.toDateString()) {
+            return '今日';
+        } else if (date.toDateString() === yesterday.toDateString()) {
+            return '昨日';
+        } else {
+            return `${date.getMonth() + 1}月${date.getDate()}日`;
+        }
+    }
+    
+    function formatTime(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleTimeString('ja-JP', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+    }
+    
+    function getCategoryIcon(entry) {
+        if (entry.entry_type === 'income' && entry.income_category) {
+            return entry.income_category.icon;
+        } else if (entry.entry_type === 'expense' && entry.expense_category) {
+            return entry.expense_category.icon;
+        }
+        return 'category';
+    }
+    
+    function getCategoryName(entry) {
+        if (entry.entry_type === 'income' && entry.income_category) {
+            return entry.income_category.name;
+        } else if (entry.entry_type === 'expense' && entry.expense_category) {
+            return entry.expense_category.name;
+        }
+        return 'その他';
+    }
+    
+    function updateSummary(entries) {
+        const income = entries.filter(e => e.entry_type === 'income').reduce((sum, e) => sum + e.amount, 0);
+        const expense = entries.filter(e => e.entry_type === 'expense').reduce((sum, e) => sum + e.amount, 0);
+        const balance = income - expense;
+        
+        // DOM要素の存在確認
+        const totalIncomeEl = document.getElementById('totalIncome');
+        const totalExpenseEl = document.getElementById('totalExpense');
+        const totalBalanceEl = document.getElementById('totalBalance');
+        
+        if (totalIncomeEl) {
+            totalIncomeEl.textContent = `¥${income.toLocaleString()}`;
+        }
+        if (totalExpenseEl) {
+            totalExpenseEl.textContent = `¥${expense.toLocaleString()}`;
+        }
+        if (totalBalanceEl) {
+            totalBalanceEl.textContent = `¥${balance.toLocaleString()}`;
+        }
+        
+        // 収支カードの色を更新
+        const balanceCard = document.getElementById('balanceCard');
+        if (balanceCard) {
+            balanceCard.className = 'mf-balance-card-compact balance';
+            if (balance > 0) {
+                balanceCard.classList.add('positive');
+            } else if (balance < 0) {
+                balanceCard.classList.add('negative');
+            }
+        }
+    }
+    
+    function filterEntries(entries) {
+        let filtered = entries;
+        
+        // タイプフィルター
+        if (currentFilter !== 'all') {
+            filtered = filtered.filter(entry => entry.entry_type === currentFilter);
+        }
+        
+        // 検索フィルター
+        const searchTerm = document.getElementById('searchInput')?.value?.toLowerCase();
+        if (searchTerm) {
+            filtered = filtered.filter(entry => 
+                entry.description?.toLowerCase().includes(searchTerm) ||
+                getCategoryName(entry).toLowerCase().includes(searchTerm)
+            );
+        }
+        
+        return filtered;
+    }
+    
+    function setFilter(filter) {
+        currentFilter = filter;
+        
+        // タブの表示を更新
+        document.querySelectorAll('.mf-filter-tab').forEach(tab => {
+            tab.classList.remove('active');
+            if (tab.dataset.filter === filter) {
+                tab.classList.add('active');
+            }
+        });
+        
+        displayEntries(currentEntries);
+    }
+    
+    function toggleSearch() {
+        const searchBox = document.getElementById('searchBox');
+        const isVisible = searchBox.style.display !== 'none';
+        
+        if (isVisible) {
+            searchBox.style.display = 'none';
+            document.getElementById('searchInput').value = '';
+            searchEntries();
+        } else {
+            searchBox.style.display = 'block';
+            document.getElementById('searchInput').focus();
+        }
+    }
+    
+    function searchEntries() {
+        displayEntries(currentEntries);
+    }
+    
+    function showEntryModal(type = 'expense') {
+        currentEntryType = type;
+        editingEntryId = null;
+        
+        
+        
+        // モーダルタイトル設定
+        document.getElementById('modalTitleText').textContent = type === 'income' ? '収入を追加' : '支出を追加';
+        document.getElementById('modalIcon').textContent = type === 'income' ? 'trending_up' : 'trending_down';
+        
+        // フォームリセット
+        document.getElementById('entryForm').reset();
+        document.getElementById('entryId').value = '';
+        
+        // タイプボタン設定
+        setEntryType(type);
+        
+        // ボタン表示設定
+        document.getElementById('deleteBtn').style.display = 'none';
+        document.getElementById('submitBtn').textContent = '追加';
+        
+        // 家計簿IDを設定
+        getHouseholdBookId().then(id => {
+            document.getElementById('householdBookId').value = id;
+        });
+        
+        document.getElementById('entryModal').classList.add('active');
+    }
+    
+    function closeEntryModal() {
+        document.getElementById('entryModal').classList.remove('active');
+        selectedCategoryId = null;
+        updateCategoryGrid();
+    }
+    
+    function setEntryType(type) {
+        currentEntryType = type;
+        
+        // ボタンの状態更新
+        document.getElementById('incomeBtn').classList.toggle('active', type === 'income');
+        document.getElementById('expenseBtn').classList.toggle('active', type === 'expense');
+        
+        // カテゴリグリッドを更新
+        updateCategoryGrid();
+    }
+    
+    function updateCategoryGrid() {
+        const container = document.getElementById('categoryGrid');
+        const categories = currentEntryType === 'income' ? incomeCategories : expenseCategories;
+        
+        container.innerHTML = categories.map(category => `
+            <div class="mf-category-item ${selectedCategoryId === category.id ? 'selected' : ''}" 
+                 onclick="selectCategory(${category.id})" 
+                 style="color: ${category.color}">
+                <i class="material-icons">${category.icon}</i>
+                <span>${category.name}</span>
+            </div>
+        `).join('');
+    }
+    
+    function selectCategory(categoryId) {
+        selectedCategoryId = categoryId;
+        updateCategoryGrid();
+    }
+    
+    function setDefaultDate() {
+        const today = new Date();
+        const dateString = today.toISOString().split('T')[0];
+        document.getElementById('entryDate').value = dateString;
+    }
+    
+    function setupEventListeners() {
+        document.getElementById('entryForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            saveEntry();
+        });
+        
+        // モーダルの外側クリックで閉じる
+        document.getElementById('entryModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEntryModal();
+            }
+        });
+    
+        // モーダル背景クリック時のクローズ機能
+        document.addEventListener('DOMContentLoaded', function() {
+            // エントリーモーダル
+            const entryModal = document.getElementById('entryModal');
+            entryModal.addEventListener('click', function(e) {
+                if (e.target === entryModal) {
+                    closeEntryModal();
+                }
+            });
+    
+            // データ連携モーダル
+            const syncModal = document.getElementById('syncModal');
+            syncModal.addEventListener('click', function(e) {
+                if (e.target === syncModal) {
+                    closeSyncModal();
+                }
+            });
+        });
+    }
+    
+    function saveEntry() {
+        const formData = new FormData(document.getElementById('entryForm'));
+        const data = Object.fromEntries(formData.entries());
+        
+        // バリデーション
+        if (!data.amount || data.amount <= 0) {
+            showToast('金額を入力してください', 'error');
+            return;
+        }
+        
+        if (!selectedCategoryId) {
+            showToast('カテゴリを選択してください', 'error');
+            return;
+        }
+        
+        // データ準備
+        data.entry_type = currentEntryType;
+        data.amount = parseFloat(data.amount);
+        
+        if (currentEntryType === 'income') {
+            data.income_category_id = selectedCategoryId;
+            data.expense_category_id = null;
+        } else {
+            data.expense_category_id = selectedCategoryId;
+            data.income_category_id = null;
+        }
+        
+        const url = editingEntryId ? `/api/household-entries/${editingEntryId}` : '/api/household-entries';
+        const method = editingEntryId ? 'PUT' : 'POST';
+        
+        fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.message || result.id) {
+                showToast(editingEntryId ? '更新しました' : '追加しました', 'success');
+                closeEntryModal();
+                loadEntries();
+            } else {
+                throw new Error(result.error || '保存に失敗しました');
+            }
+        })
+        .catch(error => {
+            console.error('エントリー保存エラー:', error);
+            showToast('保存に失敗しました', 'error');
+        });
+    }
+    
+    function editEntry(entryId) {
+        const entry = currentEntries.find(e => e.id === entryId);
+        if (!entry) return;
+        
+        editingEntryId = entryId;
+        
+        // モーダルタイトル設定
+        document.getElementById('modalTitleText').textContent = entry.entry_type === 'income' ? '収入を編集' : '支出を編集';
+        document.getElementById('modalIcon').textContent = 'edit';
+        
+        // フォームに値を設定
+        document.getElementById('entryId').value = entry.id;
+        document.getElementById('entryAmount').value = entry.amount;
+        document.getElementById('entryDescription').value = entry.description || '';
+        document.getElementById('entryDate').value = entry.entry_date.split('T')[0];
+        
+        // タイプとカテゴリを設定
+        setEntryType(entry.entry_type);
+        selectedCategoryId = entry.entry_type === 'income' ? entry.income_category_id : entry.expense_category_id;
+        updateCategoryGrid();
+        
+        // ボタン表示設定
+        document.getElementById('deleteBtn').style.display = 'block';
+        document.getElementById('submitBtn').textContent = '更新';
+        
+        document.getElementById('entryModal').classList.add('active');
+    }
+    
+    function deleteEntry() {
+        if (!editingEntryId) return;
+        
+        if (!confirm('この取引を削除しますか？')) return;
+        
+        fetch(`/api/household-entries/${editingEntryId}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.message) {
+                showToast('削除しました', 'success');
+                closeEntryModal();
+                loadEntries();
+            } else {
+                throw new Error(result.error || '削除に失敗しました');
+            }
+        })
+        .catch(error => {
+            console.error('エントリー削除エラー:', error);
+            showToast('削除に失敗しました', 'error');
+        });
+    }
+    
+    function goBack() {
+        window.location.href = '/household-books';
+    }
+    
+    function toggleMenu() {
+        // TODO: メニュー機能の実装
+        showToast('メニュー機能は準備中です', 'info');
+    }
+    
+    
+    
+    function formatAmount(amount) {
+        return `¥${amount.toLocaleString()}`;
+    }
+    
+    // データ連携モーダル関数
+    function showSyncModal() {
+        document.getElementById('syncModal').style.display = 'flex';
+    }
+    
+    function closeSyncModal() {
+        document.getElementById('syncModal').style.display = 'none';
+    }
+    
+    function syncHouseholdData() {
+        // 確認ダイアログ
+        if (!confirm('家計簿２のデータをこの家計簿に連携しますか？\n既存のデータに追加されます。')) {
+            return;
+        }
+    
+        // ローディング表示
+        const syncBtn = event.target;
+        const originalText = syncBtn.innerHTML;
+        syncBtn.innerHTML = '<i class="material-icons">hourglass_empty</i>連携中...';
+        syncBtn.disabled = true;
+    
+        // 家計簿２のデータを取得
+        fetch('/household-book-dev')
+            .then(response => response.text())
+            .then(html => {
+                // HTMLからデータを抽出（簡易的な実装）
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                // 実際の実装では、APIエンドポイントを作成してデータを取得
+                return fetch('/api/household-book-dev/entries');
+            })
+            .then(response => response.json())
+            .then(entries => {
+                // 現在の家計簿IDを取得
+                return getHouseholdBookId().then(householdBookId => {
+                    // 各エントリーを現在の家計簿に追加
+                    const promises = entries.map(entry => {
+                        const entryData = {
+                            household_book_id: householdBookId,
+                            entry_type: entry.type,
+                            amount: entry.amount,
+                            description: entry.description,
+                            expense_category_id: entry.expense_category_id,
+                            income_category_id: entry.income_category_id,
+                            entry_date: entry.date
+                        };
+                        
+                        return fetch('/api/household-entries', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(entryData)
+                        });
+                    });
+                    
+                    return Promise.all(promises);
+                });
+            })
+            .then(() => {
+                showToast('データ連携が完了しました', 'success');
+                closeSyncModal();
+                loadEntries(); // データを再読み込み
+            })
+            .catch(error => {
+                console.error('データ連携エラー:', error);
+                showToast('データ連携に失敗しました', 'error');
+            })
+            .finally(() => {
+                syncBtn.innerHTML = originalText;
+                syncBtn.disabled = false;
+            });
+    }
+    
+    // 前後の月への遷移機能
+    function goToPreviousMonth() {
+        const pathParts = window.location.pathname.split('/');
+        const currentYear = parseInt(pathParts[2]);
+        const currentMonth = parseInt(pathParts[3]);
+        
+        let newYear = currentYear;
+        let newMonth = currentMonth - 1;
+        
+        if (newMonth < 1) {
+            newMonth = 12;
+            newYear = currentYear - 1;
+        }
+        
+        window.location.href = `/household-books/${newYear}/${newMonth}`;
+    }
+    
+    function goToNextMonth() {
+        const pathParts = window.location.pathname.split('/');
+        const currentYear = parseInt(pathParts[2]);
+        const currentMonth = parseInt(pathParts[3]);
+        
+        let newYear = currentYear;
+        let newMonth = currentMonth + 1;
+        
+        if (newMonth > 12) {
+            newMonth = 1;
+            newYear = currentYear + 1;
+        }
+        
+        window.location.href = `/household-books/${newYear}/${newMonth}`;
+    }
+    
+    // ページ読み込み時にタイトルを更新
+    function updateMonthlyTitle() {
+        const pathParts = window.location.pathname.split('/');
+        const year = parseInt(pathParts[2]);
+        const month = parseInt(pathParts[3]);
+        
+        const titleElement = document.getElementById('monthlyTitle');
+        if (titleElement) {
+            titleElement.textContent = `${year}年${month}月`;
+        }
+    }
+    
+    function switchToCalendarView() {
+        const pathParts = window.location.pathname.split('/');
+        const year = parseInt(pathParts[2]);
+        const month = parseInt(pathParts[3]);
+        window.location.href = `/household-calendar/${year}/${month}`;
+    }
+    </script>
+    {% endblock %} 

@@ -1,0 +1,154 @@
+{% extends "base-new.html" %}
+
+{% block title %}ライフプランシミュレーター{% endblock %}
+
+{% block content %}
+<div class="modern-tabs-container">
+    <!-- ヘッダーセクション -->
+    <div class="landing-header-modern">
+        <div class="app-title-container">
+            <div class="app-icon-large">
+                <i class="material-icons">analytics</i>
+            </div>
+            <h1 class="app-title-modern">ライフプランシミュレーター</h1>
+            <p class="app-subtitle">将来を見据えた資産管理とライフプランニング</p>
+        </div>
+        
+        <div class="quote-section-modern">
+            <div class="quote-card-modern">
+                <div class="quote-icon">
+                    <i class="material-icons">format_quote</i>
+                </div>
+                <p class="quote-text-modern">
+                    リスクは、自分が何をやっているかよくわからない時に起こる。
+                </p>
+                <p class="quote-author-modern">— ウォーレン・バフェット</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- メイン機能セクション -->
+    <div class="content-section">
+        <div class="section-header">
+            <h2 class="section-title-modern">主な機能</h2>
+            <p class="section-subtitle">あなたの人生設計をサポートする包括的なツール</p>
+        </div>
+            
+        <div class="modern-menu-grid">
+            <a href="{{ url_for('expenses_incomes') }}" class="modern-menu-card feature-card">
+                <div class="card-icon expenses-icon">
+                        <i class="material-icons">account_balance_wallet</i>
+                    </div>
+                <div class="card-content">
+                    <h3 class="card-title">支出・収入管理</h3>
+                    <p class="card-description">生活費、住居費、給与、投資収入など詳細な収支管理</p>
+                </div>
+                <div class="card-arrow">
+                    <i class="material-icons">arrow_forward_ios</i>
+                </div>
+            </a>
+                
+            <a href="{{ url_for('simulation') }}" class="modern-menu-card feature-card">
+                <div class="card-icon incomes-icon">
+                        <i class="material-icons">trending_up</i>
+                    </div>
+                <div class="card-content">
+                    <h3 class="card-title">ライフプランシミュレーション</h3>
+                    <p class="card-description">将来の収支予測とグラフ表示で資産推移を可視化</p>
+                </div>
+                <div class="card-arrow">
+                    <i class="material-icons">arrow_forward_ios</i>
+                </div>
+            </a>
+                
+            <a href="{{ url_for('household_books') }}" class="modern-menu-card feature-card">
+                <div class="card-icon household-icon">
+                        <i class="material-icons">event_note</i>
+                    </div>
+                <div class="card-content">
+                    <h3 class="card-title">家計簿</h3>
+                    <p class="card-description">スワイプ操作で支出を素早く記録・管理</p>
+                </div>
+                <div class="card-arrow">
+                    <i class="material-icons">arrow_forward_ios</i>
+                </div>
+            </a>
+                
+                            <a href="{{ url_for('household_swipe_dev') }}" class="modern-menu-card feature-card">
+                <div class="card-icon dev-icon">
+                        <i class="material-icons">developer_mode</i>
+                    </div>
+                <div class="card-content">
+                    <h3 class="card-title">家計簿（開発版）</h3>
+                    <p class="card-description">新機能テスト用バージョン・最新機能を体験</p>
+                </div>
+                <div class="card-arrow">
+                    <i class="material-icons">arrow_forward_ios</i>
+                </div>
+            </a>
+            
+            <a href="{{ url_for('dashboard') }}" class="modern-menu-card feature-card">
+                <div class="card-icon dashboard-icon">
+                    <i class="material-icons">dashboard</i>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">ダッシュボード</h3>
+                    <p class="card-description">全体的な資産状況と収支バランスの概要</p>
+                </div>
+                <div class="card-arrow">
+                    <i class="material-icons">arrow_forward_ios</i>
+                </div>
+            </a>
+            
+            <a href="{{ url_for('mypage') }}" class="modern-menu-card feature-card">
+                <div class="card-icon profile-icon">
+                    <i class="material-icons">person</i>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">マイページ</h3>
+                    <p class="card-description">個人設定とアカウント情報の管理</p>
+                </div>
+                <div class="card-arrow">
+                    <i class="material-icons">arrow_forward_ios</i>
+                </div>
+            </a>
+                </div>
+            </div>
+    
+    <!-- アクションボタンセクション -->
+    <div class="action-section-modern">
+        <div class="auth-buttons-container">
+            <a href="{{ url_for('login') }}" class="btn-primary-modern">
+                <i class="material-icons">login</i>
+                <span>ログイン</span>
+            </a>
+            <a href="{{ url_for('register') }}" class="btn-secondary-modern">
+                <i class="material-icons">person_add</i>
+                <span>新規登録</span>
+            </a>
+        </div>
+        
+        <div class="additional-info">
+            <div class="info-card">
+                <div class="info-icon">
+                    <i class="material-icons">security</i>
+                </div>
+                <div class="info-content">
+                    <h4>安全・安心</h4>
+                    <p>あなたのデータは暗号化されて保護されます</p>
+                </div>
+            </div>
+            
+            <div class="info-card">
+                <div class="info-icon">
+                    <i class="material-icons">devices</i>
+                </div>
+                <div class="info-content">
+                    <h4>マルチデバイス対応</h4>
+                    <p>スマートフォン、タブレット、PCで利用可能</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

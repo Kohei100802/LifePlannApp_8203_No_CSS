@@ -1,0 +1,200 @@
+/* 家計簿コンポーネント専用CSS */
+
+/* 月次コンテナ */
+.monthly-container {
+    max-width: 800px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* バランスサマリー */
+.balance-summary {
+    background: var(--color-background);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.balance-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.balance-card {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    border-radius: 12px;
+    background: var(--color-background-secondary);
+    transition: transform 0.2s ease;
+}
+
+.balance-card:hover {
+    transform: translateY(-2px);
+}
+
+.balance-card.income {
+    border-left: 4px solid var(--color-green);
+}
+
+.balance-card.expense {
+    border-left: 4px solid var(--color-red);
+}
+
+.balance-card.balance {
+    border-left: 4px solid var(--color-accent);
+}
+
+.balance-card .material-icons {
+    font-size: 32px;
+    margin-right: 12px;
+    color: var(--color-text-secondary);
+}
+
+.balance-text {
+    flex: 1;
+}
+
+.balance-label {
+    font-size: var(--font-size-small);
+    color: var(--color-text-secondary);
+    margin-bottom: 4px;
+    font-weight: 500;
+}
+
+.balance-amount {
+    font-size: var(--font-size-title);
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+/* エントリーリスト */
+.entries-section {
+    background: var(--color-background);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.entries-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--color-separator);
+}
+
+.entries-title {
+    font-size: var(--font-size-title);
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 0;
+}
+
+.entries-count {
+    font-size: var(--font-size-small);
+    color: var(--color-text-secondary);
+    background: var(--color-background-secondary);
+    padding: 4px 8px;
+    border-radius: 12px;
+}
+
+.entries-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.entry-item {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    border-radius: 12px;
+    background: var(--color-background-secondary);
+    transition: all 0.2s ease;
+    cursor: pointer;
+    border: 1px solid transparent;
+}
+
+.entry-item:hover {
+    background: var(--color-background-tertiary);
+    transform: translateY(-1px);
+    border-color: var(--color-accent);
+    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.1);
+}
+
+.entry-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.entry-icon.income {
+    background: rgba(52, 199, 89, 0.1);
+    color: var(--color-green);
+}
+
+.entry-icon.expense {
+    background: rgba(255, 59, 48, 0.1);
+    color: var(--color-red);
+}
+
+.entry-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.entry-description {
+    font-weight: 500;
+    color: var(--color-text-primary);
+    margin-bottom: 4px;
+}
+
+.entry-category {
+    font-size: var(--font-size-small);
+    color: var(--color-text-secondary);
+}
+
+.entry-amount {
+    font-weight: 600;
+    font-size: var(--font-size-large);
+    text-align: right;
+    flex-shrink: 0;
+    margin-left: 12px;
+}
+
+.entry-amount.income {
+    color: var(--color-green);
+}
+
+.entry-amount.expense {
+    color: var(--color-red);
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .balance-cards {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    .balance-card {
+        padding: 12px;
+    }
+    
+    .entries-section {
+        padding: 16px;
+    }
+    
+    .entry-item {
+        padding: 12px;
+    }
+}
