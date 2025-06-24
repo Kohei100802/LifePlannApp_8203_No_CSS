@@ -17,13 +17,13 @@
 </div>
 
 <!-- フローティングボタン -->
-<div class="fab-container">
-    <button id="toolsFab" class="fab-button tools" title="ツール">
-        <i class="material-icons">more_vert</i>
-    </button>
+<div class="fab-container multiple-buttons" id="fabContainer">
     <a href="/incomes/pension/new" class="fab-button add" title="新規追加">
         <i class="material-icons">add</i>
     </a>
+    <button id="toolsFab" class="fab-button tools" title="ツール" style="display: none;">
+        <i class="material-icons">more_horiz</i>
+    </button>
 </div>
 
 <!-- ツールメニュー -->
@@ -148,24 +148,178 @@
 
 {% block scripts %}
 <script>
+let currentAction = null;
+let selectedItems = [];
+let pensionIncomesData = [];
+
 document.addEventListener('DOMContentLoaded', function() {
-    // 年度セレクトボックスを初期化
-    initializeYearSelects();
-    
+    // 年金収入データ読み込み
     loadPensionIncomes();
     
-    // 月額収入の変更時に年額を自動計算（万円で入力されるので10000倍する）
-    document.querySelector('input[name="monthly_amount"]').addEventListener('input', function() {
-        const monthlyAmount = parseFloat(this.value) || 0;
-        const annualAmount = monthlyAmount * 12 * 10000; // 万円を円に変換
-        document.getElementById('annual_amount_display').value = formatCurrency(annualAmount);
-    });
+    // ツールボタンのイベントリスナー
+    setupToolsMenu();
 });
+
+// ツールメニューの設定
+function setupToolsMenu() {
+    const toolsFab = document.getElementById('toolsFab');
+    const toolsMenu = document.getElementById('toolsMenu');
+    const copyToolBtn = document.getElementById('copyToolBtn');
+    const deleteToolBtn = document.getElementById('deleteToolBtn');
+    
+    // ツールボタンクリック
+    toolsFab.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const isVisible = toolsMenu.style.display !== 'none';
+        toolsMenu.style.display = isVisible ? 'none' : 'block';
+        
+        if (!isVisible) {
+            // メニューの位置を調整
+            const fabRect = toolsFab.getBoundingClientRect();
+            toolsMenu.style.bottom = (window.innerHeight - fabRect.top + 10) + 'px';
+            toolsMenu.style.right = (window.innerWidth - fabRect.right) + 'px';
+        }
+    });
+    
+    // コピーボタンクリック
+    copyToolBtn.addEventListener('click', function() {
+        currentAction = 'copy';
+        toolsMenu.style.display = 'none';
+        showDataSelectionModal('コピーするデータを選択してください');
+    });
+    
+    // 削除ボタンクリック
+    deleteToolBtn.addEventListener('click', function() {
+        currentAction = 'delete';
+        toolsMenu.style.display = 'none';
+        showDataSelectionModal('削除するデータを選択してください');
+    });
+    
+    // 外部クリックでメニューを閉じる
+    document.addEventListener('click', function() {
+        toolsMenu.style.display = 'none';
+    });
+    
+    toolsMenu.addEventListener('click', function(e) {
+        e.stopPropagation();
+    });
+}
+
+// データ選択モーダルを表示
+function showDataSelectionModal(title) {
+    if (pensionIncomesData.length === 0) {
+        showToast('選択できるデータがありません', 'warning');
+        return;
+    }
+    
+    const modal = document.getElementById('dataSelectionModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const dataList = document.getElementById('dataSelectionList');
+    const executeBtn = document.getElementById('executeActionBtn');
+    
+    modalTitle.textContent = title;
+    selectedItems = [];
+    
+    // データリストを生成
+    let html = '<div class="data-selection-list">';
+    pensionIncomesData.forEach(income => {
+        const monthlyAmount = (income.monthly_amount || 0) / 10000;
+        const periodText = `${income.start_year}年-${income.end_year}年`;
+        
+        html += `
+            <label class="data-selection-item">
+                <input type="checkbox" value="${income.id}" onchange="updateSelectedItems()">
+                <div class="selection-item-content">
+                    <div class="selection-item-title">${income.name}</div>
+                    <div class="selection-item-details">
+                        ${periodText} | 月額 ${monthlyAmount.toFixed(1)}万円
+                        ${income.description ? `<br><span style="color: #666; font-size: 0.9em;">${income.description}</span>` : ''}
+                    </div>
+                </div>
+            </label>
+        `;
+    });
+    html += '</div>';
+    
+    dataList.innerHTML = html;
+    executeBtn.style.display = 'none';
+    executeBtn.textContent = currentAction === 'copy' ? 'コピー' : '削除';
+    executeBtn.onclick = executeSelectedAction;
+    
+    modal.classList.add('show');
+}
+
+// 選択項目の更新
+function updateSelectedItems() {
+    const checkboxes = document.querySelectorAll('#dataSelectionList input[type="checkbox"]:checked');
+    selectedItems = Array.from(checkboxes).map(cb => parseInt(cb.value));
+    
+    const executeBtn = document.getElementById('executeActionBtn');
+    executeBtn.style.display = selectedItems.length > 0 ? 'block' : 'none';
+}
+
+// 選択したアクションを実行
+async function executeSelectedAction() {
+    if (selectedItems.length === 0) return;
+    
+    const actionText = currentAction === 'copy' ? 'コピー' : '削除';
+    const confirmMessage = `選択した${selectedItems.length}件のデータを${actionText}しますか？`;
+    
+    if (!confirm(confirmMessage)) return;
+    
+    try {
+        let successCount = 0;
+        
+        for (const id of selectedItems) {
+            let success = false;
+            
+            if (currentAction === 'copy') {
+                const response = await fetch(`/api/pension-incomes/${id}/copy`, {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                success = result.success;
+            } else if (currentAction === 'delete') {
+                const response = await fetch(`/api/pension-incomes/${id}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                success = result.success;
+            }
+            
+            if (success) successCount++;
+        }
+        
+        if (successCount > 0) {
+            showToast(`${successCount}件のデータを${actionText}しました`, 'success');
+            loadPensionIncomes(); // 一覧を再読み込み
+        }
+        
+        if (successCount < selectedItems.length) {
+            showToast(`${selectedItems.length - successCount}件の${actionText}に失敗しました`, 'warning');
+        }
+        
+    } catch (error) {
+        console.error('Error executing action:', error);
+        showToast(`${actionText}処理でエラーが発生しました`, 'error');
+    } finally {
+        closeDataSelectionModal();
+    }
+}
+
+// モーダルを閉じる
+function closeDataSelectionModal() {
+    const modal = document.getElementById('dataSelectionModal');
+    modal.classList.remove('show');
+    selectedItems = [];
+    currentAction = null;
+}
 
 // 年金収入データ読み込み
 async function loadPensionIncomes() {
     try {
         const pensionIncomes = await apiCall('/api/pension-incomes');
+        pensionIncomesData = pensionIncomes; // グローバル変数に保存
         displayPensionIncomes(pensionIncomes);
     } catch (error) {
         console.error('Error loading pension incomes:', error);
@@ -177,12 +331,13 @@ async function loadPensionIncomes() {
 function displayPensionIncomes(pensionIncomes) {
     const listContainer = document.getElementById('pension-income-list');
     const toolsFab = document.getElementById('toolsFab');
+    const fabContainer = document.getElementById('fabContainer');
     
     if (pensionIncomes.length === 0) {
         listContainer.innerHTML = `
             <div class="empty-state">
                 <div style="text-align: center; padding: 2rem; color: var(--color-secondary);">
-                    <i class="material-icons" style="font-size: 3rem; margin-bottom: 1rem;">elderly</i>
+                    <i class="material-icons" style="font-size: 3rem; margin-bottom: 1rem;">account_balance</i>
                     <p>登録済みの年金収入がありません</p>
                     <p class="text-small">右下の「+」ボタンから作成してください</p>
                 </div>
@@ -192,12 +347,20 @@ function displayPensionIncomes(pensionIncomes) {
         if (toolsFab) {
             toolsFab.style.display = 'none';
         }
+        // multiple-buttonsクラスを削除
+        if (fabContainer) {
+            fabContainer.classList.remove('multiple-buttons');
+        }
         return;
     }
     
     // データがある場合はツールボタンを表示
     if (toolsFab) {
         toolsFab.style.display = 'inline-flex';
+    }
+    // multiple-buttonsクラスを追加
+    if (fabContainer) {
+        fabContainer.classList.add('multiple-buttons');
     }
     
     const html = `
@@ -209,15 +372,7 @@ function displayPensionIncomes(pensionIncomes) {
                 
                 return `
                     <div class="modern-menu-card plan-card" style="position: relative; cursor: pointer; display: flex; align-items: center; min-height: 80px;" onclick="showIncomeDetails(${income.id})">
-                        <div class="plan-actions" style="position: absolute; top: 12px; right: 12px; display: flex; gap: 8px; z-index: 10;" onclick="event.stopPropagation();">
-                            <button onclick="copyIncome(${income.id})" class="plan-action-btn" title="コピー" style="background: #FF9800; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; border: none; cursor: pointer; min-width: 50px; height: 28px;">
-                                <i class="material-icons" style="font-size: 14px; margin-right: 2px;">content_copy</i>コピー
-                            </button>
-                            <button onclick="deletePensionIncome(${income.id})" class="plan-action-btn" title="削除" style="background: #f44336; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; border: none; cursor: pointer; min-width: 50px; height: 28px;">
-                                <i class="material-icons" style="font-size: 14px; margin-right: 2px;">delete</i>削除
-                            </button>
-                        </div>
-                        <div class="card-content" style="flex: 1; padding-right: 140px;">
+                        <div class="card-content" style="flex: 1; padding-right: 20px;">
                             <h3 class="card-title" style="margin-bottom: 8px; font-size: 1.1em; font-weight: 600;">${income.name}</h3>
                             <p class="card-description" style="margin-bottom: 0; line-height: 1.4; color: var(--color-text-secondary);">
                                 ${periodText}<br>
@@ -241,126 +396,6 @@ function displayPensionIncomes(pensionIncomes) {
 function showIncomeDetails(incomeId) {
     // 編集ページに遷移
     window.location.href = `/incomes/pension/edit/${incomeId}`;
-}
-
-// 年金収入削除
-async function deletePensionIncome(incomeId) {
-    if (!confirm('この年金収入を削除しますか？')) return;
-    
-    try {
-        const response = await fetch(`/api/pension-incomes/${incomeId}`, {
-            method: 'DELETE'
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showToast('年金収入を削除しました', 'success');
-            loadPensionIncomes(); // 一覧を再読み込み
-        } else {
-            showToast('年金収入の削除に失敗しました', 'error');
-        }
-    } catch (error) {
-        console.error('Error deleting pension income:', error);
-        showToast('年金収入の削除に失敗しました', 'error');
-    }
-}
-
-// フォーム表示
-function showAddPensionForm() {
-    document.getElementById('pension-form-container').classList.remove('hidden');
-    document.getElementById('pensionIncomeForm').reset();
-    document.querySelector('input[name="id"]').value = '';
-    document.querySelector('.submit-text').textContent = '年金収入を登録';
-}
-
-// フォーム非表示
-function hideAddPensionForm() {
-    document.getElementById('pension-form-container').classList.add('hidden');
-}
-
-// 年金収入編集
-async function editPensionIncome(id) {
-    try {
-        const data = await apiCall('/api/pension-incomes');
-        const income = data.find(item => item.id === id);
-        if (!income) return;
-        
-        // フォームに値を設定（万円表示に変換）
-        document.querySelector('input[name="id"]').value = income.id;
-        document.querySelector('input[name="name"]').value = income.name;
-        document.querySelector('input[name="description"]').value = income.description || '';
-        document.querySelector('input[name="monthly_amount"]').value = parseFloat((income.monthly_amount / 10000).toFixed(1));
-        document.querySelector('input[name="start_year"]').value = income.start_year;
-        document.querySelector('input[name="end_year"]').value = income.end_year;
-        
-        // 年額を計算
-        document.getElementById('annual_amount_display').value = formatCurrency(income.monthly_amount * 12);
-        
-        document.querySelector('.submit-text').textContent = '年金収入を更新';
-        showAddPensionForm();
-    } catch (error) {
-        console.error('Error loading pension income:', error);
-        showToast('年金収入データの読み込みに失敗しました', 'error');
-    }
-}
-
-// フォーム送信
-document.getElementById('pensionIncomeForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const formData = new FormData(this);
-    const data = Object.fromEntries(formData.entries());
-    
-    // 数値変換（万円を円に変換）
-    data.monthly_amount = parseFloat(data.monthly_amount) * 10000 || 0;
-    data.start_year = parseInt(data.start_year) || 2060;
-    data.end_year = parseInt(data.end_year) || 2080;
-    
-    const submitButton = this.querySelector('button[type="submit"]');
-    const submitText = submitButton.querySelector('.submit-text');
-    const loadingSpinner = submitButton.querySelector('.loading-spinner');
-    
-    try {
-        submitText.style.display = 'none';
-        loadingSpinner.classList.remove('hidden');
-        submitButton.disabled = true;
-        
-        const method = data.id ? 'PUT' : 'POST';
-        await apiCall('/api/pension-incomes', method, data);
-        
-        showToast(data.id ? '年金収入を更新しました' : '年金収入を登録しました', 'success');
-        hideAddPensionForm();
-        loadPensionIncomes();
-    } catch (error) {
-        console.error('Error saving pension income:', error);
-        showToast('年金収入の保存に失敗しました', 'error');
-    } finally {
-        submitText.style.display = 'inline';
-        loadingSpinner.classList.add('hidden');
-        submitButton.disabled = false;
-    }
-});
-
-// 年金収入コピー
-async function copyIncome(incomeId) {
-    try {
-        const response = await fetch(`/api/pension-incomes/${incomeId}/copy`, {
-            method: 'POST'
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showToast('年金収入をコピーしました', 'success');
-            loadPensionIncomes(); // 一覧を再読み込み
-        } else {
-            showToast('年金収入のコピーに失敗しました', 'error');
-        }
-    } catch (error) {
-        console.error('Error copying pension income:', error);
-        showToast('年金収入のコピーに失敗しました', 'error');
-    }
 }
 </script>
 {% endblock %} 

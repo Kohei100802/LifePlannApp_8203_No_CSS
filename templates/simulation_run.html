@@ -9,19 +9,6 @@
 {% endblock %}
 
 {% block tab_navigation %}
-<!-- シミュレーション結果タブナビゲーション -->
-<div class="modern-tab-navigation">
-    <div class="modern-tab-item active" style="cursor: default;">
-        <div class="tab-icon-wrapper">
-            <i class="material-icons">analytics</i>
-        </div>
-        <div class="tab-content-wrapper">
-            <span class="tab-title">シミュレーション結果</span>
-            <span class="tab-description" id="simulationSummary">ライフプランの将来予測結果</span>
-        </div>
-        <div class="tab-indicator"></div>
-    </div>
-</div>
 {% endblock %}
 
 {% block content %}
@@ -219,8 +206,8 @@ async function runSimulation(planId) {
         document.getElementById('loadingMessage').style.display = 'block';
         document.getElementById('simulationResults').style.display = 'none';
         
-        // タブナビゲーションをローディング状態に更新
-        updateTabNavigation('シミュレーション実行中', '計算処理を実行しています...');
+        // タブナビゲーション更新（削除済みのためコメントアウト）
+        // updateTabNavigation('シミュレーション実行中', '計算処理を実行しています...');
         
         const plan = await apiCall(`/api/simulation-plans/${planId}`);
         
@@ -263,12 +250,12 @@ function displaySimulationResults(response, simulationData, planName) {
     const results = response.simulation_data;
     const summary = response.summary;
     
-    // サマリー表示とタブナビゲーション更新
-    const summaryText = `プラン「${planName}」- ${simulationData.start_year}年〜${simulationData.end_year}年（${summary.total_years}年間）のシミュレーション結果`;
-    document.getElementById('simulationSummary').textContent = summaryText;
+    // サマリー表示（削除済み要素のためコメントアウト）
+    // const summaryText = `プラン「${planName}」- ${simulationData.start_year}年〜${simulationData.end_year}年（${summary.total_years}年間）のシミュレーション結果`;
+    // document.getElementById('simulationSummary').textContent = summaryText;
     
-    // タブナビゲーションを結果表示状態に更新
-    updateTabNavigation('シミュレーション結果', `ライフプランの将来予測結果`);
+    // タブナビゲーション更新（削除済みのためコメントアウト）
+    // updateTabNavigation('シミュレーション結果', `ライフプランの将来予測結果`);
     
     document.getElementById('totalIncomeSum').textContent = formatCurrency(summary.total_income);
     document.getElementById('totalExpenseSum').textContent = formatCurrency(summary.total_expenses);

@@ -9,33 +9,33 @@
 {% block content %}
 <div class="calendar-container">
     <!-- ヘッダー部分 -->
-    <div class="calendar-header">
+    <div class="month-selector-bar">
         <!-- 月タイトルとナビゲーション -->
-        <div class="calendar-nav">
-            <button class="calendar-nav-btn" onclick="goToPreviousMonth()" title="前月">
+        <div class="month-nav">
+            <button class="month-nav-btn" onclick="goToPreviousMonth()" title="前月">
                 <i class="material-icons">chevron_left</i>
             </button>
-            <div class="calendar-title">
-                <h1 id="calendarTitle">2025年6月</h1>
+            <div class="month-title">
+                <h2 id="calendarTitle">2025年6月</h2>
             </div>
-            <button class="calendar-nav-btn" onclick="goToNextMonth()" title="次月">
+            <button class="month-nav-btn" onclick="goToNextMonth()" title="次月">
                 <i class="material-icons">chevron_right</i>
             </button>
         </div>
         
         <!-- 収支サマリー -->
-        <div class="calendar-summary">
-            <div class="calendar-summary-item income income-summary">
-                <div class="calendar-summary-label">収入</div>
-                <div class="calendar-summary-amount" id="monthlyIncome">¥0</div>
+        <div class="month-summary">
+            <div class="summary-item income">
+                <div class="summary-label">収入</div>
+                <div class="summary-amount" id="monthlyIncome">¥0</div>
             </div>
-            <div class="calendar-summary-item expense expense-summary">
-                <div class="calendar-summary-label">支出</div>
-                <div class="calendar-summary-amount" id="monthlyExpense">¥66,180</div>
+            <div class="summary-item expense">
+                <div class="summary-label">支出</div>
+                <div class="summary-amount" id="monthlyExpense">¥66,180</div>
             </div>
-            <div class="calendar-summary-item balance balance-summary" id="balanceSummaryCard">
-                <div class="calendar-summary-label">収支</div>
-                <div class="calendar-summary-amount" id="monthlyBalance">¥-66,180</div>
+            <div class="summary-item balance" id="balanceSummaryCard">
+                <div class="summary-label">収支</div>
+                <div class="summary-amount" id="monthlyBalance">¥-66,180</div>
             </div>
         </div>
     </div>
@@ -192,6 +192,18 @@
 </div>
 
 {% endblock %}
+
+<style>
+/* 月選択バー（資産管理ページ統一） */
+.month-selector-bar {
+    background: white;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    margin: 80px 20px 15px 20px !important;
+}
+</style>
 
 {% block scripts %}
 <script>

@@ -86,6 +86,25 @@
             </div>
         </div>
 
+        <!-- 分析ツール -->
+        <div class="menu-section">
+            <h4 class="menu-section-title">分析ツール</h4>
+            <div class="menu-items">
+                <a href="http://localhost:8206" class="menu-item" target="_blank">
+                    <div class="menu-item-icon">
+                        <i class="material-icons">terrain</i>
+                    </div>
+                    <div class="menu-item-content">
+                        <div class="menu-item-title">土地分析</div>
+                        <div class="menu-item-subtitle">地域特性・価格分析</div>
+                    </div>
+                    <div class="menu-item-arrow">
+                        <i class="material-icons">chevron_right</i>
+                    </div>
+                </a>
+            </div>
+        </div>
+
         <!-- アプリ設定 -->
         <div class="menu-section">
             <h4 class="menu-section-title">設定</h4>
@@ -574,6 +593,190 @@
         </div>
     </div>
 </div>
+
+<!-- 土地分析モーダル -->
+<div id="land-analysis-modal" class="modal">
+    <div class="modal-content" style="max-width: 90vw; width: 800px; max-height: 85vh;">
+        <div class="modal-header">
+            <h3>土地分析ツール</h3>
+            <button type="button" class="modal-close" onclick="closeModal('land-analysis-modal')">
+                <i class="material-icons">close</i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="land-analysis-container">
+                <!-- 入力セクション -->
+                <div class="input-section">
+                    <h4>分析条件</h4>
+                    <div class="form-group">
+                        <label class="form-label">都道府県</label>
+                        <select class="form-control" id="prefecture-select">
+                            <option value="">都道府県を選択</option>
+                            <option value="tokyo">東京都</option>
+                            <option value="osaka">大阪府</option>
+                            <option value="kyoto">京都府</option>
+                            <option value="kanagawa">神奈川県</option>
+                            <option value="aichi">愛知県</option>
+                            <option value="saitama">埼玉県</option>
+                            <option value="chiba">千葉県</option>
+                            <option value="hyogo">兵庫県</option>
+                            <option value="fukuoka">福岡県</option>
+                            <option value="hokkaido">北海道</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">市区町村</label>
+                        <select class="form-control" id="city-select" disabled>
+                            <option value="">市区町村を選択</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">土地面積（㎡）</label>
+                        <input type="number" class="form-control" id="land-area" placeholder="例: 100" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">用途地域</label>
+                        <select class="form-control" id="land-use">
+                            <option value="">用途地域を選択</option>
+                            <option value="residential">第一種低層住居専用地域</option>
+                            <option value="residential2">第二種低層住居専用地域</option>
+                            <option value="residential3">第一種中高層住居専用地域</option>
+                            <option value="residential4">第二種中高層住居専用地域</option>
+                            <option value="residential5">第一種住居地域</option>
+                            <option value="residential6">第二種住居地域</option>
+                            <option value="commercial">近隣商業地域</option>
+                            <option value="commercial2">商業地域</option>
+                            <option value="industrial">準工業地域</option>
+                            <option value="industrial2">工業地域</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn btn-primary" onclick="analyzeLand()" style="width: 100%; margin-top: 16px;">
+                        <i class="material-icons">analytics</i>
+                        分析実行
+                    </button>
+                </div>
+
+                <!-- 結果セクション -->
+                <div class="result-section" id="result-section" style="display: none;">
+                    <h4>分析結果</h4>
+                    <div class="analysis-results">
+                        <div class="result-card">
+                            <div class="result-header">
+                                <i class="material-icons">attach_money</i>
+                                <span>推定価格</span>
+                            </div>
+                            <div class="result-value" id="estimated-price">-</div>
+                        </div>
+                        <div class="result-card">
+                            <div class="result-header">
+                                <i class="material-icons">trending_up</i>
+                                <span>価格傾向</span>
+                            </div>
+                            <div class="result-value" id="price-trend">-</div>
+                        </div>
+                        <div class="result-card">
+                            <div class="result-header">
+                                <i class="material-icons">location_city</i>
+                                <span>地域特性</span>
+                            </div>
+                            <div class="result-value" id="area-characteristics">-</div>
+                        </div>
+                        <div class="result-card">
+                            <div class="result-header">
+                                <i class="material-icons">info</i>
+                                <span>投資判断</span>
+                            </div>
+                            <div class="result-value" id="investment-judgment">-</div>
+                        </div>
+                    </div>
+                    <div class="detailed-analysis" id="detailed-analysis">
+                        <h5>詳細分析</h5>
+                        <div id="analysis-details"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* 土地分析モーダル専用スタイル */
+.land-analysis-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.input-section, .result-section {
+    padding: 16px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.analysis-results {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.result-card {
+    background: white;
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.result-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #6c757d;
+}
+
+.result-header .material-icons {
+    font-size: 18px;
+}
+
+.result-value {
+    font-size: 18px;
+    font-weight: 600;
+    color: #212529;
+}
+
+.detailed-analysis {
+    background: white;
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.detailed-analysis h5 {
+    margin-bottom: 12px;
+    color: #495057;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .land-analysis-container {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .analysis-results {
+        grid-template-columns: 1fr;
+    }
+    
+    #land-analysis-modal .modal-content {
+        width: 95vw !important;
+        max-width: 95vw !important;
+    }
+}
+</style>
 {% endblock %}
 
 {% block scripts %}
@@ -1014,6 +1217,12 @@ document.addEventListener('DOMContentLoaded', function() {
     for (let modal of modals) {
         modal.style.display = 'none';
     }
+    
+    // 土地分析の都道府県選択イベント
+    const prefectureSelect = document.getElementById('prefecture-select');
+    if (prefectureSelect) {
+        prefectureSelect.addEventListener('change', updateCityOptions);
+    }
 });
 
 // モーダル外クリックで閉じる（特定のモーダルのみ対象）
@@ -1025,5 +1234,170 @@ document.addEventListener('click', function(event) {
         }
     }
 });
+
+// 土地分析モーダル表示
+function showLandAnalysis() {
+    // ポート8206にリダイレクト
+    window.open('http://localhost:8206', '_blank');
+}
+
+// 都道府県選択時の市区町村更新
+function updateCityOptions() {
+    const prefectureSelect = document.getElementById('prefecture-select');
+    const citySelect = document.getElementById('city-select');
+    const selectedPrefecture = prefectureSelect.value;
+    
+    // 市区町村をリセット
+    citySelect.innerHTML = '<option value="">市区町村を選択</option>';
+    citySelect.disabled = true;
+    
+    if (!selectedPrefecture) return;
+    
+    // 都道府県別の市区町村データ
+    const cityData = {
+        tokyo: ['千代田区', '中央区', '港区', '新宿区', '文京区', '台東区', '墨田区', '江東区', '品川区', '目黒区', '大田区', '世田谷区', '渋谷区', '中野区', '杉並区', '豊島区', '北区', '荒川区', '板橋区', '練馬区', '足立区', '葛飾区', '江戸川区'],
+        osaka: ['大阪市', '堺市', '岸和田市', '豊中市', '池田市', '吹田市', '泉大津市', '高槻市', '貝塚市', '守口市', '枚方市', '茨木市', '八尾市', '泉佐野市', '富田林市', '寝屋川市', '河内長野市', '松原市', '大東市', '和泉市', '箕面市', '柏原市', '羽曳野市', '門真市', '摂津市', '高石市', '藤井寺市', '東大阪市', '泉南市', '四條畷市', '交野市', '大阪狭山市', '阪南市'],
+        kyoto: ['京都市', '福知山市', '舞鶴市', '綾部市', '宇治市', '宮津市', '亀岡市', '城陽市', '向日市', '長岡京市', '八幡市', '京田辺市', '京丹後市', '南丹市', '木津川市'],
+        kanagawa: ['横浜市', '川崎市', '相模原市', '横須賀市', '平塚市', '鎌倉市', '藤沢市', '小田原市', '茅ヶ崎市', '逗子市', '三浦市', '秦野市', '厚木市', '大和市', '伊勢原市', '海老名市', '座間市', '南足柄市', '綾瀬市'],
+        aichi: ['名古屋市', '豊橋市', '岡崎市', '一宮市', '瀬戸市', '半田市', '春日井市', '豊川市', '津島市', '碧南市', '刈谷市', '豊田市', '安城市', '西尾市', '蒲郡市', '犬山市', '常滑市', '江南市', '小牧市', '稲沢市', '新城市', '東海市', '大府市', '知多市', '知立市', '尾張旭市', '高浜市', '岩倉市', '豊明市', '日進市', '田原市', '愛西市', '清須市', '北名古屋市', '弥富市', 'みよし市', 'あま市', '長久手市'],
+        saitama: ['さいたま市', '川越市', '熊谷市', '川口市', '行田市', '秩父市', '所沢市', '飯能市', '加須市', '本庄市', '東松山市', '春日部市', '狭山市', '羽生市', '鴻巣市', '深谷市', '上尾市', '草加市', '越谷市', '蕨市', '戸田市', '入間市', '朝霞市', '志木市', '和光市', '新座市', '桶川市', '久喜市', '北本市', '八潮市', '富士見市', '三郷市', '蓮田市', '坂戸市', '幸手市', '鶴ヶ島市', '日高市', '吉川市', 'ふじみ野市', '白岡市'],
+        chiba: ['千葉市', '銚子市', '市川市', '船橋市', '館山市', '木更津市', '松戸市', '野田市', '茂原市', '成田市', '佐倉市', '東金市', '旭市', '習志野市', '柏市', '勝浦市', '市原市', '流山市', '八千代市', '我孫子市', '鴨川市', '鎌ケ谷市', '君津市', '富津市', '浦安市', '四街道市', '袖ケ浦市', '八街市', '印西市', '白井市', '富里市', '南房総市', '匝瑳市', '香取市', '山武市', 'いすみ市', '大網白里市', '酒々井町', '栄町', '神崎町', '多古町', '東庄町', '九十九里町', '芝山町', '横芝光町', '一宮町', '睦沢町', '長生村', '白子町', '長柄町', '長南町', '大多喜町', '御宿町', '鋸南町'],
+        hyogo: ['神戸市', '姫路市', '尼崎市', '明石市', '西宮市', '洲本市', '芦屋市', '伊丹市', '相生市', '豊岡市', '加古川市', '赤穂市', '西脇市', '宝塚市', '三木市', '高砂市', '川西市', '小野市', '三田市', '加西市', '丹波篠山市', '養父市', '丹波市', '南あわじ市', '朝来市', '淡路市', '宍粟市', '加東市', 'たつの市'],
+        fukuoka: ['福岡市', '北九州市', '大牟田市', '久留米市', '直方市', '飯塚市', '田川市', '柳川市', '八女市', '筑後市', '大川市', '行橋市', '豊前市', '中間市', '小郡市', '筑紫野市', '春日市', '大野城市', '宗像市', '太宰府市', '古賀市', '福津市', 'うきは市', '宮若市', '嘉麻市', '朝倉市', 'みやま市', '糸島市'],
+        hokkaido: ['札幌市', '函館市', '小樽市', '旭川市', '室蘭市', '釧路市', '帯広市', '北見市', '夕張市', '岩見沢市', '網走市', '留萌市', '苫小牧市', '稚内市', '美唄市', '芦別市', '江別市', '赤平市', '紋別市', '士別市', '名寄市', '三笠市', '根室市', '千歳市', '滝川市', '砂川市', '歌志内市', '深川市', '富良野市', '登別市', '恵庭市', '伊達市', '北広島市', '石狩市', '北斗市']
+    };
+    
+    if (cityData[selectedPrefecture]) {
+        cityData[selectedPrefecture].forEach(city => {
+            const option = document.createElement('option');
+            option.value = city;
+            option.textContent = city;
+            citySelect.appendChild(option);
+        });
+        citySelect.disabled = false;
+    }
+}
+
+// 土地分析実行
+function analyzeLand() {
+    const prefecture = document.getElementById('prefecture-select').value;
+    const city = document.getElementById('city-select').value;
+    const area = document.getElementById('land-area').value;
+    const landUse = document.getElementById('land-use').value;
+    
+    // 入力チェック
+    if (!prefecture || !city || !area || !landUse) {
+        showToast('すべての項目を入力してください', 'error');
+        return;
+    }
+    
+    // 分析実行（シミュレーション）
+    const analysisResult = performLandAnalysis(prefecture, city, area, landUse);
+    
+    // 結果表示
+    displayAnalysisResults(analysisResult);
+}
+
+// 土地分析ロジック（シミュレーション）
+function performLandAnalysis(prefecture, city, area, landUse) {
+    // 基準価格（㎡あたり）
+    const basePrices = {
+        tokyo: 150000,
+        osaka: 120000,
+        kyoto: 100000,
+        kanagawa: 130000,
+        aichi: 110000,
+        saitama: 80000,
+        chiba: 70000,
+        hyogo: 90000,
+        fukuoka: 85000,
+        hokkaido: 50000
+    };
+    
+    // 用途地域係数
+    const landUseFactors = {
+        residential: 1.0,
+        residential2: 1.1,
+        residential3: 1.2,
+        residential4: 1.3,
+        residential5: 1.4,
+        residential6: 1.5,
+        commercial: 1.8,
+        commercial2: 2.2,
+        industrial: 0.7,
+        industrial2: 0.5
+    };
+    
+    // 面積係数（大きいほど単価が下がる）
+    const areaFactor = Math.max(0.8, 1 - (area - 100) * 0.001);
+    
+    // 推定価格計算
+    const basePrice = basePrices[prefecture] || 80000;
+    const useFactor = landUseFactors[landUse] || 1.0;
+    const estimatedPrice = Math.round(basePrice * useFactor * areaFactor * area);
+    
+    // 価格傾向
+    const trends = ['上昇傾向', '横ばい', '微減', '安定'];
+    const trend = trends[Math.floor(Math.random() * trends.length)];
+    
+    // 地域特性
+    const characteristics = {
+        tokyo: '都心部・交通利便性高',
+        osaka: '関西圏・商業地として有望',
+        kyoto: '観光地・文化財保護地域',
+        kanagawa: '首都圏・ベッドタウン',
+        aichi: '中部圏・工業地帯',
+        saitama: '首都圏・住宅地',
+        chiba: '首都圏・新興住宅地',
+        hyogo: '関西圏・港湾都市',
+        fukuoka: '九州圏・地方中核都市',
+        hokkaido: '北海道・自然環境豊富'
+    };
+    
+    // 投資判断
+    const judgments = ['投資推奨', '要検討', '慎重判断', '投資適正'];
+    const judgment = judgments[Math.floor(Math.random() * judgments.length)];
+    
+    return {
+        estimatedPrice: estimatedPrice,
+        trend: trend,
+        characteristics: characteristics[prefecture] || '地域特性分析中',
+        judgment: judgment,
+        details: generateDetailedAnalysis(prefecture, city, area, landUse)
+    };
+}
+
+// 詳細分析生成
+function generateDetailedAnalysis(prefecture, city, area, landUse) {
+    const details = [];
+    
+    // 交通アクセス
+    details.push(`<strong>交通アクセス:</strong> ${city}は主要駅まで徒歩10-15分圏内で、通勤・通学に便利な立地です。`);
+    
+    // 周辺環境
+    details.push(`<strong>周辺環境:</strong> スーパー、コンビニ、医療機関が徒歩圏内にあり、生活利便性が高い地域です。`);
+    
+    // 将来性
+    details.push(`<strong>将来性:</strong> 都市計画により、今後5-10年でインフラ整備が進む見込みです。`);
+    
+    // リスク要因
+    details.push(`<strong>リスク要因:</strong> 地震や洪水などの自然災害リスクを考慮する必要があります。`);
+    
+    return details.join('<br><br>');
+}
+
+// 分析結果表示
+function displayAnalysisResults(result) {
+    document.getElementById('estimated-price').textContent = `${result.estimatedPrice.toLocaleString()}万円`;
+    document.getElementById('price-trend').textContent = result.trend;
+    document.getElementById('area-characteristics').textContent = result.characteristics;
+    document.getElementById('investment-judgment').textContent = result.judgment;
+    document.getElementById('analysis-details').innerHTML = result.details;
+    
+    // 結果セクションを表示
+    document.getElementById('result-section').style.display = 'block';
+    
+    showToast('土地分析が完了しました', 'success');
+}
 </script>
 {% endblock %} 

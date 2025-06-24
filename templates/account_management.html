@@ -5,19 +5,37 @@
 
 {% block content %}
 <div class="account-management-container">
-    <!-- 口座一覧セクション -->
-    <div class="accounts-section">
-        <div class="section-header">
-            <h3><i class="material-icons">account_balance</i> 口座一覧</h3>
+    <!-- 月選択バー -->
+    <div class="month-selector-bar">
+        <div class="month-nav">
+            <button class="month-nav-btn" onclick="goToPreviousMonth()" title="前月">
+                <i class="material-icons">chevron_left</i>
+            </button>
+            <div class="month-title">
+                <h2 id="currentMonthTitle">2025年6月</h2>
+            </div>
+            <button class="month-nav-btn" onclick="goToNextMonth()" title="次月">
+                <i class="material-icons">chevron_right</i>
+            </button>
         </div>
         
-        <div class="accounts-grid" id="accounts-grid">
-            <div class="accounts-content" id="accounts-content">
-                <!-- 口座カードは JavaScript で動的に生成 -->
+        <!-- 月別収支サマリー -->
+        <div class="month-summary">
+            <div class="summary-item income">
+                <div class="summary-label">収入</div>
+                <div class="summary-amount" id="monthlyIncome">¥0</div>
+            </div>
+            <div class="summary-item expense">
+                <div class="summary-label">支出</div>
+                <div class="summary-amount" id="monthlyExpense">¥0</div>
+            </div>
+            <div class="summary-item balance" id="monthlyBalanceCard">
+                <div class="summary-label">収支</div>
+                <div class="summary-amount" id="monthlyBalance">¥0</div>
             </div>
         </div>
     </div>
-    
+
     <!-- 収入源セクション -->
     <div class="income-sources-section">
         <div class="section-header">
@@ -75,6 +93,19 @@
                         <div class="income-description">国民・厚生年金</div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 口座一覧セクション -->
+    <div class="accounts-section">
+        <div class="section-header">
+            <h3><i class="material-icons">account_balance</i> 口座一覧</h3>
+        </div>
+        
+        <div class="accounts-grid" id="accounts-grid">
+            <div class="accounts-content" id="accounts-content">
+                <!-- 口座カードは JavaScript で動的に生成 -->
             </div>
         </div>
     </div>
@@ -156,7 +187,7 @@
 <div id="create-account-modal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h3>新しい口座を作成</h3>
+            <h3 id="create-modal-title">新しい口座を作成</h3>
             <button class="modal-close" onclick="hideCreateAccountModal()">&times;</button>
         </div>
         <div class="modal-body">
@@ -173,6 +204,10 @@
                     <option value="クレジット">クレジットカード</option>
                     <option value="投資">投資口座</option>
                 </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">説明文（任意）</label>
+                <input type="text" id="account-description" class="form-control" placeholder="例：給与受取用口座、投資用資金">
             </div>
             <div class="form-group">
                 <label class="form-label">初期残高</label>
@@ -212,8 +247,76 @@
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-secondary" onclick="hideCreateAccountModal()">キャンセル</button>
-            <button type="button" class="btn btn-primary" onclick="createAccount()">作成</button>
+            <button type="button" class="btn btn-primary" id="create-account-btn" onclick="createAccount()">作成</button>
         </div>
+    </div>
+</div>
+
+<!-- 家計簿登録モーダル -->
+<div id="householdEntryModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>
+                <i class="material-icons">receipt_long</i>
+                家計簿に登録
+            </h3>
+            <button class="modal-close" onclick="closeHouseholdEntryModal()">
+                <i class="material-icons">close</i>
+            </button>
+        </div>
+        <form id="householdEntryForm" class="entry-form">
+            <input type="hidden" id="sourceAccountId" name="source_account_id">
+            <input type="hidden" id="expenseCategoryId" name="expense_category_id">
+            <input type="hidden" id="entryYear" name="entry_year">
+            <input type="hidden" id="entryMonth" name="entry_month">
+            
+            <!-- ドラッグ元とドロップ先の表示 -->
+            <div class="transfer-info">
+                <div class="transfer-from">
+                    <div class="transfer-label">支払い元</div>
+                    <div class="transfer-account" id="sourceAccountDisplay">
+                        <i class="material-icons">account_balance_wallet</i>
+                        <span id="sourceAccountName">財布</span>
+                    </div>
+                </div>
+                <div class="transfer-arrow">
+                    <i class="material-icons">arrow_forward</i>
+                </div>
+                <div class="transfer-to">
+                    <div class="transfer-label">支出項目</div>
+                    <div class="transfer-category" id="targetCategoryDisplay">
+                        <i class="material-icons">category</i>
+                        <span id="targetCategoryName">食費</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 金額入力 -->
+            <div class="amount-input">
+                <label for="householdAmount">支出金額</label>
+                <div class="amount-field">
+                    <span class="currency">¥</span>
+                    <input type="number" id="householdAmount" name="amount" placeholder="0" required min="1" step="1">
+                </div>
+            </div>
+            
+            <!-- 日付選択 -->
+            <div class="form-group">
+                <label for="householdDate">日付</label>
+                <input type="date" id="householdDate" name="entry_date" required>
+            </div>
+            
+            <!-- 説明入力 -->
+            <div class="form-group">
+                <label for="householdDescription">説明（任意）</label>
+                <input type="text" id="householdDescription" name="description" placeholder="例：スーパーでの買い物">
+            </div>
+            
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="closeHouseholdEntryModal()">キャンセル</button>
+                <button type="submit" class="btn-primary">登録</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -258,9 +361,47 @@
     </div>
 </div>
 
+<!-- 口座編集モーダル -->
+<div id="edit-account-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>口座情報を編集</h3>
+            <button class="modal-close" onclick="hideEditAccountModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label">口座名</label>
+                <input type="text" id="edit-account-name" class="form-control">
+            </div>
+            <div class="form-group">
+                <label class="form-label">アイコン</label>
+                <div id="edit-icon-selector" class="icon-selector"></div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">カラー</label>
+                <div id="edit-color-selector" class="color-selector"></div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">説明文（任意）</label>
+                <input type="text" id="edit-account-description" class="form-control">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="hideEditAccountModal()">キャンセル</button>
+            <button type="button" class="btn btn-primary" id="edit-account-btn">変更</button>
+        </div>
+    </div>
+</div>
+
 <script>
 let accounts = [];
+let expenseCategories = [];
 let currentTransfer = {};
+let editingAccountId = null;
+
+// 月選択関連の変数
+let currentYear = new Date().getFullYear();
+let currentMonth = new Date().getMonth() + 1;
 
 // 長押しドラッグ関連の変数
 let longPressTimer = null;
@@ -272,9 +413,176 @@ let dragPreview = null;
 // ページ読み込み時
 document.addEventListener('DOMContentLoaded', function() {
     loadAccounts();
+    loadExpenseCategories();
     setupLongPressDrag();
     setupToolsMenu();
+    initializeMonth();
+    loadMonthlySummary();
+    setupHouseholdEntryForm();
 });
+
+// 月の初期化
+function initializeMonth() {
+    updateMonthTitle();
+    // 今日の日付を家計簿登録フォームにセット
+    const today = new Date();
+    const dateStr = today.getFullYear() + '-' + 
+                   String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+                   String(today.getDate()).padStart(2, '0');
+    const householdDateInput = document.getElementById('householdDate');
+    if (householdDateInput) {
+        householdDateInput.value = dateStr;
+    }
+}
+
+// 月タイトルの更新
+function updateMonthTitle() {
+    const monthTitle = document.getElementById('currentMonthTitle');
+    if (monthTitle) {
+        monthTitle.textContent = `${currentYear}年${currentMonth}月`;
+    }
+}
+
+// 前月へ移動
+function goToPreviousMonth() {
+    currentMonth--;
+    if (currentMonth < 1) {
+        currentMonth = 12;
+        currentYear--;
+    }
+    updateMonthTitle();
+    loadMonthlySummary();
+}
+
+// 次月へ移動
+function goToNextMonth() {
+    currentMonth++;
+    if (currentMonth > 12) {
+        currentMonth = 1;
+        currentYear++;
+    }
+    updateMonthTitle();
+    loadMonthlySummary();
+}
+
+// 月別収支サマリーの読み込み
+function loadMonthlySummary() {
+    fetch(`/api/monthly-summary/${currentYear}/${currentMonth}`)
+        .then(response => response.json())
+        .then(data => {
+            const monthlyIncome = document.getElementById('monthlyIncome');
+            const monthlyExpense = document.getElementById('monthlyExpense');
+            const monthlyBalance = document.getElementById('monthlyBalance');
+            const monthlyBalanceCard = document.getElementById('monthlyBalanceCard');
+            
+            if (monthlyIncome) monthlyIncome.textContent = `¥${data.income.toLocaleString()}`;
+            if (monthlyExpense) monthlyExpense.textContent = `¥${data.expense.toLocaleString()}`;
+            if (monthlyBalance) monthlyBalance.textContent = `¥${data.balance.toLocaleString()}`;
+            
+            // 収支の色を設定
+            if (monthlyBalanceCard) {
+                monthlyBalanceCard.className = 'summary-item balance ' + (data.balance >= 0 ? 'positive' : 'negative');
+            }
+        })
+        .catch(error => {
+            console.error('月別サマリーの読み込みエラー:', error);
+        });
+}
+
+// 支出カテゴリの読み込み
+function loadExpenseCategories() {
+    fetch('/api/expense-categories')
+        .then(response => response.json())
+        .then(data => {
+            console.log('Loaded expense categories:', data);
+            // データが配列でない場合は配列に変換
+            if (Array.isArray(data)) {
+                expenseCategories = data;
+            } else if (data.success && data.categories && Array.isArray(data.categories)) {
+                expenseCategories = data.categories;
+            } else if (data.categories && Array.isArray(data.categories)) {
+                expenseCategories = data.categories;
+            } else if (data.success && Array.isArray(data.data)) {
+                expenseCategories = data.data;
+            } else {
+                expenseCategories = [];
+                console.error('Expense categories is not an array:', data);
+            }
+            console.log('Final expense categories:', expenseCategories);
+        })
+        .catch(error => {
+            console.error('支出カテゴリの読み込みエラー:', error);
+            expenseCategories = [];
+        });
+}
+
+// 家計簿登録フォームの設定
+function setupHouseholdEntryForm() {
+    const form = document.getElementById('householdEntryForm');
+    if (form) {
+        form.addEventListener('submit', handleHouseholdEntrySubmit);
+    }
+}
+
+// 家計簿登録フォームの送信処理
+function handleHouseholdEntrySubmit(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const data = {
+        source_account_id: parseInt(formData.get('source_account_id')),
+        expense_category_id: parseInt(formData.get('expense_category_id')),
+        amount: parseInt(formData.get('amount')),
+        entry_date: formData.get('entry_date'),
+        description: formData.get('description') || '',
+        entry_year: parseInt(formData.get('entry_year')),
+        entry_month: parseInt(formData.get('entry_month'))
+    };
+    
+    // バリデーション
+    if (!data.amount || data.amount <= 0) {
+        showToast('金額を正しく入力してください', 'error');
+        return;
+    }
+    
+    if (!data.entry_date) {
+        showToast('日付を選択してください', 'error');
+        return;
+    }
+    
+    fetch('/api/household-entries-from-account', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            closeHouseholdEntryModal();
+            loadMonthlySummary();
+            loadAccounts(); // 口座残高を更新
+            showToast('家計簿に登録しました', 'success');
+        } else {
+            showToast('エラー: ' + (result.error || '登録に失敗しました'), 'error');
+        }
+    })
+    .catch(error => {
+        console.error('家計簿登録エラー:', error);
+        showToast('登録に失敗しました', 'error');
+    });
+}
+
+
+
+// 家計簿登録モーダルを閉じる
+function closeHouseholdEntryModal() {
+    const modal = document.getElementById('householdEntryModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
 
 // 長押しドラッグの設定
 function setupLongPressDrag() {
@@ -286,10 +594,10 @@ function setupLongPressDrag() {
         return;
     }
     
-    // タッチイベントの設定
-    container.addEventListener('touchstart', handleTouchStart, { passive: false });
-    container.addEventListener('touchmove', handleTouchMove, { passive: false });
-    container.addEventListener('touchend', handleTouchEnd, { passive: false });
+    // タッチイベントの設定（横スクロール優先でpassive: trueに変更）
+    container.addEventListener('touchstart', handleTouchStart, { passive: true });
+    container.addEventListener('touchmove', handleTouchMove, { passive: true });
+    container.addEventListener('touchend', handleTouchEnd, { passive: true });
     
     // マウスイベントの設定（デスクトップ対応）
     container.addEventListener('mousedown', handleMouseDown, { passive: false });
@@ -298,7 +606,7 @@ function setupLongPressDrag() {
     
     // グローバルイベント（ドラッグ中に画面外に出た場合の対応）
     document.addEventListener('touchmove', function(e) {
-        if (isDragging) {
+        if (isDragging && e.cancelable) {
             e.preventDefault();
         }
     }, { passive: false });
@@ -315,7 +623,7 @@ function handleTouchStart(e) {
     const target = e.target.closest('.account-card, .income-source');
     if (!target) return;
     
-    e.preventDefault();
+    // passive: trueなのでe.preventDefault()は削除
     const touch = e.touches[0];
     startLongPress(target, touch.clientX, touch.clientY);
 }
@@ -340,6 +648,7 @@ function startLongPress(element, x, y) {
     
     // 長押しタイマー開始（500ms）
     longPressTimer = setTimeout(() => {
+        // 0.5秒以内に20px以上の横移動がない場合のみドラッグ開始
         startDrag(element, x, y);
     }, 500);
     
@@ -485,18 +794,38 @@ function createDragPreview(element, x, y) {
 // タッチ移動
 function handleTouchMove(e) {
     if (longPressTimer && !isDragging) {
-        // 長押し中に移動した場合、長押しをキャンセル
-        clearTimeout(longPressTimer);
-        longPressTimer = null;
-        if (currentDragElement) {
-            currentDragElement.classList.remove('long-press-active');
+        // 長押し中に移動した場合の判定を変更（20px以上の横移動でキャンセル）
+        const touch = e.touches[0];
+        const horizontalDistance = Math.abs(touch.clientX - dragStartPos.x);
+        const verticalDistance = Math.abs(touch.clientY - dragStartPos.y);
+        
+        // 20px以上の横移動があった場合は横スクロール優先でドラッグをキャンセル
+        if (horizontalDistance > 20) {
+            clearTimeout(longPressTimer);
+            longPressTimer = null;
+            if (currentDragElement) {
+                currentDragElement.classList.remove('long-press-active');
+                currentDragElement = null;
+            }
+            return;
         }
-        return;
+        
+        // 縦移動が大きい場合も一応キャンセル（縦スクロール優先）
+        if (verticalDistance > 30) {
+            clearTimeout(longPressTimer);
+            longPressTimer = null;
+            if (currentDragElement) {
+                currentDragElement.classList.remove('long-press-active');
+                currentDragElement = null;
+            }
+            return;
+        }
     }
     
     if (!isDragging) return;
     
-    e.preventDefault();
+    // passive: trueのため、preventDefaultは呼び出さない
+    // グローバルイベントリスナーでpreventDefaultを処理
     const touch = e.touches[0];
     updateDragPreview(touch.clientX, touch.clientY);
     checkDropTarget(touch.clientX, touch.clientY);
@@ -549,9 +878,14 @@ function checkDropTarget(x, y) {
     });
     
     // 新しいドロップターゲットを設定
-    const dropTarget = elementBelow?.closest('.account-card');
-    if (dropTarget && dropTarget !== currentDragElement) {
-        dropTarget.classList.add('drop-target');
+    const accountDropTarget = elementBelow?.closest('.account-card');
+    const expenseDropTarget = elementBelow?.closest('.expense-category-card');
+    
+    if (accountDropTarget && accountDropTarget !== currentDragElement) {
+        accountDropTarget.classList.add('drop-target');
+    } else if (expenseDropTarget && currentDragElement?.classList.contains('account-card')) {
+        // 口座から支出項目へのドロップのみ許可
+        expenseDropTarget.classList.add('drop-target');
     }
 }
 
@@ -600,12 +934,17 @@ function endDrag(x, y) {
     // ドロップターゲットを確認
     dragPreview.style.display = 'none';
     const elementBelow = document.elementFromPoint(x, y);
-    const dropTarget = elementBelow?.closest('.account-card');
+    const accountDropTarget = elementBelow?.closest('.account-card');
+    const expenseDropTarget = elementBelow?.closest('.expense-category-card');
     
-    if (dropTarget && dropTarget !== currentDragElement) {
+    if (accountDropTarget && accountDropTarget !== currentDragElement) {
         // 資産移動処理
-        console.log('Drop target found:', dropTarget);
-        initiateTransfer(currentDragElement, dropTarget);
+        console.log('Account drop target found:', accountDropTarget);
+        initiateTransfer(currentDragElement, accountDropTarget);
+    } else if (expenseDropTarget && currentDragElement?.classList.contains('account-card')) {
+        // 家計簿登録処理
+        console.log('Expense drop target found:', expenseDropTarget);
+        initiateHouseholdEntry(currentDragElement, expenseDropTarget);
     }
     
     // 視覚効果をリセット
@@ -730,6 +1069,13 @@ function createAccountCard(account) {
 // モーダル関連の既存関数
 function showCreateAccountModal() {
     document.getElementById('create-account-modal').style.display = 'block';
+    // カラー選択肢のクリックイベントを毎回セット
+    document.querySelectorAll('.color-option').forEach(opt => {
+        opt.onclick = function() {
+            document.querySelectorAll('.color-option').forEach(o => o.classList.remove('selected'));
+            this.classList.add('selected');
+        };
+    });
 }
 
 function hideCreateAccountModal() {
@@ -1041,9 +1387,10 @@ async function executeSelectedAccountAction() {
             let success = false;
             
             if (currentAction === 'edit') {
-                // 編集機能（現在は未実装）
-                console.log('Edit account:', id);
-                success = true;
+                // 編集モーダルを表示
+                const account = accounts.find(acc => acc.id === id);
+                if (account) showEditAccountModal(account);
+                return; // 1件ずつ編集
             } else if (currentAction === 'delete') {
                 const response = await fetch(`/api/accounts/${id}`, {
                     method: 'DELETE'
@@ -1078,5 +1425,176 @@ function closeAccountSelectionModal() {
     modal.classList.remove('show');
     selectedItems = [];
 }
+
+// 家計簿登録開始
+function initiateHouseholdEntry(accountElement, expenseElement) {
+    const accountData = getElementData(accountElement);
+    const expenseCategoryData = getExpenseCategoryData(expenseElement);
+    
+    if (!accountData || !expenseCategoryData) {
+        console.error('Account or expense category data not found');
+        return;
+    }
+    
+    showHouseholdEntryModal(accountData, expenseCategoryData);
+}
+
+// 支出カテゴリデータ取得
+function getExpenseCategoryData(element) {
+    if (element.classList.contains('expense-category-card')) {
+        const categoryName = element.querySelector('.expense-category-name')?.textContent;
+        const categoryIcon = element.querySelector('.expense-category-icon i')?.textContent;
+        
+        console.log('Getting expense category data for:', categoryName);
+        console.log('Available expense categories:', expenseCategories);
+        console.log('Type of expenseCategories:', typeof expenseCategories);
+        console.log('Is array?', Array.isArray(expenseCategories));
+        
+        // 既知のカテゴリマッピング（フォールバック用）
+        const categoryMapping = {
+            '食費': { id: 1, name: '食費', icon: 'restaurant' },
+            '住居費': { id: 2, name: '住居費', icon: 'home' },
+            '交通費': { id: 3, name: '交通費', icon: 'directions_car' },
+            '日用品': { id: 4, name: '日用品', icon: 'shopping_cart' },
+            '教育費': { id: 5, name: '教育費', icon: 'school' },
+            '医療費': { id: 6, name: '医療費', icon: 'local_hospital' },
+            '娯楽費': { id: 7, name: '娯楽費', icon: 'sports_esports' },
+            '衣服費': { id: 8, name: '衣服費', icon: 'checkroom' },
+            'その他': { id: 9, name: 'その他', icon: 'category' }
+        };
+        
+        // expenseCategoriesが配列であることを確認
+        if (Array.isArray(expenseCategories) && expenseCategories.length > 0) {
+            const category = expenseCategories.find(cat => cat.name === categoryName);
+            
+            if (category) {
+                console.log('Found category:', category);
+                return category;
+            }
+        }
+        
+        // マッピングから探す
+        if (categoryMapping[categoryName]) {
+            console.log('Found category in mapping:', categoryMapping[categoryName]);
+            return categoryMapping[categoryName];
+        }
+        
+        // カテゴリが見つからない場合の最終フォールバック
+        console.log('Category not found, using final fallback');
+        return {
+            id: 1, // デフォルトカテゴリID
+            name: categoryName || '支出',
+            icon: categoryIcon || 'category'
+        };
+    }
+    return null;
+}
+
+// 家計簿登録モーダル表示
+function showHouseholdEntryModal(accountData, categoryData) {
+    const modal = document.getElementById('householdEntryModal');
+    
+    // フォーム要素設定
+    document.getElementById('sourceAccountId').value = accountData.id;
+    document.getElementById('expenseCategoryId').value = categoryData.id;
+    
+    // 現在の年月を設定
+    const now = new Date();
+    document.getElementById('entryYear').value = now.getFullYear();
+    document.getElementById('entryMonth').value = now.getMonth() + 1;
+    
+    // 表示情報設定
+    const sourceAccountDisplay = document.getElementById('sourceAccountDisplay');
+    sourceAccountDisplay.innerHTML = `
+        <i class="material-icons" style="color: ${accountData.color}">${accountData.icon}</i>
+        <span>${accountData.name}</span>
+    `;
+    document.getElementById('sourceAccountName').textContent = accountData.name;
+    
+    const targetCategoryDisplay = document.getElementById('targetCategoryDisplay');
+    targetCategoryDisplay.innerHTML = `
+        <i class="material-icons">${categoryData.icon}</i>
+        <span>${categoryData.name}</span>
+    `;
+    document.getElementById('targetCategoryName').textContent = categoryData.name;
+    
+    // 日付を今日に設定
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('householdDate').value = today;
+    
+    // フォームリセット
+    document.getElementById('householdAmount').value = '';
+    document.getElementById('householdDescription').value = '';
+    
+    // モーダル表示
+    modal.style.display = 'block';
+}
+
+// 家計簿登録モーダル閉じる
+function closeHouseholdEntryModal() {
+    const modal = document.getElementById('householdEntryModal');
+    modal.style.display = 'none';
+}
+
+function showEditAccountModal(account) {
+    editingAccountId = account.id;
+    document.getElementById('edit-account-name').value = account.name;
+    document.getElementById('edit-account-description').value = account.description || '';
+    // アイコン選択肢を新規作成と同じ5種類に統一
+    const icons = ["account_balance", "account_balance_wallet", "credit_card", "savings", "trending_up"];
+    const iconSelector = document.getElementById('edit-icon-selector');
+    iconSelector.innerHTML = icons.map(icon =>
+        `<span class="icon-option${account.icon === icon ? ' selected' : ''}" data-icon="${icon}"><i class="material-icons">${icon}</i></span>`
+    ).join('');
+    iconSelector.querySelectorAll('.icon-option').forEach(opt => {
+        opt.onclick = function() {
+            iconSelector.querySelectorAll('.icon-option').forEach(o => o.classList.remove('selected'));
+            this.classList.add('selected');
+        };
+    });
+    // カラー選択肢
+    const colors = ["#2196F3", "#4CAF50", "#FF9800", "#9C27B0", "#F44336", "#607D8B"];
+    const colorSelector = document.getElementById('edit-color-selector');
+    colorSelector.innerHTML = colors.map(color =>
+        `<span class="color-option${account.color === color ? ' selected' : ''}" data-color="${color}" style="background:${color}"></span>`
+    ).join('');
+    colorSelector.querySelectorAll('.color-option').forEach(opt => {
+        opt.onclick = function() {
+            colorSelector.querySelectorAll('.color-option').forEach(o => o.classList.remove('selected'));
+            this.classList.add('selected');
+        };
+    });
+    document.getElementById('edit-account-modal').style.display = 'block';
+}
+
+function hideEditAccountModal() {
+    document.getElementById('edit-account-modal').style.display = 'none';
+    editingAccountId = null;
+}
+
+document.getElementById('edit-account-btn').onclick = async function() {
+    const name = document.getElementById('edit-account-name').value.trim();
+    const description = document.getElementById('edit-account-description').value.trim();
+    const icon = document.querySelector('#edit-icon-selector .icon-option.selected')?.dataset.icon || 'account_balance';
+    const color = document.querySelector('#edit-color-selector .color-option.selected')?.dataset.color || '#2196F3';
+    if (!name) {
+        showToast('口座名を入力してください', 'error');
+        return;
+    }
+    // APIリクエスト
+    const res = await fetch(`/api/accounts/${editingAccountId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, description, icon, color })
+    });
+    const data = await res.json();
+    if (data.success) {
+        showToast('変更が完了しました', 'success');
+        hideEditAccountModal();
+        loadAccounts();
+    } else {
+        showToast('変更に失敗しました', 'error');
+    }
+};
 </script>
 {% endblock %} 

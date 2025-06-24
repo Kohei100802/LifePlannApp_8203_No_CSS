@@ -75,7 +75,7 @@
                 <i class="material-icons">home</i>
                 <span>トップ</span>
             </a>
-            <a href="/expenses/incomes" class="footer-item {{ 'active' if request.endpoint in ['expenses', 'incomes', 'expenses_incomes'] }}">
+            <a href="javascript:void(0)" onclick="showExpenseIncomePopup()" class="footer-item {{ 'active' if request.endpoint in ['expenses', 'incomes', 'expenses_incomes'] }}">
                 <i class="material-icons">account_balance_wallet</i>
                 <span>支出/収入</span>
             </a>
@@ -164,6 +164,66 @@
     </div>
     {% endif %}
     
+    <!-- 支出・収入選択ポップアップ -->
+    <div id="expense-income-popup-overlay" class="expense-income-popup-overlay" style="display: none;">
+        <div class="expense-income-popup">
+            <div class="popup-header">
+                <h3>支出・収入管理</h3>
+                <button class="popup-close" onclick="closeExpenseIncomePopup()">
+                    <i class="material-icons">close</i>
+                </button>
+            </div>
+            <div class="popup-content">
+                <div class="popup-section">
+                    <h4>支出管理</h4>
+                    <a href="/expenses/living" class="popup-menu-item" onclick="closeExpenseIncomePopup()">
+                        <i class="material-icons">home</i>
+                        <span>生活費</span>
+                    </a>
+                    <a href="/expenses/housing" class="popup-menu-item" onclick="closeExpenseIncomePopup()">
+                        <i class="material-icons">apartment</i>
+                        <span>住居費</span>
+                    </a>
+                    <a href="/expenses/education" class="popup-menu-item" onclick="closeExpenseIncomePopup()">
+                        <i class="material-icons">school</i>
+                        <span>教育費</span>
+                    </a>
+                    <a href="/expenses/insurance" class="popup-menu-item" onclick="closeExpenseIncomePopup()">
+                        <i class="material-icons">security</i>
+                        <span>保険料</span>
+                    </a>
+                    <a href="/expenses/events" class="popup-menu-item" onclick="closeExpenseIncomePopup()">
+                        <i class="material-icons">event</i>
+                        <span>イベント費</span>
+                    </a>
+                </div>
+                <div class="popup-section">
+                    <h4>収入管理</h4>
+                    <a href="/incomes/salary" class="popup-menu-item" onclick="closeExpenseIncomePopup()">
+                        <i class="material-icons">work</i>
+                        <span>給与収入</span>
+                    </a>
+                    <a href="/incomes/sidejob" class="popup-menu-item" onclick="closeExpenseIncomePopup()">
+                        <i class="material-icons">business_center</i>
+                        <span>副業収入</span>
+                    </a>
+                    <a href="/incomes/investment" class="popup-menu-item" onclick="closeExpenseIncomePopup()">
+                        <i class="material-icons">trending_up</i>
+                        <span>投資収入</span>
+                    </a>
+                    <a href="/incomes/pension" class="popup-menu-item" onclick="closeExpenseIncomePopup()">
+                        <i class="material-icons">elderly</i>
+                        <span>年金収入</span>
+                    </a>
+                    <a href="/incomes/other" class="popup-menu-item" onclick="closeExpenseIncomePopup()">
+                        <i class="material-icons">more_horiz</i>
+                        <span>その他収入</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- 共通UI要素 -->
     <div id="loading-overlay" class="loading-overlay hidden">
         <div class="loading-spinner"></div>
@@ -223,16 +283,48 @@
         }
     }
     
+    // 支出・収入ポップアップ制御
+    function showExpenseIncomePopup() {
+        const popup = document.getElementById('expense-income-popup-overlay');
+        if (popup) {
+            popup.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            // アニメーション用
+            setTimeout(() => {
+                popup.classList.add('show');
+            }, 10);
+        }
+    }
+    
+    function closeExpenseIncomePopup() {
+        const popup = document.getElementById('expense-income-popup-overlay');
+        if (popup) {
+            popup.classList.remove('show');
+            document.body.style.overflow = '';
+            setTimeout(() => {
+                popup.style.display = 'none';
+            }, 300);
+        }
+    }
+    
     // モーダル外クリックで閉じる
     document.addEventListener('click', function(event) {
         const modal = document.getElementById('menu-modal');
         const modalContent = modal ? modal.querySelector('.menu-modal-content') : null;
         const menuToggle = document.getElementById('menu-toggle');
         
+        const expensePopup = document.getElementById('expense-income-popup-overlay');
+        const expensePopupContent = expensePopup ? expensePopup.querySelector('.expense-income-popup') : null;
+        
         if (modal && modal.classList.contains('show') && 
             !modalContent.contains(event.target) && 
             !menuToggle.contains(event.target)) {
             closeMenuModal();
+        }
+        
+        if (expensePopup && expensePopup.classList.contains('show') && 
+            expensePopupContent && !expensePopupContent.contains(event.target)) {
+            closeExpenseIncomePopup();
         }
     });
     </script>

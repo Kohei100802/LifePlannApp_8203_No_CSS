@@ -5,34 +5,12 @@
 {% block main_class %}has-modern-tab-navigation{% endblock %}
 
 {% block tab_navigation %}
-<!-- モダンタブナビゲーション（main-contentから独立） -->
-<div class="modern-tab-navigation">
-    <button class="modern-tab-item active" onclick="switchModernTab('expenses')" data-tab="expenses">
-        <div class="tab-icon-wrapper">
-        <i class="material-icons">account_balance_wallet</i>
-        </div>
-        <div class="tab-content-wrapper">
-            <span class="tab-title">支出管理</span>
-        </div>
-        <div class="tab-indicator"></div>
-    </button>
-    
-    <button class="modern-tab-item" onclick="switchModernTab('incomes')" data-tab="incomes">
-        <div class="tab-icon-wrapper">
-        <i class="material-icons">attach_money</i>
-        </div>
-        <div class="tab-content-wrapper">
-            <span class="tab-title">収入管理</span>
-        </div>
-        <div class="tab-indicator"></div>
-    </button>
-</div>
+<!-- タブナビゲーションは削除 - フッターの吹き出しメニューで管理 -->
 {% endblock %}
 
 {% block content %}
 <div class="modern-tabs-container">
-
-    <!-- 支出タブコンテンツ -->
+    <!-- 支出管理コンテンツ -->
     <div id="expenses-tab" class="modern-tab-content active">
         <div class="content-section">
             <div class="modern-menu-grid">
@@ -160,35 +138,6 @@
 
 {% block scripts %}
 <script>
-function switchModernTab(tabName) {
-    // すべてのタブナビゲーションアイテムから active クラスを削除
-    document.querySelectorAll('.modern-tab-item').forEach(item => {
-        item.classList.remove('active');
-    });
-    
-    // すべてのタブコンテンツから active クラスを削除
-    document.querySelectorAll('.modern-tab-content').forEach(content => {
-        content.classList.remove('active');
-    });
-    
-    // クリックされたタブナビゲーションアイテムに active クラスを追加
-    event.target.closest('.modern-tab-item').classList.add('active');
-    
-    // 対応するタブコンテンツに active クラスを追加
-    document.getElementById(tabName + '-tab').classList.add('active');
-    
-    // アニメーション効果
-    const activeTab = document.getElementById(tabName + '-tab');
-    activeTab.style.opacity = '0';
-    activeTab.style.transform = 'translateY(10px)';
-    
-    setTimeout(() => {
-        activeTab.style.transition = 'all 0.3s ease';
-        activeTab.style.opacity = '1';
-        activeTab.style.transform = 'translateY(0)';
-    }, 50);
-}
-
 // ページ読み込み時のアニメーション
 document.addEventListener('DOMContentLoaded', function() {
     const cards = document.querySelectorAll('.modern-menu-card');

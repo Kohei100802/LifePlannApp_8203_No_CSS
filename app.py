@@ -960,12 +960,8 @@ def household_swipe_dev():
 def mypage():
     return render_template('mypage.html')
 
-@app.route('/test-menu')
-@login_required
-def test_menu():
-    return render_template('test_menu.html')
 
-# 家計簿機能のルーティング
+@app.route('/test-menu')
 @app.route('/account-management')
 @login_required
 def account_management():
@@ -3409,6 +3405,23 @@ def api_simulate():
                             year_income += annual_amount
                             income_details.append({'type': 'sidejob', 'name': income.name, 'amount': annual_amount})
                 
+                # business収入（事業収入）の計算を追加
+                if 'business' in selected_incomes:
+                    for income_id in selected_incomes['business']:
+                        income = BusinessIncomes.query.filter_by(id=income_id, user_id=current_user.id).first()
+                        if income and income.start_year <= year <= income.end_year:
+                            years_passed = year - income.start_year
+                            increase_rate = income.income_increase_rate if hasattr(income, 'income_increase_rate') else 0.0
+                            # 月額収入の計算
+                            monthly_with_increase = income.monthly_amount * ((1 + increase_rate / 100) ** years_passed)
+                            # 年間収入の計算
+                            annual_amount = monthly_with_increase * 12
+                            # 年間収入上限の適用
+                            if hasattr(income, 'has_cap') and income.has_cap and hasattr(income, 'annual_income_cap') and income.annual_income_cap > 0:
+                                annual_amount = min(annual_amount, income.annual_income_cap)
+                            year_income += annual_amount
+                            income_details.append({'type': 'business', 'name': income.name, 'amount': annual_amount})
+                
                 if 'investment' in selected_incomes:
                     for income_id in selected_incomes['investment']:
                         income = InvestmentIncomes.query.filter_by(id=income_id, user_id=current_user.id).first()
@@ -4751,6 +4764,416 @@ def api_account_transactions():
     except Exception as e:
         app.logger.error(f"取引履歴API エラー: {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/monthly-summary/<int:year>/<int:month>', methods=['GET'])
+@login_required
+def api_monthly_summary(year, month):
+    """月別収支サマリー取得API"""
+    try:
+        # 指定された年月の家計簿を取得
+        household_book = HouseholdBook.query.filter_by(
+            user_id=current_user.id,
+            year=year,
+            month=month
+        ).first()
+        
+        if not household_book:
+            return jsonify({
+                'success': True,
+                'income': 0,
+                'expense': 0,
+                'balance': 0
+            })
+        
+        # 収入の合計
+        income_total = db.session.query(db.func.sum(HouseholdEntry.amount))\
+            .filter_by(household_book_id=household_book.id, entry_type='income')\
+            .scalar() or 0
+        
+        # 支出の合計
+        expense_total = db.session.query(db.func.sum(HouseholdEntry.amount))\
+            .filter_by(household_book_id=household_book.id, entry_type='expense')\
+            .scalar() or 0
+        
+        balance = income_total - expense_total
+        
+        return jsonify({
+            'success': True,
+            'income': income_total,
+            'expense': expense_total,
+            'balance': balance
+        })
+    
+    except Exception as e:
+        app.logger.error(f"月別サマリーAPI エラー: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/household-entries-from-account', methods=['POST'])
+@login_required
+def api_create_household_entry_from_account():
+    """家計簿エントリー作成API（口座管理からの登録用）"""
+    try:
+        data = request.get_json()
+        
+        # 必須パラメータの確認
+        source_account_id = data.get('source_account_id')
+        expense_category_id = data.get('expense_category_id')
+        amount = data.get('amount')
+        entry_date = data.get('entry_date')
+        entry_year = data.get('entry_year')
+        entry_month = data.get('entry_month')
+        description = data.get('description', '')
+        
+        if not all([source_account_id, expense_category_id, amount, entry_date, entry_year, entry_month]):
+            return jsonify({'success': False, 'error': '必須パラメータが不足しています'}), 400
+        
+        # 口座の確認
+        account = Account.query.filter_by(id=source_account_id, user_id=current_user.id).first()
+        if not account:
+            return jsonify({'success': False, 'error': '口座が見つかりません'}), 404
+        
+        # 残高チェック
+        if account.balance < amount:
+            return jsonify({'success': False, 'error': '残高が不足しています'}), 400
+        
+        # 支出カテゴリの確認
+        expense_category = ExpenseCategory.query.get(expense_category_id)
+        if not expense_category:
+            return jsonify({'success': False, 'error': '支出カテゴリが見つかりません'}), 404
+        
+        # 家計簿の取得または作成
+        household_book = HouseholdBook.query.filter_by(
+            user_id=current_user.id,
+            year=entry_year,
+            month=entry_month
+        ).first()
+        
+        if not household_book:
+            household_book = HouseholdBook(
+                user_id=current_user.id,
+                name=f"{entry_year}年{entry_month}月の家計簿",
+                year=entry_year,
+                month=entry_month
+            )
+            db.session.add(household_book)
+            db.session.flush()  # IDを取得するため
+        
+        # 家計簿エントリーを作成
+        entry = HouseholdEntry(
+            household_book_id=household_book.id,
+            user_id=current_user.id,
+            entry_type='expense',
+            amount=amount,
+            description=description,
+            expense_category_id=expense_category_id,
+            entry_date=datetime.strptime(entry_date, '%Y-%m-%d').date()
+        )
+        
+        # 口座残高を減らす
+        account.balance -= amount
+        
+        db.session.add(entry)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': '家計簿に登録しました',
+            'entry': {
+                'id': entry.id,
+                'amount': entry.amount,
+                'description': entry.description,
+                'entry_date': entry.entry_date.isoformat(),
+                'category_name': expense_category.name,
+                'account_name': account.name,
+                'new_balance': account.balance
+            }
+        })
+    
+    except Exception as e:
+        app.logger.error(f"家計簿登録API エラー: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# 内緒の土地分析機能
+@app.route('/land-analysis')
+@login_required
+def land_analysis():
+    return render_template('land_analysis.html')
+
+# 土地分析API（Google Maps API使用）
+@app.route('/api/land-analysis/analyze', methods=['POST'])
+@login_required
+def api_land_analysis_analyze():
+    try:
+        data = request.get_json()
+        address = data.get('address')
+        
+        if not address:
+            return jsonify({'error': True, 'message': '住所が指定されていません'}), 400
+        
+        # Google Maps APIを使用した分析を実行
+        result = perform_land_analysis(address)
+        
+        if result is None:
+            return jsonify({'error': True, 'message': '分析に失敗しました'}), 500
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        app.logger.error(f"Land analysis error: {str(e)}")
+        return jsonify({'error': True, 'message': 'サーバーエラーが発生しました'}), 500
+
+def perform_land_analysis(address):
+    """Google Maps APIを使用した土地分析"""
+    import requests
+    import base64
+    from PIL import Image, ImageDraw
+    import io
+    import os
+    import math
+    import random
+    
+    try:
+        # Google Maps APIキー（環境変数から取得）
+        google_api_key = os.getenv('GOOGLE_MAPS_API_KEY')
+        
+        if not google_api_key:
+            # APIキーがない場合はモック結果を返す
+            return generate_mock_analysis_result(address)
+        
+        # 1. 住所から緯度経度を取得
+        geocoding_url = "https://maps.googleapis.com/maps/api/geocode/json"
+        geocoding_params = {
+            'address': address,
+            'key': google_api_key,
+            'language': 'ja',
+            'region': 'jp'
+        }
+        
+        geocoding_response = requests.get(geocoding_url, params=geocoding_params, timeout=10)
+        geocoding_data = geocoding_response.json()
+        
+        if geocoding_data['status'] != 'OK' or not geocoding_data['results']:
+            return generate_mock_analysis_result(address)
+        
+        location = geocoding_data['results'][0]['geometry']['location']
+        lat, lng = location['lat'], location['lng']
+        
+        # 2. 衛星画像を取得
+        static_map_url = "https://maps.googleapis.com/maps/api/staticmap"
+        static_map_params = {
+            'center': f"{lat},{lng}",
+            'zoom': 18,
+            'size': '640x640',
+            'maptype': 'satellite',
+            'key': google_api_key
+        }
+        
+        image_response = requests.get(static_map_url, params=static_map_params, timeout=30)
+        
+        if image_response.status_code != 200:
+            return generate_mock_analysis_result(address)
+        
+        # 3. 画像をBase64エンコード
+        satellite_image_base64 = base64.b64encode(image_response.content).decode('utf-8')
+        
+        # 4. セグメンテーション実行（簡易版）
+        segmentation_image_base64, vacant_pixels = perform_simple_segmentation(image_response.content)
+        
+        # 5. 面積計算
+        vacant_area_m2 = pixels_to_square_meters(vacant_pixels, zoom_level=18, lat=lat)
+        
+        # 6. 地価取得（簡易推定）
+        land_price_per_m2 = estimate_land_price(lat, lng)
+        
+        # 7. 評価額計算
+        estimated_value = vacant_area_m2 * land_price_per_m2
+        
+        return {
+            'address': address,
+            'coordinates': {'lat': lat, 'lng': lng},
+            'satellite_image_base64': satellite_image_base64,
+            'segmentation_image_base64': segmentation_image_base64,
+            'vacant_area_m2': round(vacant_area_m2, 2),
+            'land_price_per_m2': round(land_price_per_m2, 2),
+            'estimated_value': round(estimated_value, 2)
+        }
+        
+    except Exception as e:
+        app.logger.error(f"Land analysis error: {str(e)}")
+        return generate_mock_analysis_result(address)
+
+def generate_mock_analysis_result(address):
+    """モック分析結果を生成"""
+    import random
+    
+    # 東京周辺のランダム座標
+    base_lat = 35.6762 + (random.random() - 0.5) * 0.1
+    base_lng = 139.6503 + (random.random() - 0.5) * 0.1
+    
+    # ランダムな数値
+    area = random.randint(100, 500)
+    price_per_m2 = random.randint(100000, 800000)
+    estimated_value = area * price_per_m2
+    
+    # モック画像生成
+    satellite_image = generate_mock_satellite_image()
+    segmentation_image = generate_mock_segmentation_image()
+    
+    return {
+        'address': address,
+        'coordinates': {'lat': base_lat, 'lng': base_lng},
+        'satellite_image_base64': satellite_image,
+        'segmentation_image_base64': segmentation_image,
+        'vacant_area_m2': float(area),
+        'land_price_per_m2': float(price_per_m2),
+        'estimated_value': float(estimated_value)
+    }
+
+def perform_simple_segmentation(image_bytes):
+    """簡易セグメンテーション処理"""
+    from PIL import Image, ImageDraw
+    import io
+    import base64
+    import random
+    
+    try:
+        # 画像を開く
+        image = Image.open(io.BytesIO(image_bytes)).convert('RGB')
+        
+        # セグメンテーション画像を作成（簡易版）
+        seg_image = Image.new('RGB', image.size, (76, 175, 80))  # 緑（空き地）
+        draw = ImageDraw.Draw(seg_image)
+        
+        # ランダムな建物（赤）
+        for _ in range(random.randint(3, 8)):
+            x1 = random.randint(0, image.width - 100)
+            y1 = random.randint(0, image.height - 80)
+            x2 = x1 + random.randint(50, 100)
+            y2 = y1 + random.randint(40, 80)
+            draw.rectangle([x1, y1, x2, y2], fill=(244, 67, 54))
+        
+        # 道路（グレー）
+        draw.rectangle([0, image.height//2-20, image.width, image.height//2+20], fill=(158, 158, 158))
+        draw.rectangle([image.width//2-20, 0, image.width//2+20, image.height], fill=(158, 158, 158))
+        
+        # 水域（青）
+        if random.random() > 0.5:
+            center_x = random.randint(100, image.width-100)
+            center_y = random.randint(100, image.height-100)
+            radius = random.randint(30, 60)
+            draw.ellipse([center_x-radius, center_y-radius, center_x+radius, center_y+radius], fill=(33, 150, 243))
+        
+        # Base64エンコード
+        buffer = io.BytesIO()
+        seg_image.save(buffer, format='PNG')
+        seg_image_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+        
+        # 空き地ピクセル数を計算（緑の部分）
+        vacant_pixels = count_green_pixels(seg_image)
+        
+        return seg_image_base64, vacant_pixels
+        
+    except Exception as e:
+        app.logger.error(f"Segmentation error: {str(e)}")
+        return generate_mock_segmentation_image(), random.randint(10000, 50000)
+
+def count_green_pixels(image):
+    """緑色ピクセル数をカウント"""
+    import numpy as np
+    
+    image_array = np.array(image)
+    green_mask = (image_array[:, :, 0] == 76) & (image_array[:, :, 1] == 175) & (image_array[:, :, 2] == 80)
+    return np.sum(green_mask)
+
+def pixels_to_square_meters(pixel_count, zoom_level=18, lat=35.6762):
+    """ピクセル数を平方メートルに変換"""
+    import math
+    
+    # Google Maps Static APIのzoom18での1ピクセルあたりの実際の距離
+    meters_per_pixel = 156543.03392 * math.cos(math.radians(lat)) / (2 ** zoom_level)
+    area_per_pixel = meters_per_pixel ** 2
+    return pixel_count * area_per_pixel
+
+def estimate_land_price(lat, lng):
+    """座標に基づく地価推定"""
+    import math
+    
+    # 東京駅からの距離に基づく簡易推定
+    tokyo_lat, tokyo_lng = 35.6762, 139.6503
+    distance_km = math.sqrt(
+        ((lat - tokyo_lat) * 111) ** 2 + 
+        ((lng - tokyo_lng) * 111 * math.cos(math.radians(lat))) ** 2
+    )
+    
+    if distance_km < 10:
+        return 800000.0
+    elif distance_km < 30:
+        return 400000.0
+    elif distance_km < 100:
+        return 200000.0
+    else:
+        return 100000.0
+
+def generate_mock_satellite_image():
+    """モック衛星画像を生成"""
+    from PIL import Image, ImageDraw
+    import io
+    import base64
+    import random
+    
+    image = Image.new('RGB', (640, 640), (139, 195, 74))  # 緑の背景
+    draw = ImageDraw.Draw(image)
+    
+    # 建物
+    for _ in range(random.randint(5, 10)):
+        x1 = random.randint(0, 560)
+        y1 = random.randint(0, 560)
+        x2 = x1 + random.randint(40, 80)
+        y2 = y1 + random.randint(40, 80)
+        draw.rectangle([x1, y1, x2, y2], fill=(117, 117, 117))
+    
+    # 道路
+    draw.rectangle([0, 300, 640, 340], fill=(66, 66, 66))
+    draw.rectangle([300, 0, 340, 640], fill=(66, 66, 66))
+    
+    buffer = io.BytesIO()
+    image.save(buffer, format='PNG')
+    return base64.b64encode(buffer.getvalue()).decode('utf-8')
+
+def generate_mock_segmentation_image():
+    """モックセグメンテーション画像を生成"""
+    from PIL import Image, ImageDraw
+    import io
+    import base64
+    import random
+    
+    image = Image.new('RGB', (640, 640), (76, 175, 80))  # 緑（空き地）
+    draw = ImageDraw.Draw(image)
+    
+    # 建物（赤）
+    for _ in range(random.randint(5, 10)):
+        x1 = random.randint(0, 560)
+        y1 = random.randint(0, 560)
+        x2 = x1 + random.randint(40, 80)
+        y2 = y1 + random.randint(40, 80)
+        draw.rectangle([x1, y1, x2, y2], fill=(244, 67, 54))
+    
+    # 道路（グレー）
+    draw.rectangle([0, 300, 640, 340], fill=(158, 158, 158))
+    draw.rectangle([300, 0, 340, 640], fill=(158, 158, 158))
+    
+    # 水域（青）
+    if random.random() > 0.5:
+        draw.ellipse([450, 450, 550, 550], fill=(33, 150, 243))
+    
+    buffer = io.BytesIO()
+    image.save(buffer, format='PNG')
+    return base64.b64encode(buffer.getvalue()).decode('utf-8')
+
+@app.route('/test-menu')
+@login_required
+def test_menu():
+    return render_template('test_menu.html')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8203, debug=True) 

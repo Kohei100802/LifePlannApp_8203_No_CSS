@@ -3,7 +3,7 @@
 /* 基本レイアウト */
 .main-content {
     padding: 16px;
-    margin-top: 60px; /* 基本ヘッダー分 */
+    margin-top: 0;
     margin-bottom: 80px; /* フッター分 */
     min-height: calc(100vh - 140px);
 }
@@ -162,9 +162,9 @@
     }
     
     /* モダンタブナビゲーションがある場合の上書き - 正しいセレクタ */
-    .main-content.has-modern-tab-navigation {
+    /* .main-content.has-modern-tab-navigation {
         margin-top: 100px !important;
-    }
+    } */
     
     .client-app .main-content.has-modern-tab-navigation {
         margin-top: calc(100px + env(safe-area-inset-top, 0px)) !important;
@@ -230,4 +230,8 @@
     color: var(--color-text-secondary);
     font-size: 20px;
     -webkit-tap-highlight-color: transparent; /* タッチ時のハイライトを無効化 */
+}
+
+.month-selector-bar {
+    margin-top: 100px;
 }
