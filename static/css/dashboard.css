@@ -2,18 +2,7 @@
    ダッシュボード専用スタイル
 ======================================== */
 
-/* サマリーカード */
-.summary-card {
-    display: flex;
-    align-items: center;
-    padding: var(--spacing-lg);
-    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
-}
-
-.summary-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px var(--shadow-color);
-}
+/* サマリーカード固有スタイル */
 
 .summary-card-icon {
     display: flex;
@@ -23,27 +12,13 @@
     height: 60px;
     border-radius: var(--border-radius-lg);
     margin-right: var(--spacing-lg);
-}
-
-.summary-card-income .summary-card-icon {
-    background-color: var(--success-color);
     color: white;
 }
 
-.summary-card-expense .summary-card-icon {
-    background-color: var(--error-color);
-    color: white;
-}
-
-.summary-card-balance .summary-card-icon {
-    background-color: var(--info-color);
-    color: white;
-}
-
-.summary-card-goal .summary-card-icon {
-    background-color: var(--warning-color);
-    color: white;
-}
+.summary-card-income .summary-card-icon { background: var(--success-color); }
+.summary-card-expense .summary-card-icon { background: var(--error-color); }
+.summary-card-balance .summary-card-icon { background: var(--info-color); }
+.summary-card-goal .summary-card-icon { background: var(--warning-color); }
 
 .summary-card-content {
     flex: 1;
@@ -225,29 +200,9 @@
     font-weight: var(--font-weight-medium);
 }
 
-/* ボタンサイズバリエーション */
-.btn-sm {
-    padding: var(--spacing-xs) var(--spacing-md);
-    font-size: var(--font-size-sm);
-}
-
-/* グリッドの拡張 */
-.col-span-2 {
-    grid-column: span 2;
-}
-
-.col-span-3 {
-    grid-column: span 3;
-}
-
-/* マージン調整 */
-.mb-4 {
-    margin-bottom: var(--spacing-xl);
-}
-
-.mt-2 {
-    margin-top: var(--spacing-sm);
-}
+/* 追加ユーティリティ */
+.btn-sm { padding: var(--spacing-xs) var(--spacing-md); font-size: var(--font-size-sm); }
+.mt-2 { margin-top: var(--spacing-sm); }
 
 /* レスポンシブ対応 */
 @media (max-width: 1200px) {

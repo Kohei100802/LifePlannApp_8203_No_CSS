@@ -269,18 +269,7 @@
     margin: 0;
 }
 
-/* サマリーカード */
-.summary-card {
-    display: flex;
-    align-items: center;
-    padding: var(--spacing-lg);
-    transition: transform var(--transition-fast);
-}
-
-.summary-card:hover {
-    transform: translateY(-2px);
-}
-
+/* サマリーカード - ダッシュボードと統合 */
 .summary-icon {
     display: flex;
     align-items: center;
@@ -289,27 +278,13 @@
     height: 60px;
     border-radius: var(--border-radius-lg);
     margin-right: var(--spacing-lg);
-}
-
-.income-summary .summary-icon {
-    background: var(--success-color);
     color: white;
 }
 
-.expense-summary .summary-icon {
-    background: var(--error-color);
-    color: white;
-}
-
-.balance-summary .summary-icon {
-    background: var(--info-color);
-    color: white;
-}
-
-.target-summary .summary-icon {
-    background: var(--warning-color);
-    color: white;
-}
+.income-summary .summary-icon { background: var(--success-color); }
+.expense-summary .summary-icon { background: var(--error-color); }
+.balance-summary .summary-icon { background: var(--info-color); }
+.target-summary .summary-icon { background: var(--warning-color); }
 
 .summary-content h3 {
     font-size: var(--font-size-sm);

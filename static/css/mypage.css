@@ -133,30 +133,11 @@
     flex-shrink: 0;
 }
 
-.menu-icon.primary {
-    background: var(--primary-color);
-    color: white;
-}
-
-.menu-icon.income {
-    background: var(--success-light);
-    color: var(--success-color);
-}
-
-.menu-icon.expense {
-    background: var(--error-light);
-    color: var(--error-color);
-}
-
-.menu-icon.warning {
-    background: var(--warning-light);
-    color: var(--warning-color);
-}
-
-.menu-icon.info {
-    background: var(--info-light);
-    color: var(--info-color);
-}
+.menu-icon.primary { background: var(--primary-color); color: white; }
+.menu-icon.income { background: var(--success-light); color: var(--success-color); }
+.menu-icon.expense { background: var(--error-light); color: var(--error-color); }
+.menu-icon.warning { background: var(--warning-light); color: var(--warning-color); }
+.menu-icon.info { background: var(--info-light); color: var(--info-color); }
 
 .menu-content {
     flex: 1;
