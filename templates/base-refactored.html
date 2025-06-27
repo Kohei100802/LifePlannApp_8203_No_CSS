@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ライフプランアプリ{% endblock %}</title>
+    
+    <!-- ファビコン -->
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="app-layout">
+        <!-- ヘッダー -->
+        <header class="app-header">
+            <div class="header-container">
+                <div class="header-logo">
+                    <i class="material-icons">trending_up</i>
+                    <span>ライフプランアプリ</span>
+                </div>
+                
+                <nav class="header-nav">
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('main.dashboard') }}" class="header-nav-item">
+                            <i class="material-icons">dashboard</i>
+                        </a>
+                        <a href="{{ url_for('main.mypage') }}" class="header-nav-item">
+                            <i class="material-icons">account_circle</i>
+                        </a>
+                        <div class="dropdown">
+                            <button class="header-nav-item dropdown-toggle" onclick="toggleDropdown(this)">
+                                <i class="material-icons">more_vert</i>
+                            </button>
+                            <div class="dropdown-menu">
+                                <a href="{{ url_for('auth.logout') }}" class="dropdown-item">
+                                    <i class="material-icons">logout</i>
+                                    ログアウト
+                                </a>
+                            </div>
+                        </div>
+                    {% else %}
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-primary">ログイン</a>
+                    {% endif %}
+                </nav>
+            </div>
+        </header>
+        
+        <!-- サイドバー -->
+        {% if current_user.is_authenticated %}
+        <aside class="app-sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h3>メニュー</h3>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('main.dashboard') }}" class="sidebar-nav-item {% if request.endpoint == 'main.dashboard' %}active{% endif %}">
+                    <i class="material-icons">dashboard</i>
+                    ダッシュボード
+                </a>
+                <a href="{{ url_for('expenses.index') }}" class="sidebar-nav-item {% if 'expenses' in request.endpoint %}active{% endif %}">
+                    <i class="material-icons">money_off</i>
+                    支出管理
+                </a>
+                <a href="{{ url_for('incomes.index') }}" class="sidebar-nav-item {% if 'incomes' in request.endpoint %}active{% endif %}">
+                    <i class="material-icons">attach_money</i>
+                    収入管理
+                </a>
+                <a href="{{ url_for('simulation.index') }}" class="sidebar-nav-item {% if 'simulation' in request.endpoint %}active{% endif %}">
+                    <i class="material-icons">analytics</i>
+                    シミュレーション
+                </a>
+                <a href="{{ url_for('household.index') }}" class="sidebar-nav-item {% if 'household' in request.endpoint %}active{% endif %}">
+                    <i class="material-icons">account_balance_wallet</i>
+                    家計簿
+                </a>
+            </nav>
+        </aside>
+        {% endif %}
+        
+        <!-- メインコンテンツ -->
+        <main class="app-main">
+            <!-- フラッシュメッセージ -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible">
+                            {{ message }}
+                            <button type="button" class="close" onclick="this.parentElement.remove()">
+                                <i class="material-icons">close</i>
+                            </button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            {% block content %}{% endblock %}
+        </main>
+        
+        <!-- フッター -->
+        <footer class="app-footer">
+            <p class="footer-text">&copy; 2024 ライフプランアプリ. All rights reserved.</p>
+        </footer>
+    </div>
+    
+    <!-- オーバーレイ -->
+    <div class="overlay" id="overlay"></div>
+    
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+    
+    <script>
+        // ドロップダウン制御
+        function toggleDropdown(element) {
+            const dropdown = element.closest('.dropdown');
+            dropdown.classList.toggle('active');
+        }
+        
+        // クリック外でドロップダウンを閉じる
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.dropdown')) {
+                document.querySelectorAll('.dropdown.active').forEach(dropdown => {
+                    dropdown.classList.remove('active');
+                });
+            }
+        });
+        
+        // サイドバー制御
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+        
+        // オーバーレイクリックでサイドバーを閉じる
+        document.getElementById('overlay').addEventListener('click', toggleSidebar);
+    </script>
+</body>
+</html> 
