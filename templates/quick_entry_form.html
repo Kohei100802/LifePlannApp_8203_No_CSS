@@ -1,0 +1,420 @@
+{% extends "base-refactored.html" %}
+
+{% block title %}収支入力 - ライフプランアプリ{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/household.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-content">
+        <h1 class="page-title">
+            <i class="material-icons">add_circle</i>
+            収支入力
+        </h1>
+        <div class="page-actions">
+            <a href="/household" class="btn btn-secondary">
+                <i class="material-icons">arrow_back</i>
+                家計簿に戻る
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- タブナビゲーション -->
+<div class="card">
+    <div class="card-body">
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('income')">
+                <i class="material-icons">add_circle</i>
+                収入
+            </button>
+            <button class="tab" onclick="switchTab('expense')">
+                <i class="material-icons">remove_circle</i>
+                支出
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 収入入力フォーム -->
+<div class="tab-content active" id="income-content">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="material-icons">trending_up</i>
+                収入を追加
+            </h3>
+        </div>
+        <div class="card-body">
+            <form id="incomeForm">
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="form-group">
+                        <label class="form-label">日付 <span class="text-danger">*</span></label>
+                        <input type="date" name="date" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">金額（円） <span class="text-danger">*</span></label>
+                        <input type="number" name="amount" class="form-control" placeholder="10000" min="1" required>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="form-group">
+                        <label class="form-label">カテゴリ <span class="text-danger">*</span></label>
+                        <select name="category" class="form-control" required>
+                            <option value="">選択してください</option>
+                            <option value="salary">給与</option>
+                            <option value="bonus">ボーナス</option>
+                            <option value="business">事業収入</option>
+                            <option value="investment">投資収入</option>
+                            <option value="pension">年金</option>
+                            <option value="other">その他</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">支払方法</label>
+                        <select name="payment_method" class="form-control">
+                            <option value="cash">現金</option>
+                            <option value="bank">銀行振込</option>
+                            <option value="credit">クレジットカード</option>
+                            <option value="digital">電子マネー</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">説明</label>
+                    <input type="text" name="description" class="form-control" placeholder="収入の詳細説明（任意）">
+                </div>
+                
+                <div class="flex justify-end gap-2">
+                    <button type="button" class="btn btn-secondary" onclick="resetForm('incomeForm')">
+                        <i class="material-icons">refresh</i>
+                        リセット
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="material-icons">save</i>
+                        収入を追加
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 支出入力フォーム -->
+<div class="tab-content" id="expense-content">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="material-icons">trending_down</i>
+                支出を追加
+            </h3>
+        </div>
+        <div class="card-body">
+            <form id="expenseForm">
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="form-group">
+                        <label class="form-label">日付 <span class="text-danger">*</span></label>
+                        <input type="date" name="date" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">金額（円） <span class="text-danger">*</span></label>
+                        <input type="number" name="amount" class="form-control" placeholder="1000" min="1" required>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="form-group">
+                        <label class="form-label">カテゴリ <span class="text-danger">*</span></label>
+                        <select name="category" class="form-control" required>
+                            <option value="">選択してください</option>
+                            <option value="food">食費</option>
+                            <option value="housing">住居費</option>
+                            <option value="utilities">光熱費</option>
+                            <option value="transport">交通費</option>
+                            <option value="communication">通信費</option>
+                            <option value="insurance">保険</option>
+                            <option value="medical">医療費</option>
+                            <option value="education">教育費</option>
+                            <option value="entertainment">娯楽費</option>
+                            <option value="clothing">衣服費</option>
+                            <option value="beauty">美容費</option>
+                            <option value="other">その他</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">支払方法</label>
+                        <select name="payment_method" class="form-control">
+                            <option value="cash">現金</option>
+                            <option value="credit">クレジットカード</option>
+                            <option value="debit">デビットカード</option>
+                            <option value="digital">電子マネー</option>
+                            <option value="bank">銀行振込</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">説明</label>
+                    <input type="text" name="description" class="form-control" placeholder="支出の詳細説明（任意）">
+                </div>
+                
+                <div class="flex justify-end gap-2">
+                    <button type="button" class="btn btn-secondary" onclick="resetForm('expenseForm')">
+                        <i class="material-icons">refresh</i>
+                        リセット
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="material-icons">save</i>
+                        支出を追加
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 最近の入力履歴 -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="material-icons">history</i>
+            最近の入力履歴
+        </h3>
+    </div>
+    <div class="card-body">
+        <div class="entry-list" id="recent-entries">
+            <!-- 最近の入力がここに表示されます -->
+            <div class="empty-state">
+                <i class="material-icons">receipt_long</i>
+                <h3>まだ入力履歴がありません</h3>
+                <p>収入や支出を追加すると、ここに履歴が表示されます</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 今日の日付を設定
+    const today = new Date().toISOString().split('T')[0];
+    document.querySelectorAll('input[type="date"]').forEach(input => {
+        input.value = today;
+    });
+    
+    // フォームハンドラー設定
+    setupFormHandlers();
+    
+    // 最近の履歴を読み込み
+    loadRecentEntries();
+});
+
+function switchTab(tabName) {
+    // タブボタンの切り替え
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    event.target.closest('.tab').classList.add('active');
+    
+    // コンテンツの切り替え
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    document.getElementById(tabName + '-content').classList.add('active');
+}
+
+function setupFormHandlers() {
+    // 収入フォーム
+    document.getElementById('incomeForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        await handleFormSubmit(this, 'income');
+    });
+    
+    // 支出フォーム
+    document.getElementById('expenseForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        await handleFormSubmit(this, 'expense');
+    });
+}
+
+async function handleFormSubmit(form, type) {
+    if (!validateForm(form)) return;
+    
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    
+    // データ整形
+    data.amount = parseFloat(data.amount);
+    data.category_type = type;
+    data.date = new Date(data.date).toISOString();
+    
+    try {
+        const response = await fetch('/api/entries', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+            showNotification(`${type === 'income' ? '収入' : '支出'}を追加しました`, 'success');
+            resetForm(form.id);
+            loadRecentEntries();
+        } else {
+            throw new Error('保存に失敗しました');
+        }
+    } catch (error) {
+        showNotification(error.message, 'error');
+    }
+}
+
+function validateForm(form) {
+    const requiredFields = form.querySelectorAll('[required]');
+    let isValid = true;
+    
+    requiredFields.forEach(field => {
+        if (!field.value.trim()) {
+            field.classList.add('error');
+            isValid = false;
+        } else {
+            field.classList.remove('error');
+        }
+    });
+    
+    if (!isValid) {
+        showNotification('必須項目を入力してください', 'error');
+    }
+    
+    return isValid;
+}
+
+function resetForm(formId) {
+    const form = document.getElementById(formId);
+    form.reset();
+    
+    // 今日の日付を再設定
+    const today = new Date().toISOString().split('T')[0];
+    form.querySelector('input[type="date"]').value = today;
+    
+    // エラー状態をクリア
+    form.querySelectorAll('.error').forEach(field => {
+        field.classList.remove('error');
+    });
+}
+
+async function loadRecentEntries() {
+    try {
+        const response = await fetch('/api/entries/recent');
+        if (response.ok) {
+            const entries = await response.json();
+            displayRecentEntries(entries);
+        }
+    } catch (error) {
+        console.error('履歴の読み込みに失敗しました:', error);
+    }
+}
+
+function displayRecentEntries(entries) {
+    const container = document.getElementById('recent-entries');
+    
+    if (entries.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="material-icons">receipt_long</i>
+                <h3>まだ入力履歴がありません</h3>
+                <p>収入や支出を追加すると、ここに履歴が表示されます</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const entriesHtml = entries.map(entry => `
+        <div class="entry-item ${entry.category_type}">
+            <div class="entry-date">
+                <span class="date-day">${new Date(entry.date).getDate()}</span>
+                <span class="date-month">${new Date(entry.date).getMonth() + 1}/${new Date(entry.date).getFullYear()}</span>
+            </div>
+            
+            <div class="entry-category">
+                <div class="category-icon icon-circle ${entry.category_type}">
+                    <i class="material-icons">${entry.category_type === 'income' ? 'add_circle' : 'remove_circle'}</i>
+                </div>
+                <div class="category-info">
+                    <h4>${entry.description || getCategoryName(entry.category)}</h4>
+                    <p>${entry.payment_method || '現金'}</p>
+                </div>
+            </div>
+            
+            <div class="entry-amount ${entry.category_type}">
+                ${entry.category_type === 'income' ? '+' : '-'}¥${entry.amount.toLocaleString()}
+            </div>
+        </div>
+    `).join('');
+    
+    container.innerHTML = entriesHtml;
+}
+
+function getCategoryName(category) {
+    const categoryNames = {
+        // 収入
+        salary: '給与',
+        bonus: 'ボーナス',
+        business: '事業収入',
+        investment: '投資収入',
+        pension: '年金',
+        // 支出
+        food: '食費',
+        housing: '住居費',
+        utilities: '光熱費',
+        transport: '交通費',
+        communication: '通信費',
+        insurance: '保険',
+        medical: '医療費',
+        education: '教育費',
+        entertainment: '娯楽費',
+        clothing: '衣服費',
+        beauty: '美容費',
+        other: 'その他'
+    };
+    
+    return categoryNames[category] || 'その他';
+}
+
+function showNotification(message, type) {
+    // 通知表示の実装
+    console.log(`${type}: ${message}`);
+    
+    // 簡単な通知表示
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.textContent = message;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 24px;
+        border-radius: 8px;
+        color: white;
+        z-index: 1000;
+        background: ${type === 'success' ? '#4CAF50' : '#f44336'};
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+</script>
+{% endblock %} 

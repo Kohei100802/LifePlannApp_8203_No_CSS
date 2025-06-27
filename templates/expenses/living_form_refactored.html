@@ -1,0 +1,439 @@
+{% extends "base-refactored.html" %}
+
+{% block title %}生活費 - {% if expense_id %}編集{% else %}新規登録{% endif %} - ライフプランアプリ{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/household.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-content">
+        <h1 class="page-title">
+            <i class="material-icons">home</i>
+            {% if expense_id %}生活費編集{% else %}生活費新規登録{% endif %}
+        </h1>
+        <div class="page-actions">
+            <a href="/expenses/living" class="btn btn-secondary">
+                <i class="material-icons">arrow_back</i>
+                一覧に戻る
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- フォームカード -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="material-icons">edit</i>
+            基本情報
+        </h3>
+    </div>
+    <div class="card-body">
+        <form id="livingExpensesForm">
+            <input type="hidden" name="id" value="{{ expense_id or '' }}">
+            
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div class="form-group">
+                    <label class="form-label">項目名 <span class="text-danger">*</span></label>
+                    <input type="text" name="name" class="form-control" placeholder="例：基本生活費" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">説明</label>
+                    <input type="text" name="description" class="form-control" placeholder="詳細説明（任意）">
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-3 gap-4 mb-4">
+                <div class="form-group">
+                    <label class="form-label">開始年 <span class="text-danger">*</span></label>
+                    <select name="start_year" class="form-control" required>
+                        <!-- JavaScript で動的に生成 -->
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">終了年 <span class="text-danger">*</span></label>
+                    <select name="end_year" class="form-control" required>
+                        <!-- JavaScript で動的に生成 -->
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">物価上昇率（年率%）</label>
+                    <input type="number" name="inflation_rate" class="form-control" placeholder="2.0" min="0" max="20" step="0.1" value="2.0">
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 食費カード -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="material-icons">restaurant</i>
+            食費
+        </h3>
+    </div>
+    <div class="card-body">
+        <div class="grid grid-cols-2 gap-4">
+            <div class="form-group">
+                <label class="form-label">自炊（万円）</label>
+                <input type="number" name="food_home" class="form-control" placeholder="3" min="0" step="0.1" form="livingExpensesForm">
+            </div>
+            <div class="form-group">
+                <label class="form-label">外食（万円）</label>
+                <input type="number" name="food_outside" class="form-control" placeholder="2" min="0" step="0.1" form="livingExpensesForm">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 光熱費カード -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="material-icons">flash_on</i>
+            光熱費
+        </h3>
+    </div>
+    <div class="card-body">
+        <div class="grid grid-cols-3 gap-4">
+            <div class="form-group">
+                <label class="form-label">電気（万円）</label>
+                <input type="number" name="utility_electricity" class="form-control" placeholder="0.8" min="0" step="0.1" form="livingExpensesForm">
+            </div>
+            <div class="form-group">
+                <label class="form-label">ガス（万円）</label>
+                <input type="number" name="utility_gas" class="form-control" placeholder="0.5" min="0" step="0.1" form="livingExpensesForm">
+            </div>
+            <div class="form-group">
+                <label class="form-label">水道（万円）</label>
+                <input type="number" name="utility_water" class="form-control" placeholder="0.3" min="0" step="0.1" form="livingExpensesForm">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 通信費カード -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="material-icons">wifi</i>
+            通信費
+        </h3>
+    </div>
+    <div class="card-body">
+        <div class="grid grid-cols-3 gap-4">
+            <div class="form-group">
+                <label class="form-label">携帯（万円）</label>
+                <input type="number" name="phone" class="form-control" placeholder="0.8" min="0" step="0.1" form="livingExpensesForm">
+            </div>
+            <div class="form-group">
+                <label class="form-label">ネット（万円）</label>
+                <input type="number" name="internet" class="form-control" placeholder="0.5" min="0" step="0.1" form="livingExpensesForm">
+            </div>
+            <div class="form-group">
+                <label class="form-label">サブスク（万円）</label>
+                <input type="number" name="subscription_services" class="form-control" placeholder="0.3" min="0" step="0.1" form="livingExpensesForm">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 日用品・美容カード -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="material-icons">shopping_basket</i>
+            日用品・美容
+        </h3>
+    </div>
+    <div class="card-body">
+        <div class="grid grid-cols-2 gap-4">
+            <div class="form-group">
+                <label class="form-label">日用品（万円）</label>
+                <input type="number" name="household_goods" class="form-control" placeholder="0.5" min="0" step="0.1" form="livingExpensesForm">
+            </div>
+            <div class="form-group">
+                <label class="form-label">衛生用品（万円）</label>
+                <input type="number" name="hygiene" class="form-control" placeholder="0.3" min="0" step="0.1" form="livingExpensesForm">
+            </div>
+            <div class="form-group">
+                <label class="form-label">被服（万円）</label>
+                <input type="number" name="clothing" class="form-control" placeholder="1" min="0" step="0.1" form="livingExpensesForm">
+            </div>
+            <div class="form-group">
+                <label class="form-label">美容（万円）</label>
+                <input type="number" name="beauty" class="form-control" placeholder="0.5" min="0" step="0.1" form="livingExpensesForm">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 子供費用カード -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="material-icons">child_friendly</i>
+            子供費用
+        </h3>
+    </div>
+    <div class="card-body">
+        <div class="grid grid-cols-2 gap-4">
+            <div class="form-group">
+                <label class="form-label">子供食費（万円）</label>
+                <input type="number" name="child_food" class="form-control" placeholder="1" min="0" step="0.1" form="livingExpensesForm">
+            </div>
+            <div class="form-group">
+                <label class="form-label">子供衣服（万円）</label>
+                <input type="number" name="child_clothing" class="form-control" placeholder="0.5" min="0" step="0.1" form="livingExpensesForm">
+            </div>
+            <div class="form-group">
+                <label class="form-label">子供医療費（万円）</label>
+                <input type="number" name="child_medical" class="form-control" placeholder="0.3" min="0" step="0.1" form="livingExpensesForm">
+            </div>
+            <div class="form-group">
+                <label class="form-label">子供その他（万円）</label>
+                <input type="number" name="child_other" class="form-control" placeholder="0.5" min="0" step="0.1" form="livingExpensesForm">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- その他カード -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="material-icons">more_horiz</i>
+            その他
+        </h3>
+    </div>
+    <div class="card-body">
+        <div class="grid grid-cols-2 gap-4">
+            <div class="form-group">
+                <label class="form-label">交通費（万円）</label>
+                <input type="number" name="transport" class="form-control" placeholder="1.5" min="0" step="0.1" form="livingExpensesForm">
+            </div>
+            <div class="form-group">
+                <label class="form-label">娯楽費（万円）</label>
+                <input type="number" name="entertainment" class="form-control" placeholder="2" min="0" step="0.1" form="livingExpensesForm">
+            </div>
+            <div class="form-group">
+                <label class="form-label">医療費（万円）</label>
+                <input type="number" name="medical" class="form-control" placeholder="1" min="0" step="0.1" form="livingExpensesForm">
+            </div>
+            <div class="form-group">
+                <label class="form-label">その他（万円）</label>
+                <input type="number" name="other" class="form-control" placeholder="1" min="0" step="0.1" form="livingExpensesForm">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 操作ボタン -->
+<div class="card">
+    <div class="card-body">
+        <div class="flex justify-between items-center">
+            <a href="/expenses/living" class="btn btn-secondary">
+                <i class="material-icons">arrow_back</i>
+                キャンセル
+            </a>
+            <div class="flex gap-2">
+                <button type="button" class="btn btn-outline" onclick="previewData()">
+                    <i class="material-icons">preview</i>
+                    プレビュー
+                </button>
+                <button type="submit" class="btn btn-primary" form="livingExpensesForm">
+                    <i class="material-icons">save</i>
+                    {% if expense_id %}更新{% else %}登録{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- プレビューモーダル -->
+<div class="modal" id="preview-modal">
+    <div class="modal-header">
+        <h3 class="modal-title">生活費プレビュー</h3>
+        <button class="modal-close" onclick="closeModal('preview')">
+            <i class="material-icons">close</i>
+        </button>
+    </div>
+    <div class="modal-body">
+        <div id="preview-content">
+            <!-- プレビュー内容がここに表示されます -->
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('preview')">閉じる</button>
+        <button class="btn btn-primary" onclick="submitAfterPreview()">この内容で登録</button>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initializeYearSelects();
+    
+    const expenseId = document.querySelector('[name="id"]').value;
+    if (expenseId) {
+        loadExpenseData(expenseId);
+    }
+    
+    setupFormHandler();
+});
+
+function initializeYearSelects() {
+    const currentYear = new Date().getFullYear();
+    const startYearSelect = document.querySelector('[name="start_year"]');
+    const endYearSelect = document.querySelector('[name="end_year"]');
+    
+    for (let year = currentYear; year <= currentYear + 50; year++) {
+        const startOption = new Option(year + '年', year);
+        const endOption = new Option(year + '年', year);
+        
+        if (year === currentYear) startOption.selected = true;
+        if (year === currentYear + 30) endOption.selected = true;
+        
+        startYearSelect.add(startOption);
+        endYearSelect.add(endOption);
+    }
+}
+
+function setupFormHandler() {
+    const form = document.getElementById('livingExpensesForm');
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        await handleFormSubmit(this);
+    });
+}
+
+async function handleFormSubmit(form) {
+    if (!validateForm(form)) return;
+    
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    
+    // 数値変換
+    Object.keys(data).forEach(key => {
+        if (key.includes('_') && key !== 'id' && key !== 'name' && key !== 'description') {
+            data[key] = parseFloat(data[key]) || 0;
+        }
+    });
+    
+    const isUpdate = data.id && data.id !== '';
+    const method = isUpdate ? 'PUT' : 'POST';
+    
+    try {
+        const response = await fetch('/api/expenses/living', {
+            method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+            showNotification(isUpdate ? '生活費を更新しました' : '生活費を登録しました', 'success');
+            setTimeout(() => {
+                window.location.href = '/expenses/living';
+            }, 1500);
+        } else {
+            throw new Error('保存に失敗しました');
+        }
+    } catch (error) {
+        showNotification(error.message, 'error');
+    }
+}
+
+function validateForm(form) {
+    const requiredFields = form.querySelectorAll('[required]');
+    let isValid = true;
+    
+    requiredFields.forEach(field => {
+        if (!field.value.trim()) {
+            field.classList.add('error');
+            isValid = false;
+        } else {
+            field.classList.remove('error');
+        }
+    });
+    
+    if (!isValid) {
+        showNotification('必須項目を入力してください', 'error');
+    }
+    
+    return isValid;
+}
+
+function previewData() {
+    const form = document.getElementById('livingExpensesForm');
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    
+    let totalAmount = 0;
+    let previewHtml = '<div class="preview-summary">';
+    
+    // カテゴリ別に集計
+    const categories = {
+        '食費': ['food_home', 'food_outside'],
+        '光熱費': ['utility_electricity', 'utility_gas', 'utility_water'],
+        '通信費': ['phone', 'internet', 'subscription_services'],
+        '日用品・美容': ['household_goods', 'hygiene', 'clothing', 'beauty'],
+        '子供費用': ['child_food', 'child_clothing', 'child_medical', 'child_other'],
+        'その他': ['transport', 'entertainment', 'medical', 'other']
+    };
+    
+    Object.entries(categories).forEach(([category, fields]) => {
+        let categoryTotal = 0;
+        fields.forEach(field => {
+            categoryTotal += parseFloat(data[field]) || 0;
+        });
+        totalAmount += categoryTotal;
+        
+        previewHtml += `
+            <div class="preview-category">
+                <h4>${category}</h4>
+                <p class="amount">¥${(categoryTotal * 10000).toLocaleString()}</p>
+            </div>
+        `;
+    });
+    
+    previewHtml += `
+        </div>
+        <div class="preview-total">
+            <h3>月額合計: ¥${(totalAmount * 10000).toLocaleString()}</h3>
+            <p>年額合計: ¥${(totalAmount * 12 * 10000).toLocaleString()}</p>
+        </div>
+    `;
+    
+    document.getElementById('preview-content').innerHTML = previewHtml;
+    openModal('preview');
+}
+
+function openModal(modalId) {
+    document.getElementById(modalId + '-modal').classList.add('active');
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId + '-modal').classList.remove('active');
+}
+
+function submitAfterPreview() {
+    closeModal('preview');
+    document.getElementById('livingExpensesForm').dispatchEvent(new Event('submit'));
+}
+
+function showNotification(message, type) {
+    // 通知表示の実装
+    console.log(`${type}: ${message}`);
+}
+</script>
+{% endblock %} 
