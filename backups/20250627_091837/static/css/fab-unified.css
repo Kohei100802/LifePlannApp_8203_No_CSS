@@ -1,0 +1,187 @@
+/* === Unified FAB Button System === */
+
+/* FAB Button Container - 複数のボタンを横並びで管理 */
+.fab-container {
+    position: fixed;
+    bottom: 104px; /* フッター(80px) + マージン(24px) = 104px */
+    right: 24px;
+    z-index: 1001; /* フッターより上 */
+    display: flex;
+    gap: 27px; /* 2個目のボタンを1個目に近づける（32px → 27px、5px近づける） */
+    align-items: center;
+    flex-direction: row; /* 横並び */
+}
+
+/* フォーム用FABコンテナ - 送信・キャンセルボタン用 */
+.form-fab-container {
+    position: fixed;
+    bottom: 104px; /* フッター(80px) + マージン(24px) = 104px */
+    right: 24px;
+    z-index: 1011; /* フッターより上 */
+    display: flex;
+    gap: 24px; /* 2個目のボタンをより左側に配置するため間隔を広げる */
+    align-items: center;
+    flex-direction: row; /* 横並び */
+}
+
+.form-fab-container.left {
+    right: auto;
+    left: 24px;
+    bottom: 104px; /* フッターの上に配置 */
+}
+
+/* 基本FABボタンスタイル - 共通の資産 */
+.fab-button {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: none;
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    position: relative;
+    overflow: hidden;
+    text-decoration: none !important;
+    background: #2196F3; /* デフォルト：青 */
+}
+
+.fab-button:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.fab-button:active {
+    transition: all 0.1s ease;
+}
+
+.fab-button .material-icons {
+    font-size: 26px;
+    position: relative;
+    z-index: 1;
+}
+
+/* FABボタンのバリエーション - 色とアイコンのみ変更 */
+
+/* 追加・送信ボタン - 緑 */
+.fab-button.add,
+.fab-button.submit {
+    background: #4CAF50;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.fab-button.add:hover,
+.fab-button.submit:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+/* ツールボタン - オレンジ */
+.fab-button.tools {
+    background: #FF9800;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.fab-button.tools:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+/* キャンセルボタン - 赤（サイズ統一） */
+.fab-button.cancel {
+    background: #f44336;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.fab-button.cancel:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+/* 2つのボタンが配置される時のレイアウト */
+.fab-container.multiple-buttons {
+    flex-direction: row-reverse; /* 右から左の順序 */
+}
+
+.fab-container.multiple-buttons .fab-button:first-child {
+    order: 1; /* 新規作成ボタンを1つ目（右側のメイン位置）に */
+}
+
+.fab-container.multiple-buttons .fab-button:last-child {
+    order: 2; /* ツールボタンを2つ目（左側）に */
+}
+
+/* ローディング状態 */
+.fab-button.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.fab-button.loading .material-icons {
+    animation: rotate 1s linear infinite;
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 480px) {
+    .fab-container,
+    .form-fab-container {
+        bottom: 96px; /* モバイル版フッター + マージン */
+        right: 16px;
+        gap: 23px; /* モバイルでも2個目のボタンを1個目に近づける（28px → 23px、5px近づける） */
+    }
+    
+    .form-fab-container.left {
+        left: 16px;
+        bottom: 96px; /* モバイル版でもフッターの上に配置 */
+    }
+    
+    .fab-button {
+        width: 56px;
+        height: 56px;
+    }
+    
+    .fab-button .material-icons {
+        font-size: 24px;
+    }
+}
+
+/* 後方互換性のためのエイリアス */
+.fab {
+    /* fab-buttonと同じスタイルを継承 */
+    position: relative;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: all 0.2s ease;
+    z-index: 1010;
+    pointer-events: auto;
+    overflow: hidden;
+}
+
+.fab-add {
+    /* fab-button.addと同じスタイル */
+    background: #4CAF50;
+    color: white;
+}
+
+.fab-cancel {
+    /* fab-button.cancelと同じスタイル */
+    background: #f44336;
+    color: white;
+}
+
+.fab-tools {
+    /* fab-button.toolsと同じスタイル */
+    background: #FF9800;
+    color: white;
+} 

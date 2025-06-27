@@ -1,0 +1,131 @@
+{% extends "base-new.html" %}
+
+{% block title %}新規登録{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-container-clean">
+        <div class="auth-header-clean">
+            <h1 class="auth-title-clean">ライフプランシミュレーター</h1>
+            <p class="auth-subtitle-clean">無料で始めるあなたの人生設計</p>
+        </div>
+        
+        <div class="auth-form-container">
+            <h2 class="form-title-clean">新規アカウント作成</h2>
+        
+            <form id="registerForm" class="form-clean">
+                <div class="input-group-clean">
+                    <label for="username" class="label-clean">ユーザー名</label>
+                    <input type="text" id="username" name="username" class="input-clean" placeholder="ユーザー名を入力" required>
+                    <div class="help-text-clean">英数字と_（アンダースコア）が使用できます</div>
+            </div>
+            
+                <div class="input-group-clean">
+                    <label for="password" class="label-clean">パスワード</label>
+                    <input type="password" id="password" name="password" class="input-clean" placeholder="パスワードを入力" required minlength="6">
+                    <div class="help-text-clean">6文字以上で設定してください</div>
+                </div>
+                
+                <div class="input-group-clean">
+                    <label for="password_confirm" class="label-clean">パスワード確認</label>
+                    <input type="password" id="password_confirm" name="password_confirm" class="input-clean" placeholder="パスワードを再入力" required>
+                    <div class="password-match-clean" id="passwordMatchIndicator"></div>
+            </div>
+            
+                <button type="submit" class="submit-btn-clean">
+                    <span>アカウント作成</span>
+                    <i class="material-icons">person_add</i>
+                </button>
+            </form>
+            
+            <div class="auth-divider-clean">
+                <span>または</span>
+            </div>
+            
+            <a href="{{ url_for('login') }}" class="register-link-clean">
+                既存アカウントでログイン
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('registerForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    if (!validateRequired(this)) {
+        return;
+    }
+    
+    const password = document.getElementById('password').value;
+    const passwordConfirm = document.getElementById('password_confirm').value;
+    
+    if (password !== passwordConfirm) {
+        showToast('パスワードが一致しません', 'error');
+        return;
+    }
+    
+    if (password.length < 6) {
+        showToast('パスワードは6文字以上で設定してください', 'error');
+        return;
+    }
+    
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    try {
+        // ローディング状態
+        submitBtn.innerHTML = '<span>作成中...</span><i class="material-icons rotating">refresh</i>';
+        submitBtn.disabled = true;
+        
+        // パスワード確認を除外してデータを送信
+        const formData = new FormData(this);
+        formData.delete('password_confirm');
+        
+        const jsonData = {};
+        for (let [key, value] of formData.entries()) {
+            jsonData[key] = value;
+        }
+        
+        const response = await apiCall('/register', {
+            method: 'POST',
+            body: JSON.stringify(jsonData)
+        });
+        
+        if (response.success) {
+            submitBtn.innerHTML = '<span>作成完了!</span><i class="material-icons">check</i>';
+            showToast(response.message, 'success');
+            setTimeout(() => {
+                window.location.href = '/login';
+            }, 1500);
+        }
+    } catch (error) {
+        console.error('Registration error:', error);
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
+});
+
+// パスワード確認のリアルタイムバリデーション
+document.getElementById('password_confirm').addEventListener('input', function() {
+    const password = document.getElementById('password').value;
+    const passwordConfirm = this.value;
+    const indicator = document.getElementById('passwordMatchIndicator');
+    
+    if (passwordConfirm) {
+        if (password === passwordConfirm) {
+            this.style.borderColor = '#2196F3';
+            indicator.innerHTML = '<i class="material-icons" style="color: #4CAF50; font-size: 16px;">check_circle</i> <span style="color: #4CAF50;">パスワードが一致しています</span>';
+        } else {
+            this.style.borderColor = '#f44336';
+            indicator.innerHTML = '<i class="material-icons" style="color: #f44336; font-size: 16px;">error</i> <span style="color: #f44336;">パスワードが一致しません</span>';
+        }
+    } else {
+        this.style.borderColor = '';
+        indicator.innerHTML = '';
+    }
+});
+</script>
+{% endblock %} 

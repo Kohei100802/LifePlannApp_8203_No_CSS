@@ -1,0 +1,860 @@
+{% extends "base-new.html" %}
+
+{% block title %}家計簿カレンダー - LifePlanner{% endblock %}
+
+{% block body_class %}calendar-page{% endblock %}
+
+{% block main_class %}calendar-main{% endblock %}
+
+{% block content %}
+<div class="calendar-container">
+    <!-- ヘッダー部分 -->
+    <div class="month-selector-bar">
+        <!-- 月タイトルとナビゲーション -->
+        <div class="month-nav">
+            <button class="month-nav-btn" onclick="goToPreviousMonth()" title="前月">
+                <i class="material-icons">chevron_left</i>
+            </button>
+            <div class="month-title">
+                <h2 id="calendarTitle">2025年6月</h2>
+            </div>
+            <button class="month-nav-btn" onclick="goToNextMonth()" title="次月">
+                <i class="material-icons">chevron_right</i>
+            </button>
+        </div>
+        
+        <!-- 収支サマリー -->
+        <div class="month-summary">
+            <div class="summary-item income">
+                <div class="summary-label">収入</div>
+                <div class="summary-amount" id="monthlyIncome">¥0</div>
+            </div>
+            <div class="summary-item expense">
+                <div class="summary-label">支出</div>
+                <div class="summary-amount" id="monthlyExpense">¥66,180</div>
+            </div>
+            <div class="summary-item balance" id="balanceSummaryCard">
+                <div class="summary-label">収支</div>
+                <div class="summary-amount" id="monthlyBalance">¥-66,180</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- カレンダー本体 -->
+    <div class="calendar-grid">
+        <!-- 曜日ヘッダー -->
+        <div class="calendar-weekdays">
+            <div class="weekday">月</div>
+            <div class="weekday">火</div>
+            <div class="weekday">水</div>
+            <div class="weekday">木</div>
+            <div class="weekday">金</div>
+            <div class="weekday saturday">土</div>
+            <div class="weekday sunday">日</div>
+        </div>
+
+        <!-- カレンダー日付 -->
+        <div class="calendar-days" id="calendarDays">
+            <!-- 日付がJavaScriptで動的に生成されます -->
+        </div>
+    </div>
+
+    <!-- フローティングボタン -->
+    <div class="fab-container multiple-buttons">
+        <!-- 表示切り替えボタン -->
+        <button class="fab-button tools" onclick="toggleView()" title="リスト表示に切り替え">
+            <i class="material-icons">view_list</i>
+        </button>
+        <!-- 新規追加ボタン -->
+        <button class="fab-button add" onclick="showEntryModal()" title="収支を追加">
+            <i class="material-icons">add</i>
+        </button>
+    </div>
+</div>
+
+<!-- 日別詳細表示パネル -->
+<div id="dailyPanel" class="daily-panel">
+    <div class="daily-panel-content">
+        <div class="daily-panel-header">
+            <div class="daily-panel-title-row">
+                <div class="daily-panel-title">
+                    <h3>
+                        <i class="material-icons">event</i>
+                        <span id="dailyPanelDate">2025年6月10日</span>
+                    </h3>
+                </div>
+                <button class="daily-panel-close" onclick="closeDailyPanel()" title="閉じる">
+                    <i class="material-icons">close</i>
+                </button>
+            </div>
+            
+            <!-- 日別収支サマリー -->
+            <div class="daily-panel-summary">
+                <div class="daily-summary-item income daily-income">
+                    <div class="daily-summary-label">収入</div>
+                    <div class="daily-summary-amount" id="dailyIncome">¥0</div>
+                </div>
+                <div class="daily-summary-item expense daily-expense">
+                    <div class="daily-summary-label">支出</div>
+                    <div class="daily-summary-amount" id="dailyExpense">¥3,835</div>
+                </div>
+                <div class="daily-summary-item balance daily-balance" id="dailyBalanceCard">
+                    <div class="daily-summary-label">収支</div>
+                    <div class="daily-summary-amount" id="dailyBalance">¥-3,835</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="daily-entries-list">
+            <div class="daily-entries-header">
+                <div class="daily-entries-title">
+                    <i class="material-icons">list</i>
+                    明細一覧
+                </div>
+                <div class="daily-entries-count" id="dailyEntriesCount">0件</div>
+            </div>
+            <div id="dailyEntriesList">
+                <!-- 日別明細がここに表示される -->
+                <div class="daily-entries-empty">
+                    <i class="material-icons">receipt_long</i>
+                    <h4>明細がありません</h4>
+                    <p>この日の収支データはありません</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- エントリー追加・編集モーダル -->
+<div id="entryModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalTitle">
+                <i class="material-icons" id="modalIcon">add</i>
+                <span id="modalTitleText">収支を追加</span>
+            </h3>
+            <button class="modal-close" onclick="closeEntryModal()">
+                <i class="material-icons">close</i>
+            </button>
+        </div>
+        <form id="entryForm" class="entry-form">
+            <input type="hidden" id="entryId" name="id">
+            <input type="hidden" id="householdBookId" name="household_book_id">
+            
+            <!-- タイプ選択 -->
+            <div class="type-selector">
+                <button type="button" class="type-btn income" id="incomeBtn" onclick="setEntryType('income')">
+                    <i class="material-icons">trending_up</i>
+                    <span>収入</span>
+                </button>
+                <button type="button" class="type-btn expense active" id="expenseBtn" onclick="setEntryType('expense')">
+                    <i class="material-icons">trending_down</i>
+                    <span>支出</span>
+                </button>
+            </div>
+            
+            <!-- 金額入力 -->
+            <div class="amount-input">
+                <label for="entryAmount">金額</label>
+                <div class="amount-field">
+                    <span class="currency">¥</span>
+                    <input type="number" id="entryAmount" name="amount" placeholder="0" required min="0" step="1">
+                </div>
+            </div>
+            
+            <!-- カテゴリ選択 -->
+            <div class="form-group">
+                <label for="entryCategory">カテゴリ</label>
+                <div class="category-grid" id="categoryGrid">
+                    <!-- カテゴリがここに動的に挿入されます -->
+                </div>
+            </div>
+            
+            <!-- 日付選択 -->
+            <div class="form-group">
+                <label for="entryDate">日付</label>
+                <input type="date" id="entryDate" name="entry_date" required>
+            </div>
+            
+            <!-- 説明入力 -->
+            <div class="form-group">
+                <label for="entryDescription">説明（任意）</label>
+                <input type="text" id="entryDescription" name="description" placeholder="例：スーパーでの買い物">
+            </div>
+            
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="closeEntryModal()">キャンセル</button>
+                <button type="button" class="btn-danger" id="deleteBtn" onclick="deleteEntry()" style="display: none;">削除</button>
+                <button type="submit" class="btn-primary" id="submitBtn">追加</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+<style>
+/* 月選択バー（資産管理ページ統一） */
+.month-selector-bar {
+    background: white;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    margin: 80px 20px 15px 20px !important;
+}
+</style>
+
+{% block scripts %}
+<script>
+// サーバーから渡された年月を使用、なければ現在の年月を使用
+let currentYear = {% if current_year %}{{ current_year }}{% else %}new Date().getFullYear(){% endif %};
+let currentMonth = {% if current_month %}{{ current_month }}{% else %}new Date().getMonth() + 1{% endif %};
+let householdEntries = {};
+let currentHouseholdBookId = null;
+let currentEntryType = 'expense';
+let selectedCategoryId = null;
+let editingEntryId = null;
+
+// カテゴリデータ
+let expenseCategories = [];
+let incomeCategories = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    initializeCalendar();
+    loadCalendarData();
+    loadCategories();
+    initializeModalEvents();
+});
+
+function initializeCalendar() {
+    updateCalendarTitle();
+    generateCalendar();
+}
+
+function updateCalendarTitle() {
+    document.getElementById('calendarTitle').textContent = `${currentYear}年${currentMonth}月`;
+}
+
+function generateCalendar() {
+    const calendarDays = document.getElementById('calendarDays');
+    calendarDays.innerHTML = '';
+    
+    const firstDay = new Date(currentYear, currentMonth - 1, 1);
+    const startDate = new Date(firstDay);
+    startDate.setDate(startDate.getDate() - firstDay.getDay() + 1); // 月曜日から開始
+    
+    const today = new Date();
+    
+    for (let i = 0; i < 42; i++) { // 6週間分
+        const date = new Date(startDate);
+        date.setDate(startDate.getDate() + i);
+        
+        const dayElement = document.createElement('div');
+        dayElement.className = 'calendar-day';
+        
+        const isCurrentMonth = date.getMonth() === currentMonth - 1;
+        const isToday = date.toDateString() === today.toDateString();
+        
+        if (!isCurrentMonth) {
+            dayElement.classList.add('other-month');
+        }
+        
+        if (isToday) {
+            dayElement.classList.add('today');
+        }
+        
+        dayElement.innerHTML = `
+            <div class="day-indicators" id="indicators-${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}">
+                <!-- ドットインジケーターが動的に挿入されます -->
+            </div>
+            <div class="day-number">${date.getDate()}</div>
+            <div class="day-entries" id="entries-${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}">
+                <!-- エントリーが動的に挿入されます -->
+            </div>
+            <div class="day-total" id="total-${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}"></div>
+        `;
+        
+
+        
+        dayElement.addEventListener('click', () => {
+            if (isCurrentMonth) {
+                showDailyPanel(date);
+            }
+        });
+        
+        calendarDays.appendChild(dayElement);
+    }
+    
+    // エントリーデータを表示
+    displayEntriesOnCalendar();
+}
+
+function displayEntriesOnCalendar() {
+    // 既存のエントリー表示をクリア
+    document.querySelectorAll('.day-entries').forEach(container => {
+        container.innerHTML = '';
+    });
+    document.querySelectorAll('.day-total').forEach(container => {
+        container.innerHTML = '';
+    });
+    document.querySelectorAll('.day-indicators').forEach(container => {
+        container.innerHTML = '';
+    });
+    
+    // 既存のクラスをクリア
+    document.querySelectorAll('.calendar-day').forEach(dayElement => {
+        dayElement.classList.remove('has-entries', 'has-expenses', 'has-both');
+    });
+    
+    // エントリーデータを日別に表示
+    Object.keys(householdEntries).forEach(dateStr => {
+        const entries = householdEntries[dateStr];
+        const [year, month, day] = dateStr.split('-');
+        const entriesContainer = document.getElementById(`entries-${year}-${month}-${day}`);
+        const totalContainer = document.getElementById(`total-${year}-${month}-${day}`);
+        const indicatorsContainer = document.getElementById(`indicators-${year}-${month}-${day}`);
+        
+        if (entriesContainer && entries.length > 0) {
+            let dayTotal = 0;
+            let hasIncome = false;
+            let hasExpense = false;
+            
+            // 全エントリーをチェックして収入・支出の有無を判定
+            entries.forEach(entry => {
+                if (entry.entry_type === 'income') {
+                    dayTotal += entry.amount;
+                    hasIncome = true;
+                } else {
+                    dayTotal -= entry.amount;
+                    hasExpense = true;
+                }
+            });
+            
+            // 最初の数個のエントリーのみ表示
+            entries.slice(0, 2).forEach(entry => {
+                const entryElement = document.createElement('div');
+                entryElement.className = `day-entry ${entry.entry_type}`;
+                entryElement.textContent = `¥${entry.amount.toLocaleString()}`;
+                entriesContainer.appendChild(entryElement);
+            });
+            
+            // 残りのエントリー数を表示
+            if (entries.length > 2) {
+                const moreElement = document.createElement('div');
+                moreElement.className = 'day-entry-more';
+                moreElement.textContent = `+${entries.length - 2}件`;
+                moreElement.style.cssText = 'font-size: 0.6rem; color: #999; text-align: center;';
+                entriesContainer.appendChild(moreElement);
+            }
+            
+            // ドットインジケーターを追加
+            if (indicatorsContainer) {
+                if (hasIncome && hasExpense) {
+                    // 収入と支出の両方がある場合 - 緑と赤のドットを並べて表示
+                    const incomeIndicator = document.createElement('div');
+                    incomeIndicator.className = 'day-indicator income';
+                    incomeIndicator.title = '収入あり';
+                    incomeIndicator.style.cssText = 'background: #4CAF50 !important; width: 8px; height: 8px; border-radius: 50%; display: block; border: 1px solid rgba(255,255,255,0.8);';
+                    indicatorsContainer.appendChild(incomeIndicator);
+                    
+                    const expenseIndicator = document.createElement('div');
+                    expenseIndicator.className = 'day-indicator expense';
+                    expenseIndicator.title = '支出あり';
+                    expenseIndicator.style.cssText = 'background: #f44336 !important; width: 8px; height: 8px; border-radius: 50%; display: block; border: 1px solid rgba(255,255,255,0.8);';
+                    indicatorsContainer.appendChild(expenseIndicator);
+                } else if (hasIncome) {
+                    // 収入のみ - 緑のドット
+                    const incomeIndicator = document.createElement('div');
+                    incomeIndicator.className = 'day-indicator income';
+                    incomeIndicator.title = '収入あり';
+                    incomeIndicator.style.cssText = 'background: #4CAF50 !important; width: 10px; height: 10px; border-radius: 50%; display: block; border: 1px solid rgba(255,255,255,0.8);';
+                    indicatorsContainer.appendChild(incomeIndicator);
+                } else if (hasExpense) {
+                    // 支出のみ - 赤のドット
+                    const expenseIndicator = document.createElement('div');
+                    expenseIndicator.className = 'day-indicator expense';
+                    expenseIndicator.title = '支出あり';
+                    expenseIndicator.style.cssText = 'background: #f44336 !important; width: 10px; height: 10px; border-radius: 50%; display: block; border: 1px solid rgba(255,255,255,0.8);';
+                    indicatorsContainer.appendChild(expenseIndicator);
+                }
+            }
+            
+            // 日付セルにクラスを追加
+            const dayElement = entriesContainer.closest('.calendar-day');
+            if (hasIncome && hasExpense) {
+                dayElement.classList.add('has-both');
+            } else if (hasIncome) {
+                dayElement.classList.add('has-entries');
+            } else if (hasExpense) {
+                dayElement.classList.add('has-expenses');
+            }
+            
+            // 日次合計を表示
+            if (totalContainer) {
+                totalContainer.textContent = `¥${dayTotal.toLocaleString()}`;
+                totalContainer.className = `day-total ${dayTotal >= 0 ? 'positive' : 'negative'}`;
+            }
+        }
+    });
+}
+
+function loadCalendarData() {
+    fetch(`/api/calendar-entries/${currentYear}/${currentMonth}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                householdEntries = data.entries;
+                currentHouseholdBookId = data.household_book_id;
+                displayEntriesOnCalendar();
+                updateMonthlySummary(data.summary);
+            } else {
+                showToast('データの読み込みに失敗しました', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('カレンダーデータ読み込みエラー:', error);
+            showToast('データの読み込みに失敗しました', 'error');
+        });
+}
+
+function loadCategories() {
+    // 支出カテゴリを取得
+    fetch('/api/expense-categories')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                expenseCategories = data.categories;
+            }
+        })
+        .catch(error => {
+            console.error('支出カテゴリ読み込みエラー:', error);
+        });
+    
+    // 収入カテゴリを取得
+    fetch('/api/income-categories')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                incomeCategories = data.categories;
+            }
+        })
+        .catch(error => {
+            console.error('収入カテゴリ読み込みエラー:', error);
+        });
+}
+
+function updateMonthlySummary(summary) {
+    // 開いている月の合計のみを表示（APIで該当月のデータのみ集計済み）
+    document.getElementById('monthlyIncome').textContent = `¥${summary.total_income.toLocaleString()}`;
+    document.getElementById('monthlyExpense').textContent = `¥${summary.total_expense.toLocaleString()}`;
+    document.getElementById('monthlyBalance').textContent = `¥${summary.balance.toLocaleString()}`;
+    
+    // 収支カードの状態を更新
+    const balanceSummaryCard = document.getElementById('balanceSummaryCard');
+    if (summary.balance < 0) {
+        balanceSummaryCard.classList.add('negative');
+    } else {
+        balanceSummaryCard.classList.remove('negative');
+    }
+}
+
+function goToPreviousMonth() {
+    if (currentMonth === 1) {
+        currentMonth = 12;
+        currentYear--;
+    } else {
+        currentMonth--;
+    }
+    updateCalendarTitle();
+    generateCalendar();
+    loadCalendarData();
+}
+
+function goToNextMonth() {
+    if (currentMonth === 12) {
+        currentMonth = 1;
+        currentYear++;
+    } else {
+        currentMonth++;
+    }
+    updateCalendarTitle();
+    generateCalendar();
+    loadCalendarData();
+}
+
+function showDailyPanel(date) {
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    
+    fetch(`/api/daily-entries/${year}/${month}/${day}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayDailyPanel(data);
+            } else {
+                showToast('日次データの読み込みに失敗しました', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('日次データ読み込みエラー:', error);
+            showToast('日次データの読み込みに失敗しました', 'error');
+        });
+}
+
+function displayDailyPanel(data) {
+    document.getElementById('dailyPanelDate').textContent = data.date;
+    document.getElementById('dailyIncome').textContent = `¥${data.daily_total.income.toLocaleString()}`;
+    document.getElementById('dailyExpense').textContent = `¥${data.daily_total.expense.toLocaleString()}`;
+    document.getElementById('dailyBalance').textContent = `¥${data.daily_total.balance.toLocaleString()}`;
+    
+    // 日次エントリー数を更新
+    document.getElementById('dailyEntriesCount').textContent = `${data.entries.length}件`;
+    
+    // 収支カードの状態を更新
+    const dailyBalanceCard = document.getElementById('dailyBalanceCard');
+    if (data.daily_total.balance < 0) {
+        dailyBalanceCard.classList.add('negative');
+    } else {
+        dailyBalanceCard.classList.remove('negative');
+    }
+    
+    // エントリーリストを表示
+    const entriesList = document.getElementById('dailyEntriesList');
+    
+    if (data.entries.length === 0) {
+        entriesList.innerHTML = `
+            <div class="daily-entries-empty">
+                <i class="material-icons">receipt_long</i>
+                <h4>明細がありません</h4>
+                <p>この日の収支データはありません</p>
+            </div>
+        `;
+    } else {
+        entriesList.innerHTML = '';
+        data.entries.forEach(entry => {
+            const entryElement = document.createElement('div');
+            entryElement.className = 'daily-entry-item';
+            entryElement.onclick = () => editEntry(entry.id);
+            
+            entryElement.innerHTML = `
+                <div class="daily-entry-icon ${entry.entry_type}">
+                    <i class="material-icons">${getCategoryIcon(entry)}</i>
+                </div>
+                <div class="daily-entry-info">
+                    <div class="daily-entry-category">${getCategoryName(entry)}</div>
+                    ${entry.description ? `<div class="daily-entry-description">${entry.description}</div>` : ''}
+                </div>
+                <div class="daily-entry-amount ${entry.entry_type}">
+                    ${entry.entry_type === 'income' ? '+' : '-'}¥${entry.amount.toLocaleString()}
+                </div>
+            `;
+            
+            entriesList.appendChild(entryElement);
+        });
+    }
+    
+    // パネルを表示
+    document.getElementById('dailyPanel').classList.add('show');
+}
+
+function closeDailyPanel() {
+    document.getElementById('dailyPanel').classList.remove('show');
+}
+
+function showEntryModal(date = null) {
+    // モーダルをリセット
+    resetEntryModal();
+    
+    // 日付を設定
+    if (date) {
+        const dateStr = date.toISOString().split('T')[0];
+        document.getElementById('entryDate').value = dateStr;
+    } else {
+        document.getElementById('entryDate').value = new Date().toISOString().split('T')[0];
+    }
+    
+    // 家計簿IDを設定
+    document.getElementById('householdBookId').value = currentHouseholdBookId;
+    
+    // カテゴリを表示
+    displayCategories();
+    
+    // モーダルを表示
+    document.getElementById('entryModal').classList.add('show');
+}
+
+function closeEntryModal() {
+    document.getElementById('entryModal').classList.remove('show');
+    resetEntryModal();
+}
+
+function resetEntryModal() {
+    document.getElementById('entryForm').reset();
+    document.getElementById('entryId').value = '';
+    document.getElementById('modalTitleText').textContent = '収支を追加';
+    document.getElementById('submitBtn').textContent = '追加';
+    document.getElementById('deleteBtn').style.display = 'none';
+    editingEntryId = null;
+    selectedCategoryId = null;
+    setEntryType('expense');
+}
+
+function setEntryType(type) {
+    currentEntryType = type;
+    
+    // ボタンの状態を更新
+    document.getElementById('incomeBtn').classList.toggle('active', type === 'income');
+    document.getElementById('expenseBtn').classList.toggle('active', type === 'expense');
+    
+    // カテゴリを再表示
+    displayCategories();
+}
+
+function displayCategories() {
+    const categoryGrid = document.getElementById('categoryGrid');
+    categoryGrid.innerHTML = '';
+    
+    const categories = currentEntryType === 'income' ? incomeCategories : expenseCategories;
+    
+    categories.forEach(category => {
+        const categoryElement = document.createElement('div');
+        categoryElement.className = 'category-item';
+        categoryElement.onclick = () => selectCategory(category.id, categoryElement);
+        
+        categoryElement.innerHTML = `
+            <i class="material-icons">${category.icon || 'category'}</i>
+            <div class="category-name">${category.name}</div>
+        `;
+        
+        categoryGrid.appendChild(categoryElement);
+    });
+}
+
+function getCategoryIcon(entry) {
+    // エントリーのカテゴリアイコンを取得
+    const categories = entry.entry_type === 'income' ? incomeCategories : expenseCategories;
+    const category = categories.find(cat => cat.id === (entry.income_category_id || entry.expense_category_id));
+    return category ? category.icon : 'category';
+}
+
+function getCategoryName(entry) {
+    // エントリーのカテゴリ名を取得
+    const categories = entry.entry_type === 'income' ? incomeCategories : expenseCategories;
+    const category = categories.find(cat => cat.id === (entry.income_category_id || entry.expense_category_id));
+    return category ? category.name : 'その他';
+}
+
+function formatAmount(amount) {
+    return `¥${amount.toLocaleString()}`;
+}
+
+function selectCategory(categoryId, element) {
+    selectedCategoryId = categoryId;
+    
+    // 選択状態を更新
+    document.querySelectorAll('.category-item').forEach(item => {
+        item.classList.remove('selected');
+    });
+    
+    element.classList.add('selected');
+}
+
+function initializeModalEvents() {
+    // フォーム送信イベント
+    document.getElementById('entryForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        saveEntry();
+    });
+    
+    // モーダル外クリックで閉じる
+    document.getElementById('entryModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeEntryModal();
+        }
+    });
+    
+    document.getElementById('dailyPanel').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeDailyPanel();
+        }
+    });
+}
+
+function saveEntry() {
+    const formData = new FormData(document.getElementById('entryForm'));
+    
+    // バリデーション
+    if (!selectedCategoryId) {
+        showToast('カテゴリを選択してください', 'error');
+        return;
+    }
+    
+    const entryData = {
+        household_book_id: currentHouseholdBookId,
+        entry_type: currentEntryType,
+        amount: parseFloat(formData.get('amount')),
+        description: formData.get('description'),
+        entry_date: formData.get('entry_date')
+    };
+    
+    // カテゴリIDを設定
+    if (currentEntryType === 'income') {
+        entryData.income_category_id = selectedCategoryId;
+    } else {
+        entryData.expense_category_id = selectedCategoryId;
+    }
+    
+    // 編集の場合はIDを追加
+    if (editingEntryId) {
+        entryData.id = editingEntryId;
+    }
+    
+    const url = editingEntryId ? `/api/household-entries/${editingEntryId}` : '/api/household-entries';
+    const method = editingEntryId ? 'PUT' : 'POST';
+    
+    fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(entryData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast(editingEntryId ? '収支を更新しました' : '収支を追加しました', 'success');
+            closeEntryModal();
+            loadCalendarData();
+            closeDailyPanel();
+        } else {
+            showToast(data.error || '保存に失敗しました', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('保存エラー:', error);
+        showToast('保存に失敗しました', 'error');
+    });
+}
+
+function editEntry(entryId) {
+    // エントリーデータを取得して編集モーダルを開く
+    fetch(`/api/household-entries/${entryId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                populateEditModal(data.entry);
+                closeDailyPanel();
+            } else {
+                showToast('エントリーの読み込みに失敗しました', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('エントリー読み込みエラー:', error);
+            showToast('エントリーの読み込みに失敗しました', 'error');
+        });
+}
+
+function populateEditModal(entry) {
+    editingEntryId = entry.id;
+    
+    document.getElementById('entryId').value = entry.id;
+    document.getElementById('householdBookId').value = entry.household_book_id;
+    document.getElementById('entryAmount').value = entry.amount;
+    document.getElementById('entryDescription').value = entry.description || '';
+    document.getElementById('entryDate').value = entry.entry_date;
+    
+    document.getElementById('modalTitleText').textContent = '収支を編集';
+    document.getElementById('submitBtn').textContent = '更新';
+    document.getElementById('deleteBtn').style.display = 'inline-block';
+    
+    setEntryType(entry.entry_type);
+    
+    // カテゴリを選択
+    selectedCategoryId = entry.entry_type === 'income' ? entry.income_category_id : entry.expense_category_id;
+    
+    setTimeout(() => {
+        if (selectedCategoryId) {
+            const categoryItems = document.querySelectorAll('.category-item');
+            categoryItems.forEach((item, index) => {
+                const categories = currentEntryType === 'income' ? incomeCategories : expenseCategories;
+                if (categories[index] && categories[index].id === selectedCategoryId) {
+                    item.classList.add('selected');
+                }
+            });
+        }
+    }, 100);
+    
+    document.getElementById('entryModal').classList.add('show');
+}
+
+function deleteEntry() {
+    if (!editingEntryId) return;
+    
+    if (confirm('この収支データを削除しますか？')) {
+        fetch(`/api/household-entries/${editingEntryId}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('収支を削除しました', 'success');
+                closeEntryModal();
+                loadCalendarData();
+            } else {
+                showToast('削除に失敗しました', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('削除エラー:', error);
+            showToast('削除に失敗しました', 'error');
+        });
+    }
+}
+
+function toggleView() {
+    // リスト表示に切り替え
+    window.location.href = `/household-books/${currentYear}/${currentMonth}`;
+}
+
+function showToast(message, type = 'info') {
+    // 簡単なトースト通知
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 24px;
+        background: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#2196F3'};
+        color: white;
+        border-radius: 8px;
+        z-index: 3000;
+        opacity: 0;
+        transform: translateX(100%);
+        transition: all 0.3s ease;
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // アニメーションで表示
+    setTimeout(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateX(0)';
+    }, 100);
+    
+    // 3秒後に削除
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 300);
+    }, 3000);
+}
+</script>
+{% endblock %}

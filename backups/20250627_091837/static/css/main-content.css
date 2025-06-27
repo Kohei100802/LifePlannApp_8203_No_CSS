@@ -1,0 +1,237 @@
+/* メインコンテンツコンポーネント CSS */
+
+/* 基本レイアウト */
+.main-content {
+    padding: 16px;
+    margin-top: 0;
+    margin-bottom: 80px; /* フッター分 */
+    min-height: calc(100vh - 140px);
+}
+
+/* 月次ヘッダーがある場合 */
+.has-monthly-header .main-content {
+    margin-top: 120px; /* 基本ヘッダー + 月次ヘッダー */
+    min-height: calc(100vh - 200px);
+}
+
+/* タブナビゲーションがある場合 */
+.has-tab-navigation .main-content {
+    margin-top: 170px; /* 基本ヘッダー + 月次ヘッダー + タブナビ */
+    min-height: calc(100vh - 250px);
+}
+
+/* モダンタブナビゲーションがある場合 */
+.has-modern-tab-navigation .main-content {
+    margin-top: 120px; /* 基本ヘッダー(60px) + モダンタブナビ(60px) */
+    min-height: calc(100vh - 200px);
+}
+
+.content-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* コンテンツセクション */
+.content-section {
+    background: var(--color-background);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.content-header {
+    margin-bottom: 24px;
+}
+
+.content-title {
+    font-size: var(--font-size-title);
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 0 0 8px 0;
+}
+
+.content-subtitle {
+    font-size: var(--font-size-base);
+    color: var(--color-text-secondary);
+    margin: 0;
+}
+
+.content-body {
+    color: var(--color-text-primary);
+}
+
+/* ダッシュボードグリッド */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    margin-bottom: 32px;
+}
+
+.dashboard-card {
+    background: var(--color-background-secondary);
+    border-radius: 12px;
+    padding: 20px;
+    transition: all 0.2s ease;
+    border: 1px solid var(--color-separator);
+}
+
+.dashboard-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.card-header {
+    margin-bottom: 16px;
+}
+
+.card-title {
+    font-size: var(--font-size-large);
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.card-title .material-icons {
+    font-size: 24px;
+    color: var(--color-accent);
+}
+
+.card-body p {
+    color: var(--color-text-secondary);
+    margin-bottom: 16px;
+    line-height: 1.5;
+}
+
+/* ボタン */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+    font-size: var(--font-size-base);
+}
+
+.btn-primary {
+    background: var(--color-accent);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--color-accent-dark);
+    transform: translateY(-1px);
+}
+
+.btn .material-icons {
+    font-size: 18px;
+}
+
+/* アプリ版調整 */
+.client-app .main-content {
+    margin-top: calc(60px + env(safe-area-inset-top, 0px));
+    margin-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+}
+
+.client-app .has-monthly-header .main-content {
+    margin-top: calc(120px + env(safe-area-inset-top, 0px));
+}
+
+.client-app .has-tab-navigation .main-content {
+    margin-top: calc(170px + env(safe-area-inset-top, 0px));
+}
+
+/* .client-app .has-modern-tab-navigation .main-content {
+    margin-top: calc(120px + env(safe-area-inset-top, 0px));
+} */
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .main-content {
+        padding: 12px;
+        margin-top: 60px;
+    }
+    
+    /* モダンタブナビゲーションがある場合の上書き - 正しいセレクタ */
+    /* .main-content.has-modern-tab-navigation {
+        margin-top: 100px !important;
+    } */
+    
+    .client-app .main-content.has-modern-tab-navigation {
+        margin-top: calc(100px + env(safe-area-inset-top, 0px)) !important;
+    }
+    
+    .content-section {
+        padding: 16px;
+        border-radius: 12px;
+    }
+    
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .dashboard-card {
+        padding: 16px;
+    }
+    
+    .content-title {
+        font-size: var(--font-size-large);
+    }
+}
+
+@media (max-width: 480px) {
+    .main-content {
+        padding: 8px;
+    }
+    
+    .content-section {
+        padding: 12px;
+        border-radius: 8px;
+    }
+    
+    .dashboard-card {
+        padding: 12px;
+    }
+    
+    .btn {
+        padding: 10px 16px;
+        font-size: var(--font-size-small);
+    }
+}
+
+.modern-menu-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.modern-menu-card:active .menu-arrow {
+    right: 16px; /* active状態でも位置を維持 */
+}
+
+.modern-menu-card {
+    position: relative;
+}
+
+.modern-menu-card .menu-arrow {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-text-secondary);
+    font-size: 20px;
+    -webkit-tap-highlight-color: transparent; /* タッチ時のハイライトを無効化 */
+}
+
+.month-selector-bar {
+    margin-top: 100px;
+}

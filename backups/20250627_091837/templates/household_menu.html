@@ -1,0 +1,474 @@
+{% extends "base-new.html" %}
+
+{% block title %}家計簿{% endblock %}
+{% block page_title %}家計簿{% endblock %}
+
+{% block content %}
+<div class="household-menu-container">
+    <!-- ヘッダーサマリー -->
+    <div class="summary-header">
+        <div class="month-summary-card">
+            <div class="month-info">
+                <h2 class="month-title">{{ current_year }}年{{ current_month }}月</h2>
+                <p class="month-subtitle">今月の収支</p>
+            </div>
+            <div class="balance-info">
+                <div class="balance-amount {% if balance >= 0 %}positive{% else %}negative{% endif %}">
+                    <i class="material-icons">{{ 'trending_up' if balance >= 0 else 'trending_down' }}</i>
+                    <span class="amount">¥{{ "{:,}".format(balance|int) }}</span>
+                </div>
+                <div class="balance-breakdown">
+                    <div class="income-summary">
+                        <i class="material-icons">add_circle</i>
+                        <span>収入: ¥{{ "{:,}".format(total_income|int) }}</span>
+                    </div>
+                    <div class="expense-summary">
+                        <i class="material-icons">remove_circle</i>
+                        <span>支出: ¥{{ "{:,}".format(total_expense|int) }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- メニューカード -->
+    <div class="menu-cards-section">
+        <div class="menu-cards-grid">
+            <a href="/household-books" class="menu-card main-card">
+                <div class="card-icon monthly-icon">
+                    <i class="material-icons">calendar_today</i>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">月次家計簿</h3>
+                    <p class="card-description">月ごとの詳細な収支管理</p>
+                </div>
+                <div class="card-arrow">
+                    <i class="material-icons">arrow_forward_ios</i>
+                </div>
+            </a>
+
+            <a href="/household-book" class="menu-card">
+                <div class="card-icon analytics-icon">
+                    <i class="material-icons">analytics</i>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">レポート</h3>
+                    <p class="card-description">グラフで収支を分析</p>
+                </div>
+                <div class="card-arrow">
+                    <i class="material-icons">arrow_forward_ios</i>
+                </div>
+            </a>
+
+            <a href="/household-book-dev" class="menu-card">
+                <div class="card-icon settings-icon">
+                    <i class="material-icons">tune</i>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">カテゴリ設定</h3>
+                    <p class="card-description">支出・収入カテゴリの管理</p>
+                </div>
+                <div class="card-arrow">
+                    <i class="material-icons">arrow_forward_ios</i>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- カテゴリ別サマリー -->
+    {% if category_summary %}
+    <div class="category-summary-section">
+        <div class="section-header">
+            <h3 class="section-title">今月のカテゴリ別支出・収入</h3>
+        </div>
+        <div class="category-cards">
+            {% for category_name, data in category_summary.items() %}
+            <div class="category-card {% if data.type == 'expense' %}expense-card{% else %}income-card{% endif %}">
+                <div class="category-icon" style="background-color: {{ data.color }};">
+                    <i class="material-icons">{{ data.icon }}</i>
+                </div>
+                <div class="category-info">
+                    <h4 class="category-name">{{ category_name }}</h4>
+                    <p class="category-amount">¥{{ "{:,}".format(data.amount|int) }}</p>
+                </div>
+                <div class="category-type">
+                    <i class="material-icons">{{ 'add' if data.type == 'income' else 'remove' }}</i>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- 最近の取引履歴 -->
+    {% if recent_entries %}
+    <div class="recent-entries-section">
+        <div class="section-header">
+            <h3 class="section-title">最近の取引</h3>
+            <a href="/household-books" class="view-all-link">
+                <span>すべて見る</span>
+                <i class="material-icons">arrow_forward</i>
+            </a>
+        </div>
+        <div class="entries-list">
+            {% for entry in recent_entries %}
+            <div class="entry-item {% if entry.entry_type == 'expense' %}expense-entry{% else %}income-entry{% endif %}">
+                <div class="entry-icon">
+                    {% if entry.entry_type == 'expense' and entry.expense_category %}
+                        <div class="icon-circle" style="background-color: {{ entry.expense_category.color }};">
+                            <i class="material-icons">{{ entry.expense_category.icon }}</i>
+                        </div>
+                    {% elif entry.entry_type == 'income' and entry.income_category %}
+                        <div class="icon-circle" style="background-color: {{ entry.income_category.color }};">
+                            <i class="material-icons">{{ entry.income_category.icon }}</i>
+                        </div>
+                    {% else %}
+                        <div class="icon-circle" style="background-color: #666;">
+                            <i class="material-icons">{{ 'remove' if entry.entry_type == 'expense' else 'add' }}</i>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="entry-details">
+                    <h4 class="entry-description">{{ entry.description or '未設定' }}</h4>
+                    <p class="entry-meta">
+                        <span class="entry-date">{{ entry.entry_date.strftime('%m/%d') }}</span>
+                        {% if entry.entry_type == 'expense' and entry.expense_category %}
+                            <span class="entry-category">{{ entry.expense_category.name }}</span>
+                        {% elif entry.entry_type == 'income' and entry.income_category %}
+                            <span class="entry-category">{{ entry.income_category.name }}</span>
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="entry-amount {% if entry.entry_type == 'expense' %}expense-amount{% else %}income-amount{% endif %}">
+                    {{ '-' if entry.entry_type == 'expense' else '+' }}¥{{ "{:,}".format(entry.amount|int) }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- フローティングアクションボタン -->
+    <div class="fab-container">
+        <button class="fab-button add" onclick="showAddEntryModal()" title="新しい記録を追加">
+            <i class="material-icons">add</i>
+        </button>
+    </div>
+
+    <!-- 空の状態表示 -->
+    {% if not recent_entries and not category_summary %}
+    <div class="empty-state">
+        <div class="empty-icon">
+            <i class="material-icons">book</i>
+        </div>
+        <h3 class="empty-title">家計簿を始めましょう</h3>
+        <p class="empty-description">収入や支出を記録して、お金の流れを把握しましょう</p>
+        <button class="start-button" onclick="showAddEntryModal()">
+            <i class="material-icons">add</i>
+            <span>最初の記録を追加</span>
+        </button>
+    </div>
+    {% endif %}
+</div>
+
+<!-- 新規エントリー追加モーダル -->
+<div id="addEntryModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>新しい記録を追加</h3>
+            <button class="close-button" onclick="hideAddEntryModal()">
+                <i class="material-icons">close</i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="entry-type-selector">
+                <button class="type-button expense-type active" onclick="selectEntryType('expense')">
+                    <i class="material-icons">remove_circle</i>
+                    <span>支出</span>
+                </button>
+                <button class="type-button income-type" onclick="selectEntryType('income')">
+                    <i class="material-icons">add_circle</i>
+                    <span>収入</span>
+                </button>
+            </div>
+            <form id="entryForm">
+                <div class="form-group">
+                    <label for="amount">金額</label>
+                    <input type="number" id="amount" name="amount" required placeholder="0">
+                </div>
+                <div class="form-group">
+                    <label for="description">説明</label>
+                    <input type="text" id="description" name="description" placeholder="何に使いましたか？">
+                </div>
+                <div class="form-group">
+                    <label for="category">カテゴリ</label>
+                    <select id="category" name="category" required>
+                        <option value="">カテゴリを選択</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="entry_date">日付</label>
+                    <input type="date" id="entry_date" name="entry_date" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="cancel-button" onclick="hideAddEntryModal()">キャンセル</button>
+                    <button type="submit" class="save-button">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- トースト通知 -->
+<div id="toast-container"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentEntryType = 'expense';
+let expenseCategories = [];
+let incomeCategories = [];
+
+// ページ読み込み時にカテゴリを取得
+document.addEventListener('DOMContentLoaded', function() {
+    loadCategories();
+    
+    // 今日の日付をデフォルトに設定
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('entry_date').value = today;
+});
+
+// カテゴリデータを取得
+async function loadCategories() {
+    try {
+        const [expenseRes, incomeRes] = await Promise.all([
+            fetch('/api/expense-categories'),
+            fetch('/api/income-categories')
+        ]);
+        
+        expenseCategories = await expenseRes.json();
+        incomeCategories = await incomeRes.json();
+        
+        updateCategoryOptions();
+    } catch (error) {
+        console.error('カテゴリの取得に失敗しました:', error);
+    }
+}
+
+// モーダル表示
+function showAddEntryModal() {
+    document.getElementById('addEntryModal').classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+
+// モーダル非表示
+function hideAddEntryModal() {
+    document.getElementById('addEntryModal').classList.remove('show');
+    document.body.style.overflow = '';
+    document.getElementById('entryForm').reset();
+    
+    // 今日の日付を再設定
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('entry_date').value = today;
+}
+
+// エントリータイプ選択
+function selectEntryType(type) {
+    currentEntryType = type;
+    
+    // ボタンのアクティブ状態を更新
+    document.querySelectorAll('.type-button').forEach(btn => btn.classList.remove('active'));
+    document.querySelector(`.${type}-type`).classList.add('active');
+    
+    updateCategoryOptions();
+}
+
+// カテゴリオプションを更新
+function updateCategoryOptions() {
+    const categorySelect = document.getElementById('category');
+    categorySelect.innerHTML = '<option value="">カテゴリを選択</option>';
+    
+    const categories = currentEntryType === 'expense' ? expenseCategories : incomeCategories;
+    
+    categories.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category.id;
+        option.textContent = category.name;
+        categorySelect.appendChild(option);
+    });
+}
+
+// フォーム送信
+document.getElementById('entryForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    
+    try {
+        // 最初に家計簿IDを取得
+        const householdBookId = await getCurrentMonthBookId();
+        
+        if (!householdBookId) {
+            showToast('家計簿の作成に失敗しました', 'error');
+            return;
+        }
+        
+        const data = {
+            entry_type: currentEntryType,
+            amount: parseFloat(formData.get('amount')),
+            description: formData.get('description'),
+            entry_date: formData.get('entry_date'),
+            household_book_id: householdBookId
+        };
+        
+        // カテゴリIDを適切に設定
+        const categoryId = formData.get('category');
+        if (currentEntryType === 'expense') {
+            data.expense_category_id = parseInt(categoryId);
+        } else {
+            data.income_category_id = parseInt(categoryId);
+        }
+        
+        console.log('送信データ:', data);
+        
+        const response = await fetch('/api/household-entries', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+            showToast('記録を追加しました', 'success');
+            hideAddEntryModal();
+            // ページをリロードして最新データを表示
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            const error = await response.json();
+            console.error('APIエラー:', error);
+            showToast(error.error || '保存に失敗しました', 'error');
+        }
+    } catch (error) {
+        console.error('保存エラー:', error);
+        showToast('保存に失敗しました', 'error');
+    }
+});
+
+// 現在月の家計簿IDを取得
+async function getCurrentMonthBookId() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
+    
+    try {
+        // まず既存の家計簿を取得してみる
+        const getResponse = await fetch('/api/household-books');
+        if (getResponse.ok) {
+            const books = await getResponse.json();
+            const currentBook = books.find(book => book.year === year && book.month === month);
+            if (currentBook) {
+                return currentBook.id;
+            }
+        }
+        
+        // 存在しない場合は新規作成
+        const createResponse = await fetch('/api/household-books', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                name: `${year}年${month}月の家計簿`,
+                year: year,
+                month: month
+            })
+        });
+        
+        if (createResponse.ok) {
+            const result = await createResponse.json();
+            return result.household_book ? result.household_book.id : result.id;
+        } else {
+            const error = await createResponse.json();
+            console.error('家計簿作成エラー:', error);
+            return null;
+        }
+    } catch (error) {
+        console.error('家計簿IDの取得に失敗しました:', error);
+        return null;
+    }
+}
+
+// モーダル外クリックで閉じる
+document.getElementById('addEntryModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        hideAddEntryModal();
+    }
+});
+
+// トースト通知を表示する関数
+function showToast(message, type = 'info') {
+    // 既存のトーストがあれば削除
+    const existingToast = document.querySelector('.toast');
+    if (existingToast) {
+        existingToast.remove();
+    }
+    
+    // トーストを作成
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `
+        <div class="toast-content">
+            <i class="material-icons">${type === 'success' ? 'check_circle' : type === 'error' ? 'error' : 'info'}</i>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    // スタイルを設定
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 10000;
+        padding: 12px 20px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 500;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        max-width: 300px;
+        word-wrap: break-word;
+    `;
+    
+    // タイプに応じて背景色を設定
+    if (type === 'success') {
+        toast.style.backgroundColor = '#4CAF50';
+    } else if (type === 'error') {
+        toast.style.backgroundColor = '#f44336';
+    } else {
+        toast.style.backgroundColor = '#2196F3';
+    }
+    
+    document.body.appendChild(toast);
+    
+    // アニメーション
+    setTimeout(() => {
+        toast.style.transform = 'translateX(0)';
+    }, 100);
+    
+    // 3秒後に自動削除
+    setTimeout(() => {
+        toast.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.remove();
+            }
+        }, 300);
+    }, 3000);
+}
+</script>
+{% endblock %} 

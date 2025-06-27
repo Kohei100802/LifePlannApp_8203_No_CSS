@@ -1,0 +1,149 @@
+{% extends "base-new.html" %}
+
+{% block title %}副業収入管理{% endblock %}
+{% block page_title %}副業収入管理{% endblock %}
+
+{% block content %}
+<div class="modern-tabs-container">
+    <!-- プラン管理コンテンツ -->
+    <div class="modern-tab-content active">
+        <div class="content-section">
+            <!-- 登録済み副業収入一覧 -->
+            <div id="sidejob-income-list">
+                <!-- 動的に生成 -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FABボタン -->
+<div class="fab-container">
+    <a href="/incomes/sidejob/new" class="fab-button add" title="新規追加">
+        <i class="material-icons">add</i>
+    </a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 副業収入データ読み込み
+    loadSidejobIncomes();
+});
+
+// 副業収入データ読み込み
+async function loadSidejobIncomes() {
+    try {
+        const sidejobIncomes = await apiCall('/api/sidejob-incomes');
+        displaySidejobIncomes(sidejobIncomes);
+    } catch (error) {
+        console.error('Error loading sidejob incomes:', error);
+        showToast('副業収入の読み込みに失敗しました', 'error');
+    }
+}
+
+// 副業収入表示
+function displaySidejobIncomes(sidejobIncomes) {
+    const listContainer = document.getElementById('sidejob-income-list');
+    
+    if (sidejobIncomes.length === 0) {
+        listContainer.innerHTML = `
+            <div class="empty-state">
+                <div style="text-align: center; padding: 2rem; color: var(--color-secondary);">
+                    <i class="material-icons" style="font-size: 3rem; margin-bottom: 1rem;">business_center</i>
+                    <p>登録済みの副業収入がありません</p>
+                    <p class="text-small">右下の「+」ボタンから作成してください</p>
+                </div>
+            </div>
+        `;
+        return;
+    }
+    
+    const html = `
+        <div class="modern-menu-grid">
+            ${sidejobIncomes.map(income => {
+                const monthlyAmount = (income.monthly_amount || 0) / 10000;
+                const annualTotal = monthlyAmount * 12;
+                const periodText = `${income.start_year}年-${income.end_year}年`;
+                
+                return `
+                    <div class="modern-menu-card plan-card" style="position: relative; cursor: pointer; display: flex; align-items: center; min-height: 80px;" onclick="showIncomeDetails(${income.id})">
+                        <div class="plan-actions" style="position: absolute; top: 12px; right: 12px; display: flex; gap: 8px; z-index: 10;" onclick="event.stopPropagation();">
+                            <button onclick="copyIncome(${income.id})" class="plan-action-btn" title="コピー" style="background: #FF9800; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; border: none; cursor: pointer; min-width: 50px; height: 28px;">
+                                <i class="material-icons" style="font-size: 14px; margin-right: 2px;">content_copy</i>コピー
+                            </button>
+                            <button onclick="deleteSidejobIncome(${income.id})" class="plan-action-btn" title="削除" style="background: #f44336; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; border: none; cursor: pointer; min-width: 50px; height: 28px;">
+                                <i class="material-icons" style="font-size: 14px; margin-right: 2px;">delete</i>削除
+                            </button>
+                        </div>
+                        <div class="card-content" style="flex: 1; padding-right: 140px;">
+                            <h3 class="card-title" style="margin-bottom: 8px; font-size: 1.1em; font-weight: 600;">${income.name}</h3>
+                            <p class="card-description" style="margin-bottom: 0; line-height: 1.4; color: var(--color-text-secondary);">
+                                ${periodText}<br>
+                                月額 ${monthlyAmount.toFixed(1)}万円 | 年額 ${annualTotal.toFixed(1)}万円
+                                ${income.description ? `<br><span style="color: var(--color-text-secondary); font-size: 0.9em; font-style: italic;">${income.description}</span>` : ''}
+                            </p>
+                        </div>
+                        <div class="card-arrow" style="position: absolute; right: 12px; bottom: 12px; color: var(--color-text-secondary); pointer-events: none;">
+                            <i class="material-icons" style="font-size: 20px;">arrow_forward_ios</i>
+                        </div>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+    `;
+    
+    listContainer.innerHTML = html;
+}
+
+// 副業収入詳細表示（カードクリック時）
+function showIncomeDetails(incomeId) {
+    // 編集ページに遷移
+    window.location.href = `/incomes/sidejob/edit/${incomeId}`;
+}
+
+// 副業収入削除
+async function deleteSidejobIncome(incomeId) {
+    if (!confirm('この副業収入を削除しますか？')) return;
+    
+    try {
+        const response = await fetch(`/api/sidejob-incomes/${incomeId}`, {
+            method: 'DELETE'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('副業収入を削除しました', 'success');
+            loadSidejobIncomes(); // 一覧を再読み込み
+        } else {
+            showToast('副業収入の削除に失敗しました', 'error');
+    }
+    } catch (error) {
+        console.error('Error deleting sidejob income:', error);
+        showToast('副業収入の削除に失敗しました', 'error');
+    }
+}
+
+// 副業収入コピー
+async function copyIncome(incomeId) {
+    try {
+        const response = await fetch(`/api/sidejob-incomes/${incomeId}/copy`, {
+            method: 'POST'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('副業収入をコピーしました', 'success');
+            loadSidejobIncomes(); // 一覧を再読み込み
+        } else {
+            showToast('副業収入のコピーに失敗しました', 'error');
+        }
+    } catch (error) {
+        console.error('Error copying sidejob income:', error);
+        showToast('副業収入のコピーに失敗しました', 'error');
+    }
+}
+</script>
+{% endblock %} 

@@ -1,0 +1,313 @@
+{% extends "base-new.html" %}
+
+{% block title %}保険費 - {% if expense_id %}編集{% else %}新規登録{% endif %}{% endblock %}
+{% block page_title %}保険費 - {% if expense_id %}編集{% else %}新規登録{% endif %}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            {% if expense_id %}
+                保険費編集 <span class="badge badge-secondary">#{{ expense_id }}</span>
+            {% else %}
+                保険費新規登録
+            {% endif %}
+        </h3>
+        <a href="/expenses/insurance" class="btn btn-secondary btn-sm">
+            <i class="material-icons">arrow_back</i> 一覧に戻る
+        </a>
+    </div>
+    <div class="card-body">
+        <form id="expenseForm">
+            <input type="hidden" name="id" value="{{ expense_id or '' }}">
+            
+            <div class="form-group">
+                <label class="form-label">保険名 <span class="text-danger">*</span></label>
+                <input type="text" name="name" class="form-control" placeholder="例：生命保険、医療保険" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">説明</label>
+                <input type="text" name="description" class="form-control" placeholder="詳細説明（任意）">
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">開始年 <span class="text-danger">*</span></label>
+                        <select name="start_year" class="form-control" required>
+                            <!-- JavaScript で動的に生成 -->
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">終了年 <span class="text-danger">*</span></label>
+                        <select name="end_year" class="form-control" required>
+                            <!-- JavaScript で動的に生成 -->
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 保険種別 -->
+            <h5 class="mt-4 mb-3">保険種別・月額保険料（万円）</h5>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">医療保険</label>
+                        <input type="number" name="medical_insurance" class="form-control" placeholder="0.5" min="0" step="0.1">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">がん保険</label>
+                        <input type="number" name="cancer_insurance" class="form-control" placeholder="0.3" min="0" step="0.1">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">生命保険</label>
+                        <input type="number" name="life_insurance" class="form-control" placeholder="1.0" min="0" step="0.1">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">収入保障保険</label>
+                        <input type="number" name="income_protection" class="form-control" placeholder="0.8" min="0" step="0.1">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">傷害保険</label>
+                        <input type="number" name="accident_insurance" class="form-control" placeholder="0.2" min="0" step="0.1">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">賠償責任保険</label>
+                        <input type="number" name="liability_insurance" class="form-control" placeholder="0.1" min="0" step="0.1">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">火災保険</label>
+                        <input type="number" name="fire_insurance" class="form-control" placeholder="0.3" min="0" step="0.1">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">介護保険</label>
+                        <input type="number" name="long_term_care_insurance" class="form-control" placeholder="0.4" min="0" step="0.1">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">その他保険</label>
+                <input type="number" name="other_insurance" class="form-control" placeholder="0.2" min="0" step="0.1">
+            </div>
+            
+            <!-- 保険詳細情報 -->
+            <h5 class="mt-4 mb-3">保険詳細情報</h5>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">被保険者</label>
+                        <input type="text" name="insured_person" class="form-control" placeholder="例：本人、配偶者">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">保険会社</label>
+                        <input type="text" name="insurance_company" class="form-control" placeholder="例：○○生命">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">保険期間（年）</label>
+                        <input type="number" name="insurance_term_years" class="form-control" placeholder="10" min="0" step="1">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">更新タイプ</label>
+                        <select name="renew_type" class="form-control">
+                            <option value="">選択してください</option>
+                            <option value="自動更新">自動更新</option>
+                            <option value="満期終了">満期終了</option>
+                            <option value="終身">終身</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group mt-4">
+                <div class="row">
+                    <div class="col-md-6">
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <i class="material-icons">arrow_forward</i>
+                            <span class="submit-text">
+                                {% if expense_id %}保険費を更新{% else %}保険費を登録{% endif %}
+                            </span>
+                        </button>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="/expenses/insurance" class="btn btn-secondary btn-block">
+                            <i class="material-icons">cancel</i> キャンセル
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- フローティングアクションボタン -->
+<div class="form-fab-container">
+    <a href="/expenses/insurance" class="fab-button cancel" id="cancelFabButton" title="キャンセル">
+        <i class="material-icons">close</i>
+    </a>
+    <button type="button" class="fab-button submit" id="formFabButton" onclick="submitFormViaFab()" title="保存">
+        {% if expense_id %}
+            <i class="material-icons">arrow_forward</i>
+        {% else %}
+            <i class="material-icons">add</i>
+        {% endif %}
+    </button>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initializeYearSelects();
+    
+    const expenseId = document.querySelector('[name="id"]').value;
+    if (expenseId) {
+        loadExpenseData(expenseId);
+    }
+    
+    setupInsuranceFormHandler();
+    setupFormFab();
+});
+
+function loadExpenseData(id) {
+    fetch(`/api/expenses/insurance/${id}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('データの読み込みに失敗しました');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data) {
+                // フォームにデータを設定
+                Object.keys(data).forEach(key => {
+                    const element = document.querySelector(`[name="${key}"]`);
+                    if (element) {
+                        if (key.includes('insurance')) {
+                             element.value = (parseFloat(data[key]) / 10000) || '';
+                        } else {
+                             element.value = data[key];
+                        }
+                    }
+                });
+                
+                // FABのアイコンを更新用に変更
+                const fabIcon = document.querySelector('#formFabButton .material-icons');
+                if (fabIcon) {
+                    fabIcon.textContent = 'arrow_forward';
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast(error.message, 'error');
+        });
+}
+
+function setupInsuranceFormHandler() {
+    const form = document.getElementById('expenseForm');
+    if (!form) {
+        console.error('フォームが見つかりません');
+        return;
+    }
+    
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        submitInsuranceForm();
+    });
+}
+
+function submitInsuranceForm() {
+    const form = document.getElementById('expenseForm');
+    const formData = new FormData(form);
+    
+    // 保険費の金額を万円から円に変換
+    const insuranceFields = [
+        'medical_insurance', 'cancer_insurance', 'life_insurance', 
+        'income_protection', 'accident_insurance', 'liability_insurance',
+        'fire_insurance', 'long_term_care_insurance', 'other_insurance'
+    ];
+    
+    insuranceFields.forEach(field => {
+        const value = formData.get(field);
+        if (value && value !== '') {
+            const amountInYen = parseFloat(value) * 10000;
+            formData.set(field, amountInYen.toString());
+        }
+    });
+    
+    const expenseId = formData.get('id');
+    const url = expenseId ? `/api/expenses/insurance/${expenseId}` : '/api/expenses/insurance';
+    const method = expenseId ? 'PUT' : 'POST';
+    
+    showLoading('保存中...');
+    
+    fetch(url, {
+        method: method,
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.text().then(text => {
+                throw new Error(text || 'サーバーエラーが発生しました');
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        hideLoading();
+        showToast(expenseId ? '保険費を更新しました' : '保険費を登録しました', 'success');
+        setTimeout(() => {
+            window.location.href = '/expenses/insurance';
+        }, 1500);
+    })
+    .catch(error => {
+        hideLoading();
+        console.error('Error:', error);
+        showToast(error.message || '保存に失敗しました', 'error');
+    });
+}
+
+// FAB用の送信関数
+function submitFormViaFab() {
+    submitInsuranceForm();
+}
+</script>
+{% endblock %}

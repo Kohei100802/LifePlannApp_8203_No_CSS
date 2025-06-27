@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏞️ 土地評価アナライザー</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .leaflet-container {
+            height: 300px;
+            width: 100%;
+            border-radius: 0.5rem;
+        }
+        @media (max-width: 768px) {
+            .leaflet-container {
+                height: 250px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div id="app" class="min-h-screen">
+        <!-- アカウント選択画面 -->
+        <div id="auth-select-screen" class="min-h-screen flex flex-col items-center justify-center bg-gray-50">
+            <div class="bg-white rounded-lg shadow-md p-8 w-full max-w-md">
+                <h2 class="text-xl font-bold mb-6 text-center">土地評価アナライザー</h2>
+                <button class="w-full bg-blue-500 text-white py-2 rounded mb-3" onclick="showLogin()">ログイン</button>
+                <button class="w-full bg-green-500 text-white py-2 rounded mb-3" onclick="showRegister()">新規登録</button>
+                <button class="w-full bg-gray-400 text-white py-2 rounded" onclick="setGuestMode()">ゲストで試す</button>
+            </div>
+        </div>
+
+        <!-- ログイン画面 -->
+        <div id="login-screen" class="min-h-screen flex flex-col items-center justify-center bg-gray-50" style="display: none;">
+            <div class="bg-white rounded-lg shadow-md p-8 w-full max-w-md">
+                <h2 class="text-xl font-bold mb-6 text-center">ログイン</h2>
+                <div id="auth-error" class="text-red-500 mb-2 text-center" style="display: none;"></div>
+                <input id="login-username" class="w-full border p-2 mb-3 rounded" placeholder="ユーザー名" />
+                <input id="login-password" class="w-full border p-2 mb-3 rounded" type="password" placeholder="パスワード" />
+                <button class="w-full bg-blue-500 text-white py-2 rounded mb-3" onclick="handleLogin()">ログイン</button>
+                <button class="w-full text-blue-500 underline" onclick="showAuthSelect()">戻る</button>
+            </div>
+        </div>
+
+        <!-- 新規登録画面 -->
+        <div id="register-screen" class="min-h-screen flex flex-col items-center justify-center bg-gray-50" style="display: none;">
+            <div class="bg-white rounded-lg shadow-md p-8 w-full max-w-md">
+                <h2 class="text-xl font-bold mb-6 text-center">新規登録</h2>
+                <div id="register-error" class="text-red-500 mb-2 text-center" style="display: none;"></div>
+                <input id="register-username" class="w-full border p-2 mb-3 rounded" placeholder="ユーザー名" />
+                <input id="register-password" class="w-full border p-2 mb-3 rounded" type="password" placeholder="パスワード" />
+                <button class="w-full bg-green-500 text-white py-2 rounded mb-3" onclick="handleRegister()">登録</button>
+                <button class="w-full text-blue-500 underline" onclick="showAuthSelect()">戻る</button>
+            </div>
+        </div>
+
+        <!-- メイン画面 -->
+        <div id="main-screen" class="min-h-screen bg-gray-50" style="display: none;">
+            <!-- ヘッダー -->
+            <header class="bg-white shadow-sm border-b">
+                <div class="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">🏞️ 土地評価アナライザー</h1>
+                        <p class="text-gray-600 mt-1">住所入力で空き地の価値を瞬時に算出</p>
+                    </div>
+                    <div>
+                        <span id="username-display" class="text-gray-700 mr-2"></span>
+                        <button class="text-sm text-blue-500 underline" onclick="handleLogout()">ログアウト</button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- メインコンテンツ -->
+            <main class="max-w-4xl mx-auto px-4 py-8">
+                <!-- 住所入力フォーム -->
+                <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4">住所を入力してください</h2>
+                    <form id="address-form" class="space-y-4">
+                        <div>
+                            <label for="address-input" class="block text-sm font-medium text-gray-700 mb-2">住所</label>
+                            <div class="relative">
+                                <input
+                                    id="address-input"
+                                    type="text"
+                                    placeholder="例: 東京都千代田区丸の内1-1-1"
+                                    class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                                />
+                                <svg class="absolute right-3 top-3 h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <button
+                            type="submit"
+                            id="analyze-button"
+                            class="w-full bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 text-white font-medium py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center"
+                        >
+                            空き地解析を開始
+                        </button>
+                    </form>
+                    <div class="mt-4 text-sm text-gray-600">
+                        <p>💡 衛星画像から空き地を検出し、評価額を自動計算します</p>
+                    </div>
+                </div>
+
+                <!-- 履歴リスト -->
+                <div class="bg-white rounded-lg shadow-md p-6 mt-8">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800">
+                            解析履歴 
+                            <span id="guest-note" class="text-xs text-gray-400" style="display: none;">（ゲストはセッション限定）</span>
+                        </h3>
+                        <button
+                            id="clear-history-btn"
+                            class="text-sm text-red-500 hover:underline"
+                            onclick="handleClearHistory()"
+                        >
+                            履歴を全削除
+                        </button>
+                    </div>
+                    <div id="history-container" class="text-gray-400 text-sm">履歴はありません</div>
+                </div>
+
+                <!-- エラー表示 -->
+                <div id="error-display" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6" style="display: none;">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-red-800">エラーが発生しました</h3>
+                            <p id="error-message" class="text-sm text-red-700 mt-1"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 結果表示 -->
+                <div id="result-display" style="display: none;">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-semibold text-gray-800">解析結果</h2>
+                        <button
+                            onclick="handleReset()"
+                            class="bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg transition duration-200"
+                        >
+                            新しい解析を開始
+                        </button>
+                    </div>
+
+                    <!-- 基本情報 -->
+                    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                            <svg class="h-5 w-5 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                            解析対象地
+                        </h3>
+                        <p id="result-address" class="text-gray-600"></p>
+                        <p id="result-coordinates" class="text-sm text-gray-500 mt-1"></p>
+                    </div>
+
+                    <!-- 評価結果 -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div class="bg-white rounded-lg shadow-md p-6">
+                            <div class="flex items-center">
+                                <svg class="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                </svg>
+                                <div class="ml-3">
+                                    <p class="text-sm font-medium text-gray-500">空き地面積</p>
+                                    <p id="result-area" class="text-2xl font-bold text-gray-900"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow-md p-6">
+                            <div class="flex items-center">
+                                <svg class="h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                                </svg>
+                                <div class="ml-3">
+                                    <p class="text-sm font-medium text-gray-500">地価（m²あたり）</p>
+                                    <p id="result-price-per-m2" class="text-2xl font-bold text-gray-900"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow-md p-6">
+                            <div class="flex items-center">
+                                <svg class="h-8 w-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                                </svg>
+                                <div class="ml-3">
+                                    <p class="text-sm font-medium text-gray-500">推定評価額</p>
+                                    <p id="result-estimated-value" class="text-2xl font-bold text-gray-900"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 画像表示 -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div class="bg-white rounded-lg shadow-md p-6">
+                            <h4 class="text-lg font-semibold text-gray-800 mb-4">衛星画像</h4>
+                            <img id="satellite-image" src="" alt="衛星画像" class="w-full h-64 object-cover rounded-lg">
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow-md p-6">
+                            <h4 class="text-lg font-semibold text-gray-800 mb-4">セグメンテーション結果</h4>
+                            <img id="segmentation-image" src="" alt="セグメンテーション結果" class="w-full h-64 object-cover rounded-lg">
+                            <div class="mt-3 text-sm">
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
+                                        <span class="w-2 h-2 bg-red-500 rounded-full mr-1"></span>
+                                        建物
+                                    </span>
+                                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                                        <span class="w-2 h-2 bg-gray-500 rounded-full mr-1"></span>
+                                        道路
+                                    </span>
+                                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                        <span class="w-2 h-2 bg-blue-500 rounded-full mr-1"></span>
+                                        水域
+                                    </span>
+                                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
+                                        <span class="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
+                                        空き地
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- マップ表示 -->
+                    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-4">位置マップ</h4>
+                        <div id="map" class="leaflet-container"></div>
+                    </div>
+
+                    <!-- 注意事項 -->
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <h5 class="text-sm font-medium text-yellow-800 mb-2">⚠️ 注意事項</h5>
+                        <ul class="text-sm text-yellow-700 space-y-1">
+                            <li>• この評価額は概算値であり、実際の市場価格とは異なる場合があります</li>
+                            <li>• セグメンテーション結果は機械学習モデルによる推定のため、精度に限界があります</li>
+                            <li>• 地価情報は公示価格等を基にした推定値です</li>
+                            <li>• 投資判断等にご利用の際は、専門家にご相談ください</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 機能説明 -->
+                <div id="feature-explanation" class="bg-white rounded-lg shadow-md p-6 mt-8">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-6 text-center">
+                        ✨ 簡単3ステップで土地評価
+                    </h3>
+                    <div class="flex flex-col md:flex-row justify-center items-center gap-8">
+                        <div class="text-center">
+                            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <span class="text-2xl">📍</span>
+                            </div>
+                            <h4 class="font-medium text-gray-800 mb-2">住所入力</h4>
+                            <p class="text-sm text-gray-600">調べたい場所の住所を入力</p>
+                        </div>
+                        
+                        <div class="hidden md:block text-gray-300 text-2xl">→</div>
+                        
+                        <div class="text-center">
+                            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <span class="text-2xl">🛰️</span>
+                            </div>
+                            <h4 class="font-medium text-gray-800 mb-2">AI解析</h4>
+                            <p class="text-sm text-gray-600">衛星画像から空き地を自動検出</p>
+                        </div>
+                        
+                        <div class="hidden md:block text-gray-300 text-2xl">→</div>
+                        
+                        <div class="text-center">
+                            <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <span class="text-2xl">💰</span>
+                            </div>
+                            <h4 class="font-medium text-gray-800 mb-2">価値算出</h4>
+                            <p class="text-sm text-gray-600">地価データから評価額を計算</p>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- フッター -->
+            <footer class="bg-white border-t mt-16">
+                <div class="max-w-4xl mx-auto px-4 py-8">
+                    <p class="text-center text-sm text-gray-500">
+                        © 2024 土地評価アナライザー - Powered by React & FastAPI
+                    </p>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        // アプリ状態
+        let authMode = 'select'; // 'select' | 'login' | 'register' | 'guest' | 'user'
+        let token = null;
+        let username = '';
+        let history = [];
+        let loading = false;
+        let result = null;
+        let map = null;
+
+        // 画面切り替え
+        function showScreen(screenId) {
+            const screens = ['auth-select-screen', 'login-screen', 'register-screen', 'main-screen'];
+            screens.forEach(id => {
+                document.getElementById(id).style.display = id === screenId ? 'block' : 'none';
+            });
+        }
+
+        function showAuthSelect() {
+            authMode = 'select';
+            showScreen('auth-select-screen');
+        }
+
+        function showLogin() {
+            authMode = 'login';
+            showScreen('login-screen');
+            document.getElementById('auth-error').style.display = 'none';
+        }
+
+        function showRegister() {
+            authMode = 'register';
+            showScreen('register-screen');
+            document.getElementById('register-error').style.display = 'none';
+        }
+
+        function setGuestMode() {
+            authMode = 'guest';
+            token = null;
+            username = '';
+            showMainScreen();
+        }
+
+        function showMainScreen() {
+            showScreen('main-screen');
+            updateUIForAuth();
+            fetchHistory();
+        }
+
+        function updateUIForAuth() {
+            const usernameDisplay = document.getElementById('username-display');
+            const guestNote = document.getElementById('guest-note');
+            
+            if (authMode === 'user') {
+                usernameDisplay.textContent = username + ' さん';
+                guestNote.style.display = 'none';
+            } else {
+                usernameDisplay.textContent = '';
+                guestNote.style.display = 'inline';
+            }
+        }
+
+        // 認証API（モック実装）
+        async function handleLogin() {
+            const usernameInput = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            
+            if (!usernameInput || !password) {
+                showAuthError('login', 'ユーザー名とパスワードを入力してください');
+                return;
+            }
+            
+            try {
+                // モック認証（実際のAPIに置き換える）
+                token = 'mock-token-' + Date.now();
+                username = usernameInput;
+                authMode = 'user';
+                showMainScreen();
+            } catch (error) {
+                showAuthError('login', 'ログインに失敗しました');
+            }
+        }
+
+        async function handleRegister() {
+            const usernameInput = document.getElementById('register-username').value;
+            const password = document.getElementById('register-password').value;
+            
+            if (!usernameInput || !password) {
+                showAuthError('register', 'ユーザー名とパスワードを入力してください');
+                return;
+            }
+            
+            try {
+                // モック登録（実際のAPIに置き換える）
+                token = 'mock-token-' + Date.now();
+                username = usernameInput;
+                authMode = 'user';
+                showMainScreen();
+            } catch (error) {
+                showAuthError('register', '登録に失敗しました');
+            }
+        }
+
+        function showAuthError(type, message) {
+            const errorElement = document.getElementById(type + '-error');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+        }
+
+        function handleLogout() {
+            token = null;
+            username = '';
+            authMode = 'select';
+            history = [];
+            result = null;
+            showAuthSelect();
+        }
+
+        // 履歴管理
+        function fetchHistory() {
+            // モック履歴データ
+            if (authMode === 'guest') {
+                history = JSON.parse(sessionStorage.getItem('landAnalysisHistory') || '[]');
+            } else {
+                // 実際のAPIから取得
+                history = [];
+            }
+            updateHistoryDisplay();
+        }
+
+        function addToHistory(address, resultData) {
+            const historyItem = {
+                timestamp: Date.now(),
+                address: address,
+                vacant_area_m2: resultData.vacant_area_m2,
+                land_price_per_m2: resultData.land_price_per_m2,
+                estimated_value: resultData.estimated_value
+            };
+            
+            history.unshift(historyItem);
+            
+            if (authMode === 'guest') {
+                sessionStorage.setItem('landAnalysisHistory', JSON.stringify(history));
+            }
+            
+            updateHistoryDisplay();
+        }
+
+        function updateHistoryDisplay() {
+            const container = document.getElementById('history-container');
+            const clearBtn = document.getElementById('clear-history-btn');
+            
+            if (history.length === 0) {
+                container.innerHTML = '<div class="text-gray-400 text-sm">履歴はありません</div>';
+                clearBtn.disabled = true;
+                return;
+            }
+            
+            clearBtn.disabled = false;
+            
+            const historyHtml = history.map(item => `
+                <div class="border rounded-lg p-4 flex flex-col bg-gray-50 hover:bg-blue-50 transition" style="box-shadow: 0 2px 8px rgba(0,0,0,0.04)">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="font-bold text-blue-700 truncate" title="${item.address}">${item.address}</div>
+                        <button class="text-xs text-red-400 hover:underline ml-2" onclick="handleDeleteHistory(${item.timestamp})">削除</button>
+                    </div>
+                    <div class="text-xs text-gray-500 mb-1">
+                        ${new Date(item.timestamp).toLocaleString('ja-JP')}
+                    </div>
+                    <div class="flex flex-wrap gap-2 text-xs text-gray-700 mb-2">
+                        <span>面積: <b>${item.vacant_area_m2}㎡</b></span>
+                        <span>地価: <b>${item.land_price_per_m2.toLocaleString()}円/㎡</b></span>
+                        <span>評価額: <b>${item.estimated_value.toLocaleString()}円</b></span>
+                    </div>
+                    <button class="mt-auto bg-blue-500 hover:bg-blue-600 text-white text-xs py-1 px-3 rounded" onclick="handleReanalyze('${item.address}')">この住所で再解析</button>
+                </div>
+            `).join('');
+            
+            container.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-4">${historyHtml}</div>`;
+        }
+
+        function handleDeleteHistory(timestamp) {
+            history = history.filter(item => item.timestamp !== timestamp);
+            
+            if (authMode === 'guest') {
+                sessionStorage.setItem('landAnalysisHistory', JSON.stringify(history));
+            }
+            
+            updateHistoryDisplay();
+        }
+
+        function handleClearHistory() {
+            history = [];
+            
+            if (authMode === 'guest') {
+                sessionStorage.removeItem('landAnalysisHistory');
+            }
+            
+            updateHistoryDisplay();
+        }
+
+        function handleReanalyze(address) {
+            document.getElementById('address-input').value = address;
+            handleAnalyze(address);
+        }
+
+        // 分析処理
+        async function handleAnalyze(address) {
+            if (loading) return;
+            
+            loading = true;
+            updateLoadingState();
+            hideError();
+            hideResult();
+            
+            try {
+                // 実際のAPIエンドポイントを呼び出し
+                const response = await fetch('/api/land-analysis/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        address: address
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok || data.error) {
+                    throw new Error(data.message || 'APIエラーが発生しました');
+                }
+                
+                result = data;
+                addToHistory(address, result);
+                displayResult(result);
+                
+            } catch (error) {
+                console.error('Analysis error:', error);
+                showError(error.message || 'エラーが発生しました。しばらく時間をおいてから再度お試しください。');
+            } finally {
+                loading = false;
+                updateLoadingState();
+            }
+        }
+
+        function updateLoadingState() {
+            const button = document.getElementById('analyze-button');
+            const input = document.getElementById('address-input');
+            
+            if (loading) {
+                button.innerHTML = `
+                    <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                    解析中...
+                `;
+                button.disabled = true;
+                input.disabled = true;
+            } else {
+                button.innerHTML = '空き地解析を開始';
+                button.disabled = false;
+                input.disabled = false;
+            }
+        }
+
+        function showError(message) {
+            document.getElementById('error-message').textContent = message;
+            document.getElementById('error-display').style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('error-display').style.display = 'none';
+        }
+
+        function displayResult(result) {
+            document.getElementById('result-address').textContent = result.address;
+            document.getElementById('result-coordinates').textContent = 
+                `緯度: ${result.coordinates.lat.toFixed(6)}, 経度: ${result.coordinates.lng.toFixed(6)}`;
+            
+            document.getElementById('result-area').textContent = 
+                new Intl.NumberFormat('ja-JP', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(result.vacant_area_m2) + ' m²';
+            
+            document.getElementById('result-price-per-m2').textContent = 
+                new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY', minimumFractionDigits: 0 }).format(result.land_price_per_m2);
+            
+            document.getElementById('result-estimated-value').textContent = 
+                new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY', minimumFractionDigits: 0 }).format(result.estimated_value);
+            
+            // 画像を設定
+            const satelliteImg = document.getElementById('satellite-image');
+            const segmentationImg = document.getElementById('segmentation-image');
+            
+            satelliteImg.src = `data:image/png;base64,${result.satellite_image_base64}`;
+            segmentationImg.src = `data:image/png;base64,${result.segmentation_image_base64}`;
+            
+            // 画像読み込みエラー時の処理
+            satelliteImg.onerror = function() {
+                console.error('衛星画像の読み込みに失敗しました');
+                this.alt = '衛星画像の読み込みに失敗しました';
+                this.style.backgroundColor = '#f3f4f6';
+                this.style.display = 'flex';
+                this.style.alignItems = 'center';
+                this.style.justifyContent = 'center';
+            };
+            
+            segmentationImg.onerror = function() {
+                console.error('セグメンテーション画像の読み込みに失敗しました');
+                this.alt = 'セグメンテーション画像の読み込みに失敗しました';
+                this.style.backgroundColor = '#f3f4f6';
+                this.style.display = 'flex';
+                this.style.alignItems = 'center';
+                this.style.justifyContent = 'center';
+            };
+            
+            // マップ表示
+            initializeMap(result.coordinates.lat, result.coordinates.lng, result.address);
+            
+            document.getElementById('result-display').style.display = 'block';
+            document.getElementById('feature-explanation').style.display = 'none';
+        }
+
+        function hideResult() {
+            document.getElementById('result-display').style.display = 'none';
+            document.getElementById('feature-explanation').style.display = 'block';
+        }
+
+        function handleReset() {
+            result = null;
+            hideResult();
+            hideError();
+            document.getElementById('address-input').value = '';
+        }
+
+        function initializeMap(lat, lng, address) {
+            if (map) {
+                map.remove();
+            }
+            
+            map = L.map('map').setView([lat, lng], 16);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+            
+            L.marker([lat, lng]).addTo(map)
+                .bindPopup(`
+                    <div style="text-align: center;">
+                        <p style="font-weight: bold; color: #374151;">${address}</p>
+                        <p style="font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem;">
+                            緯度: ${lat.toFixed(6)}<br>
+                            経度: ${lng.toFixed(6)}
+                        </p>
+                    </div>
+                `);
+        }
+
+        // フォーム送信イベント
+        document.getElementById('address-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const address = document.getElementById('address-input').value.trim();
+            if (address) {
+                handleAnalyze(address);
+            }
+        });
+
+        // 初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            showAuthSelect();
+        });
+    </script>
+</body>
+</html> 

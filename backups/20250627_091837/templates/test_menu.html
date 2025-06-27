@@ -1,0 +1,132 @@
+{% extends "base-new.html" %}
+
+{% block title %}ダッシュボード{% endblock %}
+
+{% block page_title %}ダッシュボード{% endblock %}
+
+{% block content %}
+<div class="content-section">
+    <div class="content-header">
+        <h2 class="content-title">ライフプランシミュレーター</h2>
+        <p class="content-subtitle">あなたの未来をシミュレーション</p>
+    </div>
+    
+    <div class="content-body">
+        <div class="dashboard-grid">
+            <!-- クイックアクセス -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="material-icons">book</i>
+                        家計簿
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <p>日々の収支を記録して家計を管理</p>
+                    <a href="#" onclick="goToCurrentMonthHousehold()" class="btn btn-primary">
+                        <i class="material-icons">add</i>
+                        今月の家計簿を開く
+                    </a>
+                </div>
+            </div>
+            
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="material-icons">account_balance_wallet</i>
+                        支出・収入管理
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <p>将来の支出と収入を計画</p>
+                    <a href="/expenses/incomes" class="btn btn-primary">
+                        <i class="material-icons">list</i>
+                        支出・収入を管理
+                    </a>
+                </div>
+            </div>
+            
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="material-icons">trending_up</i>
+                        シミュレーション
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <p>将来の資金計画をシミュレーション</p>
+                    <a href="/simulation" class="btn btn-primary">
+                        <i class="material-icons">play_arrow</i>
+                        シミュレーション開始
+                    </a>
+                </div>
+            </div>
+            
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="material-icons">person</i>
+                        マイページ
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <p>アカウント設定とデータ管理</p>
+                    <a href="/mypage" class="btn btn-primary">
+                        <i class="material-icons">settings</i>
+                        設定を開く
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- メニューボタンテスト -->
+        <div class="content-section" style="margin-top: 40px;">
+            <div class="content-header">
+                <h3 class="content-title">メニューボタンテスト</h3>
+            </div>
+            <div class="content-body">
+                <p>ヘッダーのメニューボタン（☰）をクリックして、メニューモーダルが正しく表示されるかテストしてください。</p>
+                
+                <div style="margin-top: 20px; padding: 16px; background: var(--color-background-secondary); border-radius: 8px;">
+                    <h4>テスト手順:</h4>
+                    <ol>
+                        <li>ヘッダー左上のメニューボタン（☰）をクリック</li>
+                        <li>メニューモーダルが表示されることを確認</li>
+                        <li>メニュー項目をクリックして動作を確認</li>
+                        <li>モーダル外をクリックして閉じることを確認</li>
+                        <li>×ボタンで閉じることを確認</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// テスト用の追加機能
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('ダッシュボードページが読み込まれました');
+    
+    // メニューボタンの存在確認
+    const menuToggle = document.getElementById('menu-toggle');
+    if (menuToggle) {
+        console.log('✅ メニューボタンが見つかりました');
+        menuToggle.addEventListener('click', function() {
+            console.log('メニューボタンがクリックされました');
+        });
+    } else {
+        console.log('❌ メニューボタンが見つかりません');
+    }
+    
+    // メニューモーダルの存在確認
+    const menuModal = document.getElementById('menu-modal');
+    if (menuModal) {
+        console.log('✅ メニューモーダルが見つかりました');
+    } else {
+        console.log('❌ メニューモーダルが見つかりません');
+    }
+});
+</script>
+{% endblock %} 
