@@ -1,0 +1,299 @@
+/* ========================================
+   認証ページ専用スタイル
+======================================== */
+
+/* 認証ページのボディ */
+.auth-body {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+/* 認証コンテナ */
+.auth-container {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 400px;
+    padding: var(--spacing-lg);
+}
+
+/* 認証カード */
+.auth-card {
+    background: var(--background-primary);
+    border-radius: var(--border-radius-xl);
+    padding: var(--spacing-xxl);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* 認証ヘッダー */
+.auth-header {
+    text-align: center;
+    margin-bottom: var(--spacing-xxl);
+}
+
+.auth-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: var(--spacing-lg);
+}
+
+.auth-logo i {
+    font-size: 48px;
+    color: var(--primary-color);
+    margin-right: var(--spacing-md);
+}
+
+.auth-logo h1 {
+    font-size: var(--font-size-xxl);
+    font-weight: var(--font-weight-bold);
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.auth-subtitle {
+    font-size: var(--font-size-base);
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+/* 認証フォーム */
+.auth-form {
+    margin-bottom: var(--spacing-xl);
+}
+
+.auth-form .form-label {
+    display: flex;
+    align-items: center;
+    font-weight: var(--font-weight-medium);
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.auth-form .form-label i {
+    margin-right: var(--spacing-sm);
+    color: var(--primary-color);
+    font-size: var(--font-size-lg);
+}
+
+/* パスワード入力 */
+.password-input {
+    position: relative;
+}
+
+.password-toggle {
+    position: absolute;
+    right: var(--spacing-sm);
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: var(--spacing-xs);
+    border-radius: var(--border-radius-sm);
+    transition: color var(--transition-fast);
+}
+
+.password-toggle:hover {
+    color: var(--primary-color);
+}
+
+/* フォームオプション */
+.form-options {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-xl);
+}
+
+/* カスタムチェックボックス */
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+    display: none;
+}
+
+.checkmark {
+    position: relative;
+    width: 20px;
+    height: 20px;
+    background-color: var(--background-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    margin-right: var(--spacing-sm);
+    transition: all var(--transition-fast);
+}
+
+.checkbox-label input[type="checkbox"]:checked + .checkmark {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.checkbox-label input[type="checkbox"]:checked + .checkmark::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+/* フルワイドボタン */
+.btn-full {
+    width: 100%;
+    padding: var(--spacing-md);
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-full:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* 認証フッター */
+.auth-footer {
+    text-align: center;
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--border-color);
+}
+
+.auth-footer p {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin: 0 0 var(--spacing-sm);
+}
+
+.auth-link {
+    color: var(--primary-color);
+    font-weight: var(--font-weight-medium);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+
+.auth-link:hover {
+    color: var(--primary-dark);
+    text-decoration: underline;
+}
+
+/* 背景装飾 */
+.auth-decoration {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.decoration-circle {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    animation: float 6s ease-in-out infinite;
+}
+
+.circle-1 {
+    width: 200px;
+    height: 200px;
+    top: 10%;
+    left: -100px;
+    animation-delay: 0s;
+}
+
+.circle-2 {
+    width: 150px;
+    height: 150px;
+    top: 60%;
+    right: -75px;
+    animation-delay: 2s;
+}
+
+.circle-3 {
+    width: 100px;
+    height: 100px;
+    bottom: 20%;
+    left: 20%;
+    animation-delay: 4s;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-20px) rotate(180deg);
+    }
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .auth-container {
+        max-width: 100%;
+        padding: var(--spacing-md);
+    }
+    
+    .auth-card {
+        padding: var(--spacing-xl);
+    }
+    
+    .auth-logo h1 {
+        font-size: var(--font-size-xl);
+    }
+    
+    .auth-logo i {
+        font-size: 36px;
+    }
+    
+    .form-options {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-md);
+    }
+}
+
+@media (max-width: 480px) {
+    .auth-card {
+        padding: var(--spacing-lg);
+    }
+    
+    .decoration-circle {
+        display: none;
+    }
+}
+
+/* ダークモード対応 */
+@media (prefers-color-scheme: dark) {
+    .auth-body {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    }
+    
+    .auth-card {
+        background: rgba(30, 30, 30, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .decoration-circle {
+        background: rgba(255, 255, 255, 0.05);
+    }
+} 

@@ -1,0 +1,412 @@
+/* ========================================
+   マイページ専用スタイル
+======================================== */
+
+/* ユーザー情報カード */
+.user-info-card {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-xl);
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    border-radius: var(--border-radius-lg);
+    margin-bottom: var(--spacing-xl);
+}
+
+.user-avatar {
+    margin-right: var(--spacing-xl);
+}
+
+.user-avatar i {
+    font-size: 80px;
+    opacity: 0.9;
+}
+
+.user-details h2 {
+    font-size: var(--font-size-xxl);
+    font-weight: var(--font-weight-bold);
+    margin: 0 0 var(--spacing-sm);
+}
+
+.user-details p {
+    font-size: var(--font-size-base);
+    opacity: 0.9;
+    margin: 0 0 var(--spacing-lg);
+}
+
+.user-stats {
+    display: flex;
+    gap: var(--spacing-xl);
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.stat-value {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+    margin-bottom: var(--spacing-xs);
+}
+
+.stat-label {
+    font-size: var(--font-size-sm);
+    opacity: 0.8;
+}
+
+/* メニューグリッド */
+.menu-grid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xl);
+}
+
+.menu-section {
+    background: var(--background-primary);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-xl);
+    border: 1px solid var(--border-color);
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    margin: 0 0 var(--spacing-lg);
+}
+
+.section-title i {
+    margin-right: var(--spacing-md);
+    color: var(--primary-color);
+}
+
+.menu-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--spacing-md);
+}
+
+.menu-card {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-lg);
+    background: var(--background-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    text-decoration: none;
+    color: inherit;
+    transition: all var(--transition-fast);
+    cursor: pointer;
+}
+
+.menu-card:hover {
+    background: var(--background-primary);
+    border-color: var(--primary-light);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--shadow-color);
+}
+
+.menu-card.featured {
+    border-color: var(--primary-color);
+    background: var(--primary-light);
+}
+
+.menu-card.featured:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+.menu-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: var(--border-radius-lg);
+    margin-right: var(--spacing-md);
+    background: var(--background-primary);
+    color: var(--text-secondary);
+    flex-shrink: 0;
+}
+
+.menu-icon.primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.menu-icon.income {
+    background: var(--success-light);
+    color: var(--success-color);
+}
+
+.menu-icon.expense {
+    background: var(--error-light);
+    color: var(--error-color);
+}
+
+.menu-icon.warning {
+    background: var(--warning-light);
+    color: var(--warning-color);
+}
+
+.menu-icon.info {
+    background: var(--info-light);
+    color: var(--info-color);
+}
+
+.menu-content {
+    flex: 1;
+}
+
+.menu-content h4 {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    margin: 0 0 var(--spacing-xs);
+}
+
+.menu-content p {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.menu-arrow {
+    color: var(--text-disabled);
+    font-size: var(--font-size-sm);
+    margin-left: var(--spacing-sm);
+}
+
+.menu-card:hover .menu-arrow {
+    color: var(--primary-color);
+}
+
+/* FAB (Floating Action Button) */
+.fab-container {
+    position: fixed;
+    bottom: var(--spacing-xl);
+    right: var(--spacing-xl);
+    z-index: 1000;
+}
+
+.fab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: none;
+    background: var(--primary-color);
+    color: white;
+    font-size: var(--font-size-lg);
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: all var(--transition-fast);
+}
+
+.fab:hover {
+    background: var(--primary-dark);
+    transform: scale(1.1);
+}
+
+.main-fab {
+    position: relative;
+    z-index: 1001;
+}
+
+.fab-menu {
+    position: absolute;
+    bottom: 70px;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all var(--transition-normal);
+    pointer-events: none;
+}
+
+.fab-menu.active {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.sub-fab {
+    width: 48px;
+    height: 48px;
+    background: var(--background-primary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    position: relative;
+}
+
+.sub-fab:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+    transform: scale(1.1);
+}
+
+.sub-fab::before {
+    content: attr(title);
+    position: absolute;
+    right: 60px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--text-primary);
+    color: var(--background-primary);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    font-size: var(--font-size-xs);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--transition-fast);
+}
+
+.sub-fab:hover::before {
+    opacity: 1;
+}
+
+/* ヘルプモーダル */
+.help-content {
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.help-section {
+    margin-bottom: var(--spacing-xl);
+}
+
+.help-section h4 {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    margin: 0 0 var(--spacing-md);
+    border-bottom: 2px solid var(--primary-color);
+    padding-bottom: var(--spacing-xs);
+}
+
+.help-section ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.help-section li {
+    padding: var(--spacing-xs) 0;
+    padding-left: var(--spacing-lg);
+    position: relative;
+}
+
+.help-section li::before {
+    content: '•';
+    color: var(--primary-color);
+    font-weight: bold;
+    position: absolute;
+    left: 0;
+}
+
+.faq-item {
+    margin-bottom: var(--spacing-lg);
+    padding: var(--spacing-md);
+    background: var(--background-secondary);
+    border-radius: var(--border-radius-md);
+    border-left: 4px solid var(--primary-color);
+}
+
+.faq-item strong {
+    color: var(--text-primary);
+    display: block;
+    margin-bottom: var(--spacing-sm);
+}
+
+.faq-item p {
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .user-info-card {
+        flex-direction: column;
+        text-align: center;
+        padding: var(--spacing-lg);
+    }
+    
+    .user-avatar {
+        margin-right: 0;
+        margin-bottom: var(--spacing-lg);
+    }
+    
+    .user-stats {
+        justify-content: center;
+        gap: var(--spacing-lg);
+    }
+    
+    .menu-cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .menu-card {
+        padding: var(--spacing-md);
+    }
+    
+    .menu-icon {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .fab-container {
+        bottom: var(--spacing-lg);
+        right: var(--spacing-lg);
+    }
+    
+    .sub-fab::before {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .user-avatar i {
+        font-size: 60px;
+    }
+    
+    .user-details h2 {
+        font-size: var(--font-size-xl);
+    }
+    
+    .menu-section {
+        padding: var(--spacing-lg);
+    }
+    
+    .section-title {
+        font-size: var(--font-size-base);
+    }
+    
+    .fab,
+    .sub-fab {
+        width: 48px;
+        height: 48px;
+    }
+}
+
+/* ダークモード対応 */
+@media (prefers-color-scheme: dark) {
+    .user-info-card {
+        background: linear-gradient(135deg, #1a237e, #3949ab);
+    }
+    
+    .sub-fab::before {
+        background: var(--background-primary);
+        color: var(--text-primary);
+        border: 1px solid var(--border-color);
+    }
+} 

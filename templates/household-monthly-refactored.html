@@ -1,0 +1,494 @@
+{% extends "base-refactored.html" %}
+
+{% block title %}{{ year }}年{{ month }}月の家計簿 - ライフプランアプリ{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/household.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-content">
+        <h1 class="page-title">
+            <i class="material-icons">account_balance_wallet</i>
+            {{ year }}年{{ month }}月の家計簿
+        </h1>
+        <div class="page-actions">
+            <button class="btn btn-primary" onclick="openAddEntryModal()">
+                <i class="material-icons">add</i>
+                収支を追加
+            </button>
+        </div>
+    </div>
+    
+    <!-- 月ナビゲーション -->
+    <div class="month-navigation">
+        <button class="month-nav-btn" onclick="changeMonth(-1)">
+            <i class="material-icons">chevron_left</i>
+        </button>
+        
+        <div class="month-display">
+            <h2>{{ year }}年{{ month }}月</h2>
+        </div>
+        
+        <button class="month-nav-btn" onclick="changeMonth(1)">
+            <i class="material-icons">chevron_right</i>
+        </button>
+    </div>
+</div>
+
+<!-- サマリーカード -->
+<div class="grid grid-cols-4 mb-4">
+    <div class="card summary-card income-summary">
+        <div class="summary-icon">
+            <i class="material-icons">trending_up</i>
+        </div>
+        <div class="summary-content">
+            <h3>今月の収入</h3>
+            <p class="summary-amount" id="total-income">¥0</p>
+        </div>
+    </div>
+    
+    <div class="card summary-card expense-summary">
+        <div class="summary-icon">
+            <i class="material-icons">trending_down</i>
+        </div>
+        <div class="summary-content">
+            <h3>今月の支出</h3>
+            <p class="summary-amount" id="total-expense">¥0</p>
+        </div>
+    </div>
+    
+    <div class="card summary-card balance-summary">
+        <div class="summary-icon">
+            <i class="material-icons">account_balance</i>
+        </div>
+        <div class="summary-content">
+            <h3>収支</h3>
+            <p class="summary-amount" id="balance">¥0</p>
+        </div>
+    </div>
+    
+    <div class="card summary-card target-summary">
+        <div class="summary-icon">
+            <i class="material-icons">flag</i>
+        </div>
+        <div class="summary-content">
+            <h3>予算達成率</h3>
+            <p class="summary-amount" id="budget-achievement">75%</p>
+        </div>
+    </div>
+</div>
+
+<!-- フィルターとソート -->
+<div class="card mb-4">
+    <div class="filter-controls">
+        <div class="filter-group">
+            <label>カテゴリ</label>
+            <select class="form-control" id="category-filter">
+                <option value="">すべて</option>
+                <option value="income">収入</option>
+                <option value="expense">支出</option>
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <label>期間</label>
+            <select class="form-control" id="period-filter">
+                <option value="all">全期間</option>
+                <option value="week">今週</option>
+                <option value="month">今月</option>
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <label>並び順</label>
+            <select class="form-control" id="sort-filter">
+                <option value="date-desc">日付（新しい順）</option>
+                <option value="date-asc">日付（古い順）</option>
+                <option value="amount-desc">金額（高い順）</option>
+                <option value="amount-asc">金額（低い順）</option>
+            </select>
+        </div>
+        
+        <button class="btn btn-secondary" onclick="clearFilters()">
+            <i class="material-icons">clear</i>
+            フィルターをクリア
+        </button>
+    </div>
+</div>
+
+<!-- エントリーリスト -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="material-icons">list</i>
+            収支一覧
+        </h3>
+        <div class="card-actions">
+            <button class="btn btn-sm" onclick="toggleViewMode()">
+                <i class="material-icons" id="view-mode-icon">view_list</i>
+            </button>
+        </div>
+    </div>
+    
+    <div class="card-body">
+        <div class="entry-list" id="entry-list">
+            {% for entry in entries %}
+            <div class="entry-item {{ entry.category_type }}" data-date="{{ entry.date }}" data-amount="{{ entry.amount }}" data-category="{{ entry.category_type }}">
+                <div class="entry-date">
+                    <span class="date-day">{{ entry.date.strftime('%d') }}</span>
+                    <span class="date-month">{{ entry.date.strftime('%m/%Y') }}</span>
+                </div>
+                
+                <div class="entry-category">
+                    <div class="category-icon {{ entry.category_type }}">
+                        {% if entry.category_type == 'income' %}
+                            <i class="material-icons">add_circle</i>
+                        {% else %}
+                            <i class="material-icons">remove_circle</i>
+                        {% endif %}
+                    </div>
+                    <div class="category-info">
+                        <h4>{{ entry.description or 'カテゴリ' + entry.category_id|string }}</h4>
+                        <p>{{ entry.payment_method or '現金' }}</p>
+                    </div>
+                </div>
+                
+                <div class="entry-amount {{ entry.category_type }}">
+                    {% if entry.category_type == 'income' %}
+                        +¥{{ "{:,.0f}".format(entry.amount) }}
+                    {% else %}
+                        -¥{{ "{:,.0f}".format(entry.amount) }}
+                    {% endif %}
+                </div>
+                
+                <div class="entry-actions">
+                    <button class="btn-icon" onclick="editEntry({{ entry.id }})">
+                        <i class="material-icons">edit</i>
+                    </button>
+                    <button class="btn-icon danger" onclick="deleteEntry({{ entry.id }})">
+                        <i class="material-icons">delete</i>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        {% if not entries %}
+        <div class="empty-state">
+            <i class="material-icons">receipt_long</i>
+            <h3>まだ収支データがありません</h3>
+            <p>収入や支出を追加して家計簿を始めましょう</p>
+            <button class="btn btn-primary" onclick="openAddEntryModal()">
+                最初の収支を追加
+            </button>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- 収支追加モーダル -->
+<div class="modal" id="add-entry-modal">
+    <div class="modal-header">
+        <h3 class="modal-title">収支を追加</h3>
+        <button class="modal-close" onclick="closeModal('add-entry')">
+            <i class="material-icons">close</i>
+        </button>
+    </div>
+    <div class="modal-body">
+        <form id="entry-form">
+            <div class="tabs">
+                <button type="button" class="tab active" onclick="switchTab('income')">収入</button>
+                <button type="button" class="tab" onclick="switchTab('expense')">支出</button>
+            </div>
+            
+            <div class="tab-content active" id="income-tab">
+                <div class="form-group">
+                    <label class="form-label">金額</label>
+                    <input type="number" class="form-control" id="income-amount" placeholder="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">カテゴリ</label>
+                    <select class="form-control" id="income-category">
+                        {% for category in income_categories %}
+                        <option value="{{ category.id }}">{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">説明</label>
+                    <input type="text" class="form-control" id="income-description" placeholder="給与、副業など">
+                </div>
+            </div>
+            
+            <div class="tab-content" id="expense-tab">
+                <div class="form-group">
+                    <label class="form-label">金額</label>
+                    <input type="number" class="form-control" id="expense-amount" placeholder="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">カテゴリ</label>
+                    <select class="form-control" id="expense-category">
+                        {% for category in expense_categories %}
+                        <option value="{{ category.id }}">{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">説明</label>
+                    <input type="text" class="form-control" id="expense-description" placeholder="食費、交通費など">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">日付</label>
+                <input type="date" class="form-control" id="entry-date" value="{{ moment().format('YYYY-MM-DD') }}">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">支払い方法</label>
+                <select class="form-control" id="payment-method">
+                    <option value="現金">現金</option>
+                    <option value="クレジットカード">クレジットカード</option>
+                    <option value="デビットカード">デビットカード</option>
+                    <option value="電子マネー">電子マネー</option>
+                    <option value="銀行振込">銀行振込</option>
+                </select>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" onclick="closeModal('add-entry')">キャンセル</button>
+        <button class="btn btn-primary" onclick="submitEntry()">追加</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentYear = {{ year }};
+let currentMonth = {{ month }};
+let currentTab = 'income';
+
+// 初期化
+document.addEventListener('DOMContentLoaded', function() {
+    updateSummary();
+    setTodayDate();
+});
+
+// サマリー更新
+function updateSummary() {
+    const entries = document.querySelectorAll('.entry-item');
+    let totalIncome = 0;
+    let totalExpense = 0;
+    
+    entries.forEach(entry => {
+        const amount = parseFloat(entry.dataset.amount);
+        const category = entry.dataset.category;
+        
+        if (category === 'income') {
+            totalIncome += amount;
+        } else {
+            totalExpense += amount;
+        }
+    });
+    
+    const balance = totalIncome - totalExpense;
+    
+    document.getElementById('total-income').textContent = '¥' + totalIncome.toLocaleString();
+    document.getElementById('total-expense').textContent = '¥' + totalExpense.toLocaleString();
+    document.getElementById('balance').textContent = '¥' + balance.toLocaleString();
+    
+    // 収支に応じて色を変更
+    const balanceElement = document.getElementById('balance');
+    balanceElement.className = 'summary-amount ' + (balance >= 0 ? 'positive' : 'negative');
+}
+
+// 月変更
+function changeMonth(delta) {
+    currentMonth += delta;
+    if (currentMonth > 12) {
+        currentMonth = 1;
+        currentYear++;
+    } else if (currentMonth < 1) {
+        currentMonth = 12;
+        currentYear--;
+    }
+    
+    window.location.href = `{{ url_for('household.monthly') }}?year=${currentYear}&month=${currentMonth}`;
+}
+
+// モーダル制御
+function openAddEntryModal() {
+    const modal = document.getElementById('add-entry-modal');
+    const overlay = document.getElementById('overlay');
+    
+    modal.classList.add('active');
+    overlay.classList.add('active');
+}
+
+function closeModal(type) {
+    const modal = document.getElementById(type + '-modal');
+    const overlay = document.getElementById('overlay');
+    
+    modal.classList.remove('active');
+    overlay.classList.remove('active');
+}
+
+// タブ切り替え
+function switchTab(tabName) {
+    currentTab = tabName;
+    
+    // タブボタンの状態更新
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    
+    // タブコンテンツの表示切り替え
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    document.getElementById(tabName + '-tab').classList.add('active');
+}
+
+// 今日の日付を設定
+function setTodayDate() {
+    const today = new Date();
+    const dateString = today.toISOString().split('T')[0];
+    document.getElementById('entry-date').value = dateString;
+}
+
+// エントリー送信
+async function submitEntry() {
+    const isIncome = currentTab === 'income';
+    const amount = document.getElementById(currentTab + '-amount').value;
+    const categoryId = document.getElementById(currentTab + '-category').value;
+    const description = document.getElementById(currentTab + '-description').value;
+    const date = document.getElementById('entry-date').value;
+    const paymentMethod = document.getElementById('payment-method').value;
+    
+    if (!amount || !categoryId) {
+        alert('金額とカテゴリは必須です');
+        return;
+    }
+    
+    try {
+        const response = await fetch('{{ url_for("household.create_entry") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                amount: parseFloat(amount),
+                category_id: parseInt(categoryId),
+                category_type: currentTab,
+                description: description,
+                date: date,
+                payment_method: paymentMethod
+            })
+        });
+        
+        if (response.ok) {
+            location.reload();
+        } else {
+            alert('エントリーの追加に失敗しました');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('ネットワークエラーが発生しました');
+    }
+}
+
+// フィルター機能
+function applyFilters() {
+    const categoryFilter = document.getElementById('category-filter').value;
+    const sortFilter = document.getElementById('sort-filter').value;
+    const entries = Array.from(document.querySelectorAll('.entry-item'));
+    
+    // フィルター適用
+    entries.forEach(entry => {
+        const category = entry.dataset.category;
+        const visible = !categoryFilter || category === categoryFilter;
+        entry.style.display = visible ? 'flex' : 'none';
+    });
+    
+    // ソート適用
+    const visibleEntries = entries.filter(entry => entry.style.display !== 'none');
+    const container = document.getElementById('entry-list');
+    
+    visibleEntries.sort((a, b) => {
+        switch (sortFilter) {
+            case 'date-asc':
+                return new Date(a.dataset.date) - new Date(b.dataset.date);
+            case 'date-desc':
+                return new Date(b.dataset.date) - new Date(a.dataset.date);
+            case 'amount-asc':
+                return parseFloat(a.dataset.amount) - parseFloat(b.dataset.amount);
+            case 'amount-desc':
+                return parseFloat(b.dataset.amount) - parseFloat(a.dataset.amount);
+            default:
+                return 0;
+        }
+    });
+    
+    // 再配置
+    visibleEntries.forEach(entry => container.appendChild(entry));
+}
+
+// フィルターイベント
+document.getElementById('category-filter').addEventListener('change', applyFilters);
+document.getElementById('sort-filter').addEventListener('change', applyFilters);
+
+// フィルタークリア
+function clearFilters() {
+    document.getElementById('category-filter').value = '';
+    document.getElementById('period-filter').value = 'all';
+    document.getElementById('sort-filter').value = 'date-desc';
+    applyFilters();
+}
+
+// エントリー編集
+function editEntry(entryId) {
+    // 編集機能の実装
+    console.log('Edit entry:', entryId);
+}
+
+// エントリー削除
+async function deleteEntry(entryId) {
+    if (!confirm('この収支データを削除しますか？')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/household/entry/${entryId}/delete`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            location.reload();
+        } else {
+            alert('削除に失敗しました');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('ネットワークエラーが発生しました');
+    }
+}
+
+// 表示モード切り替え
+function toggleViewMode() {
+    const icon = document.getElementById('view-mode-icon');
+    const entryList = document.getElementById('entry-list');
+    
+    if (entryList.classList.contains('grid-view')) {
+        entryList.classList.remove('grid-view');
+        icon.textContent = 'view_module';
+    } else {
+        entryList.classList.add('grid-view');
+        icon.textContent = 'view_list';
+    }
+}
+</script>
+{% endblock %} 

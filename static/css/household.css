@@ -198,3 +198,437 @@
         padding: 12px;
     }
 }
+
+/* ========================================
+   家計簿ページ専用スタイル
+======================================== */
+
+/* ページヘッダー */
+.page-header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-lg);
+}
+
+.page-title {
+    display: flex;
+    align-items: center;
+    font-size: var(--font-size-xxl);
+    font-weight: var(--font-weight-bold);
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.page-title i {
+    margin-right: var(--spacing-md);
+    color: var(--primary-color);
+}
+
+.page-actions {
+    display: flex;
+    gap: var(--spacing-md);
+}
+
+/* 月ナビゲーション */
+.month-navigation {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-lg);
+    background: var(--background-secondary);
+    border-radius: var(--border-radius-lg);
+    margin-bottom: var(--spacing-xl);
+}
+
+.month-nav-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    background: var(--background-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-round);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.month-nav-btn:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.month-display h2 {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    margin: 0;
+}
+
+/* サマリーカード */
+.summary-card {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-lg);
+    transition: transform var(--transition-fast);
+}
+
+.summary-card:hover {
+    transform: translateY(-2px);
+}
+
+.summary-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    border-radius: var(--border-radius-lg);
+    margin-right: var(--spacing-lg);
+}
+
+.income-summary .summary-icon {
+    background: var(--success-color);
+    color: white;
+}
+
+.expense-summary .summary-icon {
+    background: var(--error-color);
+    color: white;
+}
+
+.balance-summary .summary-icon {
+    background: var(--info-color);
+    color: white;
+}
+
+.target-summary .summary-icon {
+    background: var(--warning-color);
+    color: white;
+}
+
+.summary-content h3 {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin: 0 0 var(--spacing-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.summary-amount {
+    font-size: var(--font-size-xxl);
+    font-weight: var(--font-weight-bold);
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.summary-amount.positive {
+    color: var(--success-color);
+}
+
+.summary-amount.negative {
+    color: var(--error-color);
+}
+
+/* フィルターコントロール */
+.filter-controls {
+    display: flex;
+    align-items: end;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-lg);
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    min-width: 120px;
+}
+
+.filter-group label {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--text-secondary);
+}
+
+/* エントリーリスト */
+.entry-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.entry-list.grid-view {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--spacing-md);
+}
+
+.entry-item {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-md);
+    background: var(--background-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    transition: all var(--transition-fast);
+}
+
+.entry-item:hover {
+    background: var(--background-primary);
+    border-color: var(--primary-light);
+    box-shadow: 0 2px 8px var(--shadow-color);
+}
+
+.entry-date {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 60px;
+    margin-right: var(--spacing-md);
+}
+
+.date-day {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--text-primary);
+    line-height: 1;
+}
+
+.date-month {
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+    margin-top: var(--spacing-xs);
+}
+
+.entry-category {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    margin-right: var(--spacing-md);
+}
+
+.category-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--border-radius-round);
+    margin-right: var(--spacing-md);
+}
+
+.category-icon.income {
+    background: var(--success-light);
+    color: var(--success-color);
+}
+
+.category-icon.expense {
+    background: var(--error-light);
+    color: var(--error-color);
+}
+
+.category-info h4 {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+    color: var(--text-primary);
+    margin: 0 0 var(--spacing-xs);
+}
+
+.category-info p {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.entry-amount {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    margin-right: var(--spacing-md);
+}
+
+.entry-amount.income {
+    color: var(--success-color);
+}
+
+.entry-amount.expense {
+    color: var(--error-color);
+}
+
+.entry-actions {
+    display: flex;
+    gap: var(--spacing-xs);
+}
+
+.btn-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: none;
+    border: none;
+    border-radius: var(--border-radius-sm);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.btn-icon:hover {
+    background: var(--background-primary);
+    color: var(--primary-color);
+}
+
+.btn-icon.danger:hover {
+    background: var(--error-light);
+    color: var(--error-color);
+}
+
+/* 空の状態 */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-xxl);
+    text-align: center;
+}
+
+.empty-state i {
+    font-size: 64px;
+    color: var(--text-disabled);
+    margin-bottom: var(--spacing-lg);
+}
+
+.empty-state h3 {
+    font-size: var(--font-size-lg);
+    color: var(--text-secondary);
+    margin: 0 0 var(--spacing-md);
+}
+
+.empty-state p {
+    font-size: var(--font-size-base);
+    color: var(--text-disabled);
+    margin: 0 0 var(--spacing-xl);
+}
+
+/* タブ */
+.tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: var(--spacing-lg);
+}
+
+.tab {
+    flex: 1;
+    padding: var(--spacing-md);
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-secondary);
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.tab.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+.tab:hover:not(.active) {
+    color: var(--text-primary);
+    background: var(--background-secondary);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 1200px) {
+    .grid-cols-4 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .page-header-content {
+        flex-direction: column;
+        gap: var(--spacing-md);
+        align-items: stretch;
+    }
+    
+    .grid-cols-4 {
+        grid-template-columns: 1fr;
+    }
+    
+    .filter-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .filter-group {
+        min-width: auto;
+    }
+    
+    .entry-item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--spacing-md);
+    }
+    
+    .entry-date {
+        flex-direction: row;
+        justify-content: space-between;
+        min-width: auto;
+        margin-right: 0;
+    }
+    
+    .entry-category {
+        margin-right: 0;
+    }
+    
+    .entry-amount {
+        margin-right: 0;
+        text-align: center;
+        font-size: var(--font-size-xl);
+    }
+    
+    .entry-actions {
+        justify-content: center;
+    }
+    
+    .month-navigation {
+        gap: var(--spacing-md);
+    }
+    
+    .month-display h2 {
+        font-size: var(--font-size-lg);
+    }
+}
+
+@media (max-width: 480px) {
+    .summary-card {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .summary-icon {
+        margin-right: 0;
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .entry-list.grid-view {
+        grid-template-columns: 1fr;
+    }
+}

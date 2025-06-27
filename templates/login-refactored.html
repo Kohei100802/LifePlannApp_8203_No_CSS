@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ログイン - ライフプランアプリ</title>
+    
+    <!-- ファビコン -->
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+</head>
+<body class="auth-body">
+    <div class="auth-container">
+        <div class="auth-card">
+            <!-- ヘッダー -->
+            <div class="auth-header">
+                <div class="auth-logo">
+                    <i class="material-icons">trending_up</i>
+                    <h1>ライフプランアプリ</h1>
+                </div>
+                <p class="auth-subtitle">アカウントにログインしてください</p>
+            </div>
+            
+            <!-- フラッシュメッセージ -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <!-- ログインフォーム -->
+            <form class="auth-form" id="login-form">
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="material-icons">person</i>
+                        ユーザー名
+                    </label>
+                    <input type="text" class="form-control" id="username" name="username" required autocomplete="username">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="material-icons">lock</i>
+                        パスワード
+                    </label>
+                    <div class="password-input">
+                        <input type="password" class="form-control" id="password" name="password" required autocomplete="current-password">
+                        <button type="button" class="password-toggle" onclick="togglePassword()">
+                            <i class="material-icons" id="password-icon">visibility</i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="form-options">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="remember" name="remember">
+                        <span class="checkmark"></span>
+                        ログイン状態を保持
+                    </label>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-full" id="login-btn">
+                    <span class="btn-text">ログイン</span>
+                    <div class="spinner" id="login-spinner" style="display: none;"></div>
+                </button>
+            </form>
+            
+            <!-- フッター -->
+            <div class="auth-footer">
+                <p>アカウントをお持ちでない方は</p>
+                <a href="{{ url_for('auth.register') }}" class="auth-link">新規登録</a>
+            </div>
+        </div>
+        
+        <!-- 背景装飾 -->
+        <div class="auth-decoration">
+            <div class="decoration-circle circle-1"></div>
+            <div class="decoration-circle circle-2"></div>
+            <div class="decoration-circle circle-3"></div>
+        </div>
+    </div>
+    
+    <script>
+        // ログインフォーム処理
+        document.getElementById('login-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const loginBtn = document.getElementById('login-btn');
+            const btnText = loginBtn.querySelector('.btn-text');
+            const spinner = document.getElementById('login-spinner');
+            
+            // ローディング状態
+            loginBtn.disabled = true;
+            btnText.style.display = 'none';
+            spinner.style.display = 'inline-block';
+            
+            const formData = {
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value,
+                remember: document.getElementById('remember').checked
+            };
+            
+            try {
+                const response = await fetch('{{ url_for("auth.login") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // ログイン成功
+                    window.location.href = data.redirect_url || '{{ url_for("main.dashboard") }}';
+                } else {
+                    // エラー表示
+                    showAlert(data.message || 'ログインに失敗しました', 'error');
+                }
+            } catch (error) {
+                showAlert('ネットワークエラーが発生しました', 'error');
+            } finally {
+                // ローディング状態を解除
+                loginBtn.disabled = false;
+                btnText.style.display = 'inline';
+                spinner.style.display = 'none';
+            }
+        });
+        
+        // パスワード表示切り替え
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const passwordIcon = document.getElementById('password-icon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                passwordIcon.textContent = 'visibility_off';
+            } else {
+                passwordInput.type = 'password';
+                passwordIcon.textContent = 'visibility';
+            }
+        }
+        
+        // アラート表示
+        function showAlert(message, type) {
+            // 既存のアラートを削除
+            const existingAlert = document.querySelector('.alert');
+            if (existingAlert) {
+                existingAlert.remove();
+            }
+            
+            // 新しいアラートを作成
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            
+            // フォームの前に挿入
+            const form = document.querySelector('.auth-form');
+            form.parentNode.insertBefore(alert, form);
+            
+            // 5秒後に自動削除
+            setTimeout(() => {
+                if (alert.parentNode) {
+                    alert.remove();
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html> 
