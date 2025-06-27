@@ -1,146 +1,247 @@
 {% extends "base-new.html" %}
 
-{% block title %}給与収入 - {% if income_id %}編集{% else %}新規登録{% endif %}{% endblock %}
-{% block page_title %}給与収入 - {% if income_id %}編集{% else %}新規登録{% endif %}{% endblock %}
+{% block title %}給与収入 - {% if income_id %}編集{% else %}新規登録{% endif %} - ライフプランアプリ{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/household.css') }}">
+{% endblock %}
 
 {% block content %}
+<div class="page-header">
+    <div class="page-header-content">
+        <h1 class="page-title">
+            <i class="material-icons">work</i>
+            {% if income_id %}給与収入編集{% else %}給与収入新規登録{% endif %}
+        </h1>
+        <div class="page-actions">
+            <a href="/incomes/salary" class="btn btn-secondary">
+                <i class="material-icons">arrow_back</i>
+                一覧に戻る
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- 基本情報カード -->
 <div class="card">
     <div class="card-header">
         <h3 class="card-title">
-            {% if income_id %}
-                給与収入編集 <span class="badge badge-secondary">#{{ income_id }}</span>
-            {% else %}
-                給与収入新規登録
-            {% endif %}
+            <i class="material-icons">edit</i>
+            基本情報
         </h3>
-        <a href="/incomes/salary" class="btn btn-secondary btn-sm">
-            <i class="material-icons">arrow_back</i> 一覧に戻る
-        </a>
     </div>
     <div class="card-body">
         <form id="salaryIncomeForm">
             <input type="hidden" name="id" value="{{ income_id or '' }}">
             
-            <div class="form-group">
+            <div class="form-row">
                 <label class="form-label">項目名 <span class="text-danger">*</span></label>
                 <input type="text" name="name" class="form-control" placeholder="例：本業給与" required>
             </div>
             
-            <div class="form-group">
+            <div class="form-row">
                 <label class="form-label">説明</label>
                 <input type="text" name="description" class="form-control" placeholder="詳細説明（任意）">
             </div>
             
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label class="form-label">開始年 <span class="text-danger">*</span></label>
-                        <select name="start_year" class="form-control" required>
-                            <!-- JavaScript で動的に生成 -->
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label class="form-label">終了年 <span class="text-danger">*</span></label>
-                        <select name="end_year" class="form-control" required>
-                            <!-- JavaScript で動的に生成 -->
-                        </select>
-                    </div>
-                </div>
+            <div class="form-row">
+                <label class="form-label">開始年 <span class="text-danger">*</span></label>
+                <select name="start_year" class="form-control" required>
+                    <!-- JavaScript で動的に生成 -->
+                </select>
             </div>
             
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label class="form-label">月額給与（万円） <span class="text-danger">*</span></label>
-                        <input type="number" name="monthly_amount" class="form-control" placeholder="30" min="0" step="0.1" required>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label class="form-label">年間ボーナス（万円）</label>
-                        <input type="number" name="annual_bonus" class="form-control" placeholder="100" min="0" step="0.1">
-                    </div>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">昇給率（年率%）</label>
-                <input type="number" name="salary_increase_rate" class="form-control" placeholder="3.0" min="0" max="20" step="0.1" value="3.0">
-                <small class="form-text text-muted">年間の給与上昇率を設定してください</small>
-            </div>
-            
-            <!-- 上限設定 -->
-            <div class="form-group">
-                <div class="form-check">
-                    <input type="checkbox" class="form-check-input" id="has_cap" name="has_cap" onchange="toggleCapInputs()">
-                    <label class="form-check-label" for="has_cap">
-                        給与に上限を設定する
-                    </label>
-                </div>
-            </div>
-            
-            <div id="cap-settings" class="cap-settings" style="display: none;">
-                <div class="form-group">
-                    <label class="form-label">年間収入上限（万円）</label>
-                    <input type="number" name="annual_income_cap" class="form-control" placeholder="1000" min="0" step="0.1">
-                    <small class="form-text text-muted">年間の総収入（月給×12＋ボーナス）の上限額</small>
-                </div>
-            </div>
-            
-            <div class="form-group mt-4">
-                <div class="row">
-                    <div class="col-md-6">
-                        <a href="/incomes/salary" class="btn btn-secondary" id="cancelButton">キャンセル</a>
-                        <button type="submit" class="btn btn-primary btn-block">
-                            <i class="material-icons">arrow_forward</i>
-                            <span class="submit-text">
-                                {% if income_id %}給与所得を更新{% else %}給与所得を登録{% endif %}
-                            </span>
-                        </button>
-                    </div>
-                </div>
+            <div class="form-row">
+                <label class="form-label">終了年 <span class="text-danger">*</span></label>
+                <select name="end_year" class="form-control" required>
+                    <!-- JavaScript で動的に生成 -->
+                </select>
             </div>
         </form>
     </div>
 </div>
 
-<!-- FAB -->
-<div class="form-fab-container" id="fabContainer">
-    <a href="/incomes/salary" class="fab-button cancel" id="cancelFabButton">
-        <i class="material-icons">close</i>
-    </a>
-    <button type="button" class="fab-button submit" id="formFabButton" onclick="submitFormViaFab()" title="保存">
-        {% if income_id %}
-            <i class="material-icons">arrow_forward</i>
-        {% else %}
-            <i class="material-icons">add</i>
-        {% endif %}
-    </button>
+<!-- 給与情報カード -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="material-icons">monetization_on</i>
+            給与情報
+        </h3>
+    </div>
+    <div class="card-body">
+        <div class="form-row">
+            <label class="form-label">月額給与（万円） <span class="text-danger">*</span></label>
+            <div>
+                <input type="number" name="monthly_amount" class="form-control" placeholder="30" min="0" step="0.1" required form="salaryIncomeForm">
+                <small class="form-text text-muted">税込み月額給与を入力してください</small>
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <label class="form-label">年間ボーナス（万円）</label>
+            <div>
+                <input type="number" name="annual_bonus" class="form-control" placeholder="100" min="0" step="0.1" form="salaryIncomeForm">
+                <small class="form-text text-muted">年間のボーナス総額を入力してください</small>
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <label class="form-label">昇給率（年率%）</label>
+            <div>
+                <input type="number" name="salary_increase_rate" class="form-control" placeholder="3.0" min="0" max="20" step="0.1" value="3.0" form="salaryIncomeForm">
+                <small class="form-text text-muted">年間の給与上昇率を設定してください</small>
+            </div>
+        </div>
+    </div>
 </div>
+
+<!-- 上限設定カード -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="material-icons">trending_up</i>
+            上限設定
+        </h3>
+    </div>
+    <div class="card-body">
+        <div class="form-group mb-4">
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="has_cap" name="has_cap" onchange="toggleCapInputs()" form="salaryIncomeForm">
+                <label class="form-check-label" for="has_cap">
+                    給与に上限を設定する
+                </label>
+                <small class="form-text text-muted">給与の上限額を設定したい場合はチェックしてください</small>
+            </div>
+        </div>
+        
+        <div id="cap-settings" class="cap-settings" style="display: none;">
+            <div class="form-group">
+                <label class="form-label">年間収入上限（万円）</label>
+                <input type="number" name="annual_income_cap" class="form-control" placeholder="1000" min="0" step="0.1" form="salaryIncomeForm">
+                <small class="form-text text-muted">年間の総収入（月給×12＋ボーナス）の上限額</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- プレビューカード -->
+<div class="card" id="preview-card" style="display: none;">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="material-icons">visibility</i>
+            収入プレビュー
+        </h3>
+    </div>
+    <div class="card-body">
+        <div class="grid grid-cols-2 compact-mobile gap-4">
+            <div class="summary-card">
+                <div class="summary-icon income">
+                    <i class="material-icons">today</i>
+                </div>
+                <div class="summary-content">
+                    <h4>月額収入</h4>
+                    <p class="summary-amount" id="preview-monthly">¥0</p>
+                </div>
+            </div>
+            
+            <div class="summary-card">
+                <div class="summary-icon income">
+                    <i class="material-icons">calendar_today</i>
+                </div>
+                <div class="summary-content">
+                    <h4>年間収入</h4>
+                    <p class="summary-amount" id="preview-annual">¥0</p>
+                </div>
+            </div>
+            
+        </div>
+        <div class="grid grid-cols-1 compact-mobile gap-4">
+            <div class="summary-card">
+                <div class="summary-icon warning">
+                    <i class="material-icons">trending_up</i>
+                </div>
+                <div class="summary-content">
+                    <h4>10年後予想</h4>
+                    <p class="summary-amount" id="preview-future">¥0</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 操作ボタン -->
+<div class="card">
+    <div class="card-body">
+        <div class="flex justify-between items-center">
+            <a href="/incomes/salary" class="btn btn-secondary">
+                <i class="material-icons">arrow_back</i>
+                キャンセル
+            </a>
+            <div class="flex gap-2">
+                <button type="button" class="btn btn-outline" onclick="togglePreview()">
+                    <i class="material-icons">visibility</i>
+                    プレビュー
+                </button>
+                <button type="submit" class="btn btn-primary" form="salaryIncomeForm">
+                    <i class="material-icons">save</i>
+                    {% if income_id %}更新{% else %}登録{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // 年度セレクトボックスを初期化
     initializeYearSelects();
     
-    // 編集モードの場合はデータを読み込み
     const incomeId = document.querySelector('[name="id"]').value;
     if (incomeId) {
         loadIncomeData(incomeId);
     }
     
-    // フォーム送信イベント設定
     setupFormHandler();
-    
-    // フローティングボタンの初期設定
-    setupFormFab();
+    setupAutoPreview();
 });
 
-// 上限設定の表示切り替え
+function initializeYearSelects() {
+    const currentYear = new Date().getFullYear();
+    const startYearSelect = document.querySelector('[name="start_year"]');
+    const endYearSelect = document.querySelector('[name="end_year"]');
+    
+    for (let year = currentYear; year <= currentYear + 50; year++) {
+        const startOption = new Option(year + '年', year);
+        const endOption = new Option(year + '年', year);
+        
+        if (year === currentYear) startOption.selected = true;
+        if (year === currentYear + 30) endOption.selected = true;
+        
+        startYearSelect.add(startOption);
+        endYearSelect.add(endOption);
+    }
+}
+
+function setupFormHandler() {
+    const form = document.getElementById('salaryIncomeForm');
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        await handleFormSubmit(this);
+    });
+}
+
+function setupAutoPreview() {
+    const form = document.getElementById('salaryIncomeForm');
+    const inputs = form.querySelectorAll('input[type="number"]');
+    
+    inputs.forEach(input => {
+        input.addEventListener('input', updatePreview);
+    });
+}
+
 function toggleCapInputs() {
     const hasCapCheckbox = document.getElementById('has_cap');
     const capSettings = document.getElementById('cap-settings');
@@ -149,27 +250,41 @@ function toggleCapInputs() {
         capSettings.style.display = 'block';
     } else {
         capSettings.style.display = 'none';
-        // チェックを外した場合は値をクリア
         document.querySelector('[name="annual_income_cap"]').value = '';
     }
+    updatePreview();
 }
 
-// フォーム送信イベント設定
-function setupFormHandler() {
-    const salaryForm = document.getElementById('salaryIncomeForm');
-    if (salaryForm) {
-        salaryForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            await handleFormSubmit(this);
-        });
+function togglePreview() {
+    const previewCard = document.getElementById('preview-card');
+    const isVisible = previewCard.style.display !== 'none';
+    
+    previewCard.style.display = isVisible ? 'none' : 'block';
+    
+    if (!isVisible) {
+        updatePreview();
     }
 }
 
-// フォーム送信処理
+function updatePreview() {
+    const monthlyAmount = parseFloat(document.querySelector('[name="monthly_amount"]').value) || 0;
+    const annualBonus = parseFloat(document.querySelector('[name="annual_bonus"]').value) || 0;
+    const increaseRate = parseFloat(document.querySelector('[name="salary_increase_rate"]').value) || 3.0;
+    
+    const monthlyAmountYen = monthlyAmount * 10000;
+    const annualBonusYen = annualBonus * 10000;
+    const annualAmount = monthlyAmountYen * 12 + annualBonusYen;
+    
+    // 10年後の予想収入
+    const futureAmount = annualAmount * Math.pow(1 + increaseRate / 100, 10);
+    
+    document.getElementById('preview-monthly').textContent = '¥' + monthlyAmountYen.toLocaleString();
+    document.getElementById('preview-annual').textContent = '¥' + annualAmount.toLocaleString();
+    document.getElementById('preview-future').textContent = '¥' + Math.round(futureAmount).toLocaleString();
+}
+
 async function handleFormSubmit(form) {
-    if (!validateRequired(form)) {
-        return;
-    }
+    if (!validateForm(form)) return;
     
     const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
@@ -193,83 +308,55 @@ async function handleFormSubmit(form) {
     
     const isUpdate = data.id && data.id !== '';
     const method = isUpdate ? 'PUT' : 'POST';
-    const messageType = isUpdate ? '更新' : '登録';
-    
-    // 送信ボタンを無効化してローディング状態にする
-    const submitButton = form.querySelector('button[type="submit"]');
-    const submitText = submitButton.querySelector('.submit-text');
-    const originalText = submitText.textContent;
-    
-    submitButton.disabled = true;
-    submitText.textContent = '処理中...';
     
     try {
-        const response = await fetch('/api/salary-incomes', {
-            method: method,
+        const response = await fetch('/api/incomes/salary', {
+            method,
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify(data)
         });
         
-        const result = await response.json();
-        
-        if (result.success) {
-            submitText.textContent = '完了！';
-            showToast(`給与収入を${messageType}しました`, 'success');
-            // 一覧ページに戻る（高速化・アニメーション付き）
-            document.body.style.opacity = '0.8';
+        if (response.ok) {
+            showNotification(isUpdate ? '給与収入を更新しました' : '給与収入を登録しました', 'success');
             setTimeout(() => {
                 window.location.href = '/incomes/salary';
-            }, 300);
+            }, 1500);
         } else {
-            submitButton.disabled = false;
-            submitText.textContent = originalText;
-            showToast(`給与収入の${messageType}に失敗しました`, 'error');
+            throw new Error('保存に失敗しました');
         }
     } catch (error) {
-        console.error('給与収入 submission error:', error);
-        submitButton.disabled = false;
-        submitText.textContent = originalText;
-        showToast(`給与収入の${messageType}に失敗しました`, 'error');
+        showNotification(error.message, 'error');
     }
 }
 
-// 編集データ読み込み
-async function loadIncomeData(incomeId) {
-    try {
-        const incomes = await apiCall('/api/salary-incomes');
-        const income = incomes.find(i => i.id === parseInt(incomeId));
-        if (!income) {
-            showToast('データが見つかりません', 'error');
-            return;
+function validateForm(form) {
+    const requiredFields = form.querySelectorAll('[required]');
+    let isValid = true;
+    
+    requiredFields.forEach(field => {
+        if (!field.value.trim()) {
+            field.classList.add('error');
+            isValid = false;
+        } else {
+            field.classList.remove('error');
         }
-        
-        // フォームに値を設定（万円表示に変換）
-        const form = document.getElementById('salaryIncomeForm');
-        form.querySelector('[name="name"]').value = income.name;
-        form.querySelector('[name="description"]').value = income.description || '';
-        form.querySelector('[name="start_year"]').value = income.start_year;
-        form.querySelector('[name="end_year"]').value = income.end_year;
-        form.querySelector('[name="monthly_amount"]').value = ((income.monthly_amount || 0) / 10000).toFixed(1);
-        form.querySelector('[name="annual_bonus"]').value = ((income.annual_bonus || 0) / 10000).toFixed(1);
-        form.querySelector('[name="salary_increase_rate"]').value = income.salary_increase_rate || 3.0;
-        
-        // 上限設定
-        const hasCap = income.has_cap || false;
-        document.getElementById('has_cap').checked = hasCap;
-        
-        if (hasCap) {
-            document.getElementById('cap-settings').style.display = 'block';
-            form.querySelector('[name="annual_income_cap"]').value = ((income.annual_income_cap || 0) / 10000).toFixed(1);
-        }
-        
-    } catch (error) {
-        console.error('Error loading income for edit:', error);
-        showToast('編集データの読み込みに失敗しました', 'error');
+    });
+    
+    if (!isValid) {
+        showNotification('必須項目を入力してください', 'error');
     }
+    
+    return isValid;
 }
 
+function showNotification(message, type) {
+    // 通知表示の実装
+    console.log(`${type}: ${message}`);
+}
 
+// 初期プレビュー更新
+setTimeout(updatePreview, 100);
 </script>
 {% endblock %} 

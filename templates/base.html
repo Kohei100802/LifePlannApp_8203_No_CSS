@@ -5,123 +5,77 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>{% block title %}{% endblock %} - ライフプランシミュレーター</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    
+    <!-- コンポーネント別CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/footer.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/navigation.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main-content.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/household.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/calendar.css') }}?v=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/account-management.css') }}?v=2.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/fab-unified.css') }}">
+    
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="theme-color" content="#FFFFFF">
     {% block head %}{% endblock %}
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
+    <!-- アプリコンテナ -->
     <div class="app-container">
+        
+        <!-- ヘッダーコンポーネント -->
         {% if current_user.is_authenticated %}
-        <nav class="navigation">
-            <div class="nav-content">
-                <div class="nav-title">
-                    <h1>{% block page_title %}ライフプランシミュレーター{% endblock %}</h1>
-                </div>
-                <div class="nav-actions">
-                    <a href="#" onclick="toggleMenu()" class="nav-link" id="menu-toggle">
+        <header class="app-header">
+            <div class="header-content">
+                <div class="header-actions">
+                    <a href="#" onclick="toggleMenu()" class="header-nav-link" id="menu-toggle">
                         <i class="material-icons">menu</i>
                     </a>
-                    <a href="{{ url_for('mypage') }}" class="nav-link">
+                </div>
+                <div class="header-title">
+                    <h1>{% block page_title %}ライフプランシミュレーター{% endblock %}</h1>
+                </div>
+                <div class="header-actions">
+                    <a href="{{ url_for('mypage') }}" class="header-nav-link">
                         <i class="material-icons">person</i>
                     </a>
                 </div>
             </div>
-        </nav>
-        
-        <!-- メニューモーダル -->
-        <div id="menu-modal" class="modal-overlay">
-            <div class="modal-content" style="max-width: 400px; margin-top: 80px;">
-                <div class="modal-header">
-                    <h3>メニュー</h3>
-                    <button class="close-button" onclick="closeMenuModal()">
-                        <i class="material-icons">close</i>
-                    </button>
-                </div>
-                <div class="modal-body" style="padding: 0;">
-                    <div class="menu-items">
-                        <a href="/dashboard" class="menu-item" onclick="closeMenuModal()">
-                            <div class="menu-item-icon">
-                                <i class="material-icons">home</i>
-                            </div>
-                            <div class="menu-item-content">
-                                <div class="menu-item-title">トップ</div>
-                            </div>
-                            <div class="menu-item-arrow">
-                                <i class="material-icons">chevron_right</i>
-                            </div>
-                        </a>
-                        <a href="#" onclick="goToCurrentMonthHousehold(); closeMenuModal();" class="menu-item">
-                            <div class="menu-item-icon">
-                                <i class="material-icons">book</i>
-                            </div>
-                            <div class="menu-item-content">
-                                <div class="menu-item-title">家計簿</div>
-                            </div>
-                            <div class="menu-item-arrow">
-                                <i class="material-icons">chevron_right</i>
-                            </div>
-                        </a>
-                        <a href="/expenses/incomes" class="menu-item" onclick="closeMenuModal()">
-                            <div class="menu-item-icon">
-                                <i class="material-icons">account_balance_wallet</i>
-                            </div>
-                            <div class="menu-item-content">
-                                <div class="menu-item-title">支出/収入</div>
-                            </div>
-                            <div class="menu-item-arrow">
-                                <i class="material-icons">chevron_right</i>
-                            </div>
-                        </a>
-                        <a href="/simulation" class="menu-item" onclick="closeMenuModal()">
-                            <div class="menu-item-icon">
-                                <i class="material-icons">trending_up</i>
-                            </div>
-                            <div class="menu-item-content">
-                                <div class="menu-item-title">シミュレーション</div>
-                            </div>
-                            <div class="menu-item-arrow">
-                                <i class="material-icons">chevron_right</i>
-                            </div>
-                        </a>
-                        <a href="{{ url_for('logout') }}" class="menu-item menu-item-danger" onclick="closeMenuModal()">
-                            <div class="menu-item-icon">
-                                <i class="material-icons">logout</i>
-                            </div>
-                            <div class="menu-item-content">
-                                <div class="menu-item-title">ログアウト</div>
-                            </div>
-                            <div class="menu-item-arrow">
-                                <i class="material-icons">chevron_right</i>
-                            </div>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
+        </header>
         {% endif %}
         
+        <!-- 月次ヘッダーコンポーネント（家計簿用） -->
         {% block monthly_header %}{% endblock %}
         
+        <!-- ナビゲーションタブバーコンポーネント -->
         {% block tab_navigation %}{% endblock %}
         
-        <main class="main-content">
-            {% block content %}{% endblock %}
+        <!-- メインコンテンツコンポーネント -->
+        <main class="main-content {% block main_class %}{% endblock %}">
+            <div class="content-container">
+                {% block content %}{% endblock %}
+            </div>
         </main>
         
+        <!-- フッターコンポーネント -->
         {% if current_user.is_authenticated %}
-        <footer class="footer-nav">
-            <a href="/dashboard" class="footer-item {{ 'active' if request.endpoint == 'dashboard' }}">
-                <i class="material-icons">home</i>
-                <span>トップ</span>
-            </a>
+        <footer class="app-footer">
             <a href="#" onclick="goToCurrentMonthHousehold()" class="footer-item {{ 'active' if request.endpoint in ['household_menu', 'household_book', 'household_books', 'household_book_monthly'] }}">
                 <i class="material-icons">book</i>
                 <span>家計簿</span>
             </a>
-            <a href="/expenses/incomes" class="footer-item {{ 'active' if request.endpoint in ['expenses', 'incomes', 'expenses_incomes'] }}">
+            <a href="/account-management" class="footer-item {{ 'active' if request.endpoint == 'account_management' }}">
+                <i class="material-icons">account_balance</i>
+                <span>資産管理</span>
+            </a>
+            <a href="/dashboard" class="footer-item home-button {{ 'active' if request.endpoint == 'dashboard' }}">
+                <i class="material-icons">home</i>
+                <span>トップ</span>
+            </a>
+            <a href="javascript:void(0)" onclick="showExpenseIncomePopup()" class="footer-item {{ 'active' if request.endpoint in ['expenses', 'incomes', 'expenses_incomes'] }}">
                 <i class="material-icons">account_balance_wallet</i>
                 <span>支出/収入</span>
             </a>
@@ -129,14 +83,148 @@
                 <i class="material-icons">trending_up</i>
                 <span>シミュレーション</span>
             </a>
-            <a href="/mypage" class="footer-item {{ 'active' if request.endpoint == 'mypage' }}">
-                <i class="material-icons">person</i>
-                <span>マイページ</span>
-            </a>
         </footer>
         {% endif %}
+        
     </div>
     
+    <!-- フローティングボタンコンポーネント（独立） -->
+    {% block floating_buttons %}{% endblock %}
+    
+    <!-- メニューモーダル -->
+    {% if current_user.is_authenticated %}
+    <div id="menu-modal" class="menu-modal-overlay">
+        <div class="menu-modal-content">
+            <div class="menu-modal-header">
+                <h3>メニュー</h3>
+                <button class="menu-close-button" onclick="closeMenuModal()">
+                    <i class="material-icons">close</i>
+                </button>
+            </div>
+            <div class="menu-modal-body">
+                <div class="menu-items">
+                    <a href="/dashboard" class="menu-item" onclick="closeMenuModal()">
+                        <div class="menu-item-icon">
+                            <i class="material-icons">home</i>
+                        </div>
+                        <div class="menu-item-content">
+                            <div class="menu-item-title">トップ</div>
+                        </div>
+                        <div class="menu-item-arrow">
+                            <i class="material-icons">chevron_right</i>
+                        </div>
+                    </a>
+                    <a href="#" onclick="goToCurrentMonthHousehold(); closeMenuModal();" class="menu-item">
+                        <div class="menu-item-icon">
+                            <i class="material-icons">book</i>
+                        </div>
+                        <div class="menu-item-content">
+                            <div class="menu-item-title">家計簿</div>
+                        </div>
+                        <div class="menu-item-arrow">
+                            <i class="material-icons">chevron_right</i>
+                        </div>
+                    </a>
+                    <a href="/expenses/incomes" class="menu-item" onclick="closeMenuModal()">
+                        <div class="menu-item-icon">
+                            <i class="material-icons">account_balance_wallet</i>
+                        </div>
+                        <div class="menu-item-content">
+                            <div class="menu-item-title">支出/収入</div>
+                        </div>
+                        <div class="menu-item-arrow">
+                            <i class="material-icons">chevron_right</i>
+                        </div>
+                    </a>
+                    <a href="/simulation" class="menu-item" onclick="closeMenuModal()">
+                        <div class="menu-item-icon">
+                            <i class="material-icons">trending_up</i>
+                        </div>
+                        <div class="menu-item-content">
+                            <div class="menu-item-title">シミュレーション</div>
+                        </div>
+                        <div class="menu-item-arrow">
+                            <i class="material-icons">chevron_right</i>
+                        </div>
+                    </a>
+                    <a href="{{ url_for('logout') }}" class="menu-item menu-item-danger" onclick="closeMenuModal()">
+                        <div class="menu-item-icon">
+                            <i class="material-icons">logout</i>
+                        </div>
+                        <div class="menu-item-content">
+                            <div class="menu-item-title">ログアウト</div>
+                        </div>
+                        <div class="menu-item-arrow">
+                            <i class="material-icons">chevron_right</i>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- 支出・収入選択ポップアップ -->
+    <div id="expense-income-popup-overlay" class="expense-income-popup-overlay" style="display: none;">
+        <div class="expense-income-popup">
+            <div class="popup-header">
+                <h3>支出・収入管理</h3>
+                <button class="popup-close" onclick="closeExpenseIncomePopup()">
+                    <i class="material-icons">close</i>
+                </button>
+            </div>
+            <div class="popup-content">
+                <div class="popup-section">
+                    <h4>支出管理</h4>
+                    <a href="/expenses/living" class="popup-menu-item" onclick="closeExpenseIncomePopup()">
+                        <i class="material-icons">home</i>
+                        <span>生活費</span>
+                    </a>
+                    <a href="/expenses/housing" class="popup-menu-item" onclick="closeExpenseIncomePopup()">
+                        <i class="material-icons">apartment</i>
+                        <span>住居費</span>
+                    </a>
+                    <a href="/expenses/education" class="popup-menu-item" onclick="closeExpenseIncomePopup()">
+                        <i class="material-icons">school</i>
+                        <span>教育費</span>
+                    </a>
+                    <a href="/expenses/insurance" class="popup-menu-item" onclick="closeExpenseIncomePopup()">
+                        <i class="material-icons">security</i>
+                        <span>保険料</span>
+                    </a>
+                    <a href="/expenses/events" class="popup-menu-item" onclick="closeExpenseIncomePopup()">
+                        <i class="material-icons">event</i>
+                        <span>イベント費</span>
+                    </a>
+                </div>
+                <div class="popup-section">
+                    <h4>収入管理</h4>
+                    <a href="/incomes/salary" class="popup-menu-item" onclick="closeExpenseIncomePopup()">
+                        <i class="material-icons">work</i>
+                        <span>給与収入</span>
+                    </a>
+                    <a href="/incomes/sidejob" class="popup-menu-item" onclick="closeExpenseIncomePopup()">
+                        <i class="material-icons">business_center</i>
+                        <span>副業収入</span>
+                    </a>
+                    <a href="/incomes/investment" class="popup-menu-item" onclick="closeExpenseIncomePopup()">
+                        <i class="material-icons">trending_up</i>
+                        <span>投資収入</span>
+                    </a>
+                    <a href="/incomes/pension" class="popup-menu-item" onclick="closeExpenseIncomePopup()">
+                        <i class="material-icons">elderly</i>
+                        <span>年金収入</span>
+                    </a>
+                    <a href="/incomes/other" class="popup-menu-item" onclick="closeExpenseIncomePopup()">
+                        <i class="material-icons">more_horiz</i>
+                        <span>その他収入</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 共通UI要素 -->
     <div id="loading-overlay" class="loading-overlay hidden">
         <div class="loading-spinner"></div>
         <div class="loading-text">処理中...</div>
@@ -144,7 +232,25 @@
     
     <div id="toast-container" class="toast-container"></div>
     
+    <!-- 共通JavaScript -->
     <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+    <script>
+    // スクロール位置復元を防ぐ
+    if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual';
+    }
+    
+    // ページ読み込み時に必ずトップに移動
+    window.addEventListener('beforeunload', function() {
+        window.scrollTo(0, 0);
+    });
+    
+    window.addEventListener('load', function() {
+        setTimeout(function() {
+            window.scrollTo(0, 0);
+        }, 100);
+    });
+    </script>
     <script>
     function goToCurrentMonthHousehold() {
         const now = new Date();
@@ -155,33 +261,73 @@
     
     function toggleMenu() {
         const modal = document.getElementById('menu-modal');
-        modal.classList.toggle('show');
-        
-        if (modal.classList.contains('show')) {
-            // スクロール防止処理
-        } else {
-            // スクロール復元処理
+        if (modal) {
+            modal.classList.toggle('show');
+            
+            if (modal.classList.contains('show')) {
+                // スクロール防止
+                document.body.style.overflow = 'hidden';
+            } else {
+                // スクロール復元
+                document.body.style.overflow = '';
+            }
         }
     }
     
     function closeMenuModal() {
         const modal = document.getElementById('menu-modal');
-        modal.classList.remove('show');
-        // スクロール復元処理
+        if (modal) {
+            modal.classList.remove('show');
+            // スクロール復元
+            document.body.style.overflow = '';
+        }
     }
     
+    // 支出・収入ポップアップ制御
+    function showExpenseIncomePopup() {
+        const popup = document.getElementById('expense-income-popup-overlay');
+        if (popup) {
+            popup.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            // アニメーション用
+            setTimeout(() => {
+                popup.classList.add('show');
+            }, 10);
+        }
+    }
+    
+    function closeExpenseIncomePopup() {
+        const popup = document.getElementById('expense-income-popup-overlay');
+        if (popup) {
+            popup.classList.remove('show');
+            document.body.style.overflow = '';
+            setTimeout(() => {
+                popup.style.display = 'none';
+            }, 300);
+        }
+    }
+    
+    // モーダル外クリックで閉じる
     document.addEventListener('click', function(event) {
         const modal = document.getElementById('menu-modal');
-        const modalContent = modal ? modal.querySelector('.modal-content') : null;
+        const modalContent = modal ? modal.querySelector('.menu-modal-content') : null;
         const menuToggle = document.getElementById('menu-toggle');
+        
+        const expensePopup = document.getElementById('expense-income-popup-overlay');
+        const expensePopupContent = expensePopup ? expensePopup.querySelector('.expense-income-popup') : null;
         
         if (modal && modal.classList.contains('show') && 
             !modalContent.contains(event.target) && 
             !menuToggle.contains(event.target)) {
             closeMenuModal();
         }
+        
+        if (expensePopup && expensePopup.classList.contains('show') && 
+            expensePopupContent && !expensePopupContent.contains(event.target)) {
+            closeExpenseIncomePopup();
+        }
     });
     </script>
     {% block scripts %}{% endblock %}
 </body>
-</html> 
+</html>

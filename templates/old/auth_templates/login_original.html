@@ -1,0 +1,76 @@
+{% extends "base-new.html" %}
+
+{% block title %}ログイン{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-container-clean">
+        <div class="auth-header-clean">
+            <h1 class="auth-title-clean">ライフプランシミュレーター</h1>
+            <p class="auth-subtitle-clean">将来の収支を可視化して、賢い人生設計を始めましょう</p>
+        </div>
+        
+        <div class="auth-form-container">
+            <h2 class="form-title-clean">ログイン</h2>
+        
+            <form id="loginForm" class="form-clean">
+                <div class="input-group-clean">
+                    <label for="username" class="label-clean">ユーザー名</label>
+                    <input type="text" id="username" name="username" class="input-clean" placeholder="ユーザー名を入力" required>
+                </div>
+                
+                <div class="input-group-clean">
+                    <label for="password" class="label-clean">パスワード</label>
+                    <input type="password" id="password" name="password" class="input-clean" placeholder="パスワードを入力" required>
+            </div>
+            
+                <button type="submit" class="submit-btn-clean">
+                    <span>ログイン</span>
+                    <i class="material-icons">arrow_forward</i>
+                </button>
+            </form>
+            
+            <div class="auth-divider-clean">
+                <span>または</span>
+            </div>
+            
+            <a href="{{ url_for('register') }}" class="register-link-clean">
+                新規アカウント作成
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    if (!validateRequired(this)) {
+        return;
+    }
+    
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    try {
+        // ローディング状態
+        submitBtn.innerHTML = '<span>ログイン中...</span><i class="material-icons rotating">refresh</i>';
+        submitBtn.disabled = true;
+        
+        const response = await submitForm(this, '/login');
+        if (response.success) {
+            submitBtn.innerHTML = '<span>成功!</span><i class="material-icons">check</i>';
+            setTimeout(() => {
+            window.location.href = '/dashboard';
+            }, 500);
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
+});
+</script>
+{% endblock %} 

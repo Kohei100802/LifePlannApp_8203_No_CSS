@@ -1,1403 +1,405 @@
-{% extends "base-new.html" %}
+{% extends "base-refactored.html" %}
 
-{% block title %}マイページ{% endblock %}
-{% block page_title %}マイページ{% endblock %}
+{% block title %}マイページ - ライフプランアプリ{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/mypage.css') }}">
+{% endblock %}
 
 {% block content %}
-<div class="mypage-container">
-    <!-- ユーザー情報セクション -->
-    <div class="card mb-3">
-        <div class="card-body">
-            <div class="user-profile">
-                <div class="user-avatar">
-                    <i class="material-icons">account_circle</i>
+<div class="page-header">
+    <h1 class="page-title">
+        <i class="material-icons">person</i>
+        マイページ
+    </h1>
+    <p class="page-subtitle">あなたのライフプランを管理しましょう</p>
+</div>
+
+<!-- ユーザー情報カード -->
+<div class="card user-info-card mb-4">
+    <div class="user-avatar">
+        <i class="material-icons">account_circle</i>
+    </div>
+    <div class="user-details">
+        <h2>{{ current_user.username }}</h2>
+        <p>ライフプランアプリへようこそ</p>
+        <div class="user-stats">
+            <div class="stat-item">
+                <span class="stat-value">3</span>
+                <span class="stat-label">シミュレーション</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">24</span>
+                <span class="stat-label">家計簿エントリー</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- メニューグリッド -->
+<div class="menu-grid">
+    <!-- 家計簿管理 -->
+    <div class="menu-section">
+        <h3 class="section-title">
+            <i class="material-icons">account_balance_wallet</i>
+            家計簿管理
+        </h3>
+        <div class="menu-cards">
+            <a href="{{ url_for('household.monthly') }}" class="menu-card">
+                <div class="menu-icon">
+                    <i class="material-icons">calendar_today</i>
                 </div>
-                <div class="user-info">
-                    <h3 class="user-name">{{ current_user.username }}</h3>
-                    <p class="user-email">{{ current_user.email }}</p>
+                <div class="menu-content">
+                    <h4>月別家計簿</h4>
+                    <p>月ごとの収支を管理</p>
                 </div>
-            </div>
+                <i class="material-icons menu-arrow">arrow_forward_ios</i>
+            </a>
+            
+            <a href="{{ url_for('household.calendar') }}" class="menu-card">
+                <div class="menu-icon">
+                    <i class="material-icons">event</i>
+                </div>
+                <div class="menu-content">
+                    <h4>カレンダー表示</h4>
+                    <p>日別の収支をカレンダーで確認</p>
+                </div>
+                <i class="material-icons menu-arrow">arrow_forward_ios</i>
+            </a>
         </div>
     </div>
 
-    <!-- メニューリスト -->
-    <div class="menu-list">
-        <!-- アカウント設定 -->
-        <div class="menu-section">
-            <h4 class="menu-section-title">アカウント</h4>
-            <div class="menu-items">
-                <a href="#" class="menu-item" onclick="showProfileEdit()">
-                    <div class="menu-item-icon">
-                        <i class="material-icons">edit</i>
-                    </div>
-                    <div class="menu-item-content">
-                        <div class="menu-item-title">プロフィール編集</div>
-                        <div class="menu-item-subtitle">ユーザー名・メールアドレスの変更</div>
-                    </div>
-                    <div class="menu-item-arrow">
-                        <i class="material-icons">chevron_right</i>
-                    </div>
-                </a>
-                
-                <a href="#" class="menu-item" onclick="showPasswordChange()">
-                    <div class="menu-item-icon">
-                        <i class="material-icons">lock</i>
-                    </div>
-                    <div class="menu-item-content">
-                        <div class="menu-item-title">パスワード変更</div>
-                        <div class="menu-item-subtitle">セキュリティ設定</div>
-                    </div>
-                    <div class="menu-item-arrow">
-                        <i class="material-icons">chevron_right</i>
-                    </div>
-                </a>
-            </div>
-        </div>
-
-        <!-- データ管理 -->
-        <div class="menu-section">
-            <h4 class="menu-section-title">データ管理</h4>
-            <div class="menu-items">
-                <a href="#" class="menu-item" onclick="showDataExport()">
-                    <div class="menu-item-icon">
-                        <i class="material-icons">download</i>
-                    </div>
-                    <div class="menu-item-content">
-                        <div class="menu-item-title">データエクスポート</div>
-                        <div class="menu-item-subtitle">データのバックアップ</div>
-                    </div>
-                    <div class="menu-item-arrow">
-                        <i class="material-icons">chevron_right</i>
-                    </div>
-                </a>
-                
-                <a href="#" class="menu-item" onclick="showDataImport()">
-                    <div class="menu-item-icon">
-                        <i class="material-icons">upload</i>
-                    </div>
-                    <div class="menu-item-content">
-                        <div class="menu-item-title">データインポート</div>
-                        <div class="menu-item-subtitle">データの復元</div>
-                    </div>
-                    <div class="menu-item-arrow">
-                        <i class="material-icons">chevron_right</i>
-                    </div>
-                </a>
-            </div>
-        </div>
-
-        <!-- 分析ツール -->
-        <div class="menu-section">
-            <h4 class="menu-section-title">分析ツール</h4>
-            <div class="menu-items">
-                <a href="http://localhost:8206" class="menu-item" target="_blank">
-                    <div class="menu-item-icon">
-                        <i class="material-icons">terrain</i>
-                    </div>
-                    <div class="menu-item-content">
-                        <div class="menu-item-title">土地分析</div>
-                        <div class="menu-item-subtitle">地域特性・価格分析</div>
-                    </div>
-                    <div class="menu-item-arrow">
-                        <i class="material-icons">chevron_right</i>
-                    </div>
-                </a>
-            </div>
-        </div>
-
-        <!-- アプリ設定 -->
-        <div class="menu-section">
-            <h4 class="menu-section-title">設定</h4>
-            <div class="menu-items">
-                <a href="#" class="menu-item" onclick="showNotificationSettings()">
-                    <div class="menu-item-icon">
-                        <i class="material-icons">notifications</i>
-                    </div>
-                    <div class="menu-item-content">
-                        <div class="menu-item-title">通知設定</div>
-                        <div class="menu-item-subtitle">リマインダーや更新通知</div>
-                    </div>
-                    <div class="menu-item-arrow">
-                        <i class="material-icons">chevron_right</i>
-                    </div>
-                </a>
-                
-                <a href="#" class="menu-item" onclick="showThemeSettings()">
-                    <div class="menu-item-icon">
-                        <i class="material-icons">palette</i>
-                    </div>
-                    <div class="menu-item-content">
-                        <div class="menu-item-title">テーマ設定</div>
-                        <div class="menu-item-subtitle">ダークモード・表示設定</div>
-                    </div>
-                    <div class="menu-item-arrow">
-                        <i class="material-icons">chevron_right</i>
-                    </div>
-                </a>
-            </div>
-        </div>
-
-        <!-- サポート -->
-        <div class="menu-section">
-            <h4 class="menu-section-title">サポート</h4>
-            <div class="menu-items">
-                <a href="#" class="menu-item" onclick="showHelp()">
-                    <div class="menu-item-icon">
-                        <i class="material-icons">help</i>
-                    </div>
-                    <div class="menu-item-content">
-                        <div class="menu-item-title">ヘルプ・使い方</div>
-                        <div class="menu-item-subtitle">操作方法やFAQ</div>
-                    </div>
-                    <div class="menu-item-arrow">
-                        <i class="material-icons">chevron_right</i>
-                    </div>
-                </a>
-                
-                <a href="#" class="menu-item" onclick="showAbout()">
-                    <div class="menu-item-icon">
-                        <i class="material-icons">info</i>
-                    </div>
-                    <div class="menu-item-content">
-                        <div class="menu-item-title">アプリについて</div>
-                        <div class="menu-item-subtitle">バージョン情報・利用規約</div>
-                    </div>
-                    <div class="menu-item-arrow">
-                        <i class="material-icons">chevron_right</i>
-                    </div>
-                </a>
-            </div>
-        </div>
-
-        <!-- アカウント管理 -->
-        <div class="menu-section">
-            <h4 class="menu-section-title">アカウント管理</h4>
-            <div class="menu-items">
-                <a href="#" class="menu-item" onclick="showLogoutConfirmation()">
-                    <div class="menu-item-icon">
-                        <i class="material-icons">logout</i>
-                    </div>
-                    <div class="menu-item-content">
-                        <div class="menu-item-title">ログアウト</div>
-                        <div class="menu-item-subtitle">アプリからログアウトします</div>
-                    </div>
-                    <div class="menu-item-arrow">
-                        <i class="material-icons">chevron_right</i>
-                    </div>
-                </a>
-                
-                <a href="#" class="menu-item menu-item-danger" onclick="showAccountDeletion()">
-                    <div class="menu-item-icon">
-                        <i class="material-icons">delete_forever</i>
-                    </div>
-                    <div class="menu-item-content">
-                        <div class="menu-item-title">アカウント削除</div>
-                        <div class="menu-item-subtitle">全データが削除されます</div>
-                    </div>
-                    <div class="menu-item-arrow">
-                        <i class="material-icons">chevron_right</i>
-                    </div>
-                </a>
-            </div>
+    <!-- 収入・支出管理 -->
+    <div class="menu-section">
+        <h3 class="section-title">
+            <i class="material-icons">trending_up</i>
+            収入・支出管理
+        </h3>
+        <div class="menu-cards">
+            <a href="{{ url_for('incomes.salary') }}" class="menu-card">
+                <div class="menu-icon income">
+                    <i class="material-icons">work</i>
+                </div>
+                <div class="menu-content">
+                    <h4>給与収入</h4>
+                    <p>給与・賞与の管理</p>
+                </div>
+                <i class="material-icons menu-arrow">arrow_forward_ios</i>
+            </a>
+            
+            <a href="{{ url_for('incomes.sidejob') }}" class="menu-card">
+                <div class="menu-icon income">
+                    <i class="material-icons">business_center</i>
+                </div>
+                <div class="menu-content">
+                    <h4>副業収入</h4>
+                    <p>副業・フリーランス収入</p>
+                </div>
+                <i class="material-icons menu-arrow">arrow_forward_ios</i>
+            </a>
+            
+            <a href="{{ url_for('expenses.living') }}" class="menu-card">
+                <div class="menu-icon expense">
+                    <i class="material-icons">home</i>
+                </div>
+                <div class="menu-content">
+                    <h4>生活費</h4>
+                    <p>日常の生活費管理</p>
+                </div>
+                <i class="material-icons menu-arrow">arrow_forward_ios</i>
+            </a>
+            
+            <a href="{{ url_for('expenses.housing') }}" class="menu-card">
+                <div class="menu-icon expense">
+                    <i class="material-icons">house</i>
+                </div>
+                <div class="menu-content">
+                    <h4>住居費</h4>
+                    <p>家賃・住宅ローン管理</p>
+                </div>
+                <i class="material-icons menu-arrow">arrow_forward_ios</i>
+            </a>
         </div>
     </div>
-</div>
 
-<!-- プロフィール編集モーダル -->
-<div id="profile-edit-modal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>プロフィール編集</h3>
-            <button type="button" class="modal-close" onclick="closeModal('profile-edit-modal')">
-                <i class="material-icons">close</i>
+    <!-- ライフプランシミュレーション -->
+    <div class="menu-section">
+        <h3 class="section-title">
+            <i class="material-icons">analytics</i>
+            ライフプランシミュレーション
+        </h3>
+        <div class="menu-cards">
+            <a href="{{ url_for('simulation.create') }}" class="menu-card featured">
+                <div class="menu-icon primary">
+                    <i class="material-icons">add_chart</i>
+                </div>
+                <div class="menu-content">
+                    <h4>新規シミュレーション</h4>
+                    <p>新しいライフプランを作成</p>
+                </div>
+                <i class="material-icons menu-arrow">arrow_forward_ios</i>
+            </a>
+            
+            <a href="{{ url_for('simulation.list') }}" class="menu-card">
+                <div class="menu-icon">
+                    <i class="material-icons">list_alt</i>
+                </div>
+                <div class="menu-content">
+                    <h4>シミュレーション一覧</h4>
+                    <p>過去のシミュレーションを確認</p>
+                </div>
+                <i class="material-icons menu-arrow">arrow_forward_ios</i>
+            </a>
+        </div>
+    </div>
+
+    <!-- 分析・レポート -->
+    <div class="menu-section">
+        <h3 class="section-title">
+            <i class="material-icons">assessment</i>
+            分析・レポート
+        </h3>
+        <div class="menu-cards">
+            <button class="menu-card" onclick="showLandAnalysis()">
+                <div class="menu-icon warning">
+                    <i class="material-icons">terrain</i>
+                </div>
+                <div class="menu-content">
+                    <h4>土地分析</h4>
+                    <p>土地投資の分析</p>
+                </div>
+                <i class="material-icons menu-arrow">arrow_forward_ios</i>
+            </button>
+            
+            <a href="{{ url_for('main.dashboard') }}" class="menu-card">
+                <div class="menu-icon info">
+                    <i class="material-icons">dashboard</i>
+                </div>
+                <div class="menu-content">
+                    <h4>ダッシュボード</h4>
+                    <p>総合的な財務状況</p>
+                </div>
+                <i class="material-icons menu-arrow">arrow_forward_ios</i>
+            </a>
+        </div>
+    </div>
+
+    <!-- 設定・その他 -->
+    <div class="menu-section">
+        <h3 class="section-title">
+            <i class="material-icons">settings</i>
+            設定・その他
+        </h3>
+        <div class="menu-cards">
+            <a href="{{ url_for('auth.account_management') }}" class="menu-card">
+                <div class="menu-icon">
+                    <i class="material-icons">manage_accounts</i>
+                </div>
+                <div class="menu-content">
+                    <h4>アカウント管理</h4>
+                    <p>プロフィール・パスワード変更</p>
+                </div>
+                <i class="material-icons menu-arrow">arrow_forward_ios</i>
+            </a>
+            
+            <button class="menu-card" onclick="showHelp()">
+                <div class="menu-icon">
+                    <i class="material-icons">help</i>
+                </div>
+                <div class="menu-content">
+                    <h4>ヘルプ・サポート</h4>
+                    <p>使い方やよくある質問</p>
+                </div>
+                <i class="material-icons menu-arrow">arrow_forward_ios</i>
             </button>
         </div>
-        <form id="profile-edit-form" onsubmit="updateProfile(event)">
-            <div class="form-group">
-                <label class="form-label">ユーザー名</label>
-                <input type="text" class="form-control" id="edit-username" value="{{ current_user.username }}" required>
-            </div>
-            <div class="form-group">
-                <label class="form-label">メールアドレス</label>
-                <input type="email" class="form-control" id="edit-email" value="{{ current_user.email }}" required>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeModal('profile-edit-modal')">キャンセル</button>
-                <button type="submit" class="btn btn-primary">保存</button>
-            </div>
-        </form>
     </div>
 </div>
 
-<!-- パスワード変更モーダル -->
-<div id="password-change-modal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>パスワード変更</h3>
-            <button type="button" class="modal-close" onclick="closeModal('password-change-modal')">
-                <i class="material-icons">close</i>
-            </button>
-        </div>
-        <form id="password-change-form" onsubmit="changePassword(event)">
-            <div class="form-group">
-                <label class="form-label">現在のパスワード</label>
-                <input type="password" class="form-control" id="current-password" required>
-            </div>
-            <div class="form-group">
-                <label class="form-label">新しいパスワード</label>
-                <input type="password" class="form-control" id="new-password" required>
-            </div>
-            <div class="form-group">
-                <label class="form-label">新しいパスワード（確認）</label>
-                <input type="password" class="form-control" id="confirm-password" required>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeModal('password-change-modal')">キャンセル</button>
-                <button type="submit" class="btn btn-primary">変更</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- ログアウト確認モーダル -->
-<div id="logout-confirmation-modal" class="modal" style="align-items: flex-start; padding-top: 15vh;">
-    <div class="modal-content" style="margin-top: 0; transform: none; max-width: 90%; width: 400px;">
-        <div class="modal-header">
-            <h3>ログアウトの確認</h3>
-            <button type="button" class="modal-close" onclick="closeModal('logout-confirmation-modal')">
-                <i class="material-icons">close</i>
-            </button>
-        </div>
-        <div class="modal-body">
-            <p>ログアウトしますか？</p>
-            <p class="text-muted">再度ログインするには、ユーザー名とパスワードが必要です。</p>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" onclick="closeModal('logout-confirmation-modal')">キャンセル</button>
-            <button type="button" class="btn btn-primary" onclick="performLogout()">ログアウト</button>
-        </div>
-    </div>
-</div>
-
-<style>
-/* マイページモーダル統一スタイル */
-.mypage-container .modal .modal-content {
-    max-width: 90vw !important;
-    width: 480px !important;
-    max-height: 85vh !important;
-}
-
-/* ログアウトモーダル最適化 */
-#logout-confirmation-modal {
-    align-items: flex-start !important;
-    padding-top: 10vh !important;
-}
-
-#logout-confirmation-modal .modal-content {
-    margin-top: 0 !important;
-    transform: none !important;
-    max-width: 85% !important;
-    width: 380px !important;
-    background-color: #ffffff !important;
-    background: #ffffff !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-}
-
-/* モバイル対応 */
-@media (max-width: 768px) {
-    .mypage-container .modal .modal-content {
-        width: 95vw !important;
-        max-width: 95vw !important;
-        max-height: 90vh !important;
-    }
-}
-
-@media (max-width: 480px) {
-    .mypage-container .modal .modal-content {
-        width: 98vw !important;
-        max-width: 98vw !important;
-        max-height: 95vh !important;
-    }
+<!-- クイックアクション FAB -->
+<div class="fab-container">
+    <button class="fab main-fab" onclick="toggleFabMenu()">
+        <i class="material-icons" id="fab-icon">add</i>
+    </button>
     
-    #logout-confirmation-modal {
-        padding-top: 8vh !important;
-    }
-    
-    #logout-confirmation-modal .modal-content {
-        width: 340px !important;
-        max-width: 90% !important;
-    }
-}
-
-/* タブレット対応 */
-@media (min-width: 769px) and (max-width: 1024px) {
-    .mypage-container .modal .modal-content {
-        width: 520px !important;
-        max-width: 80vw !important;
-    }
-}
-
-/* デスクトップ対応 */
-@media (min-width: 1025px) {
-    .mypage-container .modal .modal-content {
-        width: 550px !important;
-        max-width: 70vw !important;
-    }
-}
-</style>
-
-<!-- アカウント削除確認モーダル -->
-<div id="account-deletion-modal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 class="text-danger">アカウント削除の確認</h3>
-            <button type="button" class="modal-close" onclick="closeModal('account-deletion-modal')">
-                <i class="material-icons">close</i>
-            </button>
-        </div>
-        <div class="modal-body">
-            <div class="alert alert-danger">
-                <p><strong>警告：この操作は取り消せません</strong></p>
-                <p>アカウントを削除すると、以下のデータが完全に削除されます：</p>
-                <ul>
-                    <li>すべての収入・支出データ</li>
-                    <li>シミュレーション結果</li>
-                    <li>ユーザー設定</li>
-                    <li>その他すべての個人データ</li>
-                </ul>
-            </div>
-            <form id="account-deletion-form" onsubmit="deleteAccount(event)">
-                <div class="form-group">
-                    <label class="form-label">削除を確認するため、パスワードを入力してください</label>
-                    <input type="password" class="form-control" id="deletion-password" required>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('account-deletion-modal')">キャンセル</button>
-                    <button type="submit" class="btn btn-danger">アカウントを削除</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- データインポートモーダル -->
-<div id="data-import-modal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>データインポート</h3>
-            <button type="button" class="modal-close" onclick="closeModal('data-import-modal')">
-                <i class="material-icons">close</i>
-            </button>
-        </div>
-        <div class="modal-body">
-            <div class="alert alert-info">
-                <p><strong>注意事項</strong></p>
-                <ul>
-                    <li>インポートできるのは、このアプリでエクスポートしたJSONファイルのみです</li>
-                    <li>既存のデータは保持され、新しいデータが追加されます</li>
-                    <li>同じ名前のデータがある場合は重複して登録されます</li>
-                </ul>
-            </div>
-            <form id="data-import-form" onsubmit="importData(event)">
-                <div class="form-group">
-                    <label class="form-label">インポートファイル（JSON）</label>
-                    <input type="file" class="form-control" id="import-file" accept=".json" required>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('data-import-modal')">キャンセル</button>
-                    <button type="submit" class="btn btn-primary">インポート</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- 通知設定モーダル -->
-<div id="notification-settings-modal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>通知設定</h3>
-            <button type="button" class="modal-close" onclick="closeModal('notification-settings-modal')">
-                <i class="material-icons">close</i>
-            </button>
-        </div>
-        <div class="modal-body">
-            <div class="form-group">
-                <label class="form-check">
-                    <input type="checkbox" class="form-check-input" id="enable-notifications" checked>
-                    <span class="form-check-label">通知を有効にする</span>
-                </label>
-            </div>
-            <div class="form-group">
-                <label class="form-check">
-                    <input type="checkbox" class="form-check-input" id="monthly-reminder" checked>
-                    <span class="form-check-label">月次データ入力リマインダー</span>
-                </label>
-            </div>
-            <div class="form-group">
-                <label class="form-check">
-                    <input type="checkbox" class="form-check-input" id="backup-reminder" checked>
-                    <span class="form-check-label">データバックアップリマインダー</span>
-                </label>
-            </div>
-            <div class="form-group">
-                <label class="form-check">
-                    <input type="checkbox" class="form-check-input" id="update-notifications">
-                    <span class="form-check-label">アプリ更新通知</span>
-                </label>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeModal('notification-settings-modal')">キャンセル</button>
-                <button type="button" class="btn btn-primary" onclick="saveNotificationSettings()">保存</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- テーマ設定モーダル -->
-<div id="theme-settings-modal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>テーマ設定</h3>
-            <button type="button" class="modal-close" onclick="closeModal('theme-settings-modal')">
-                <i class="material-icons">close</i>
-            </button>
-        </div>
-        <div class="modal-body">
-            <div class="form-group">
-                <label class="form-label">カラーテーマ</label>
-                <div class="theme-options">
-                    <label class="theme-option">
-                        <input type="radio" name="theme" value="light" checked>
-                        <div class="theme-preview light-theme">
-                            <div class="theme-header"></div>
-                            <div class="theme-content"></div>
-                        </div>
-                        <span>ライト</span>
-                    </label>
-                    <label class="theme-option">
-                        <input type="radio" name="theme" value="dark">
-                        <div class="theme-preview dark-theme">
-                            <div class="theme-header"></div>
-                            <div class="theme-content"></div>
-                        </div>
-                        <span>ダーク</span>
-                    </label>
-                    <label class="theme-option">
-                        <input type="radio" name="theme" value="auto">
-                        <div class="theme-preview auto-theme">
-                            <div class="theme-header"></div>
-                            <div class="theme-content"></div>
-                        </div>
-                        <span>自動</span>
-                    </label>
-                </div>
-            </div>
-            <div class="form-group">
-                <label class="form-label">フォントサイズ</label>
-                <select class="form-control" id="font-size">
-                    <option value="small">小</option>
-                    <option value="medium" selected>中</option>
-                    <option value="large">大</option>
-                </select>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeModal('theme-settings-modal')">キャンセル</button>
-                <button type="button" class="btn btn-primary" onclick="saveThemeSettings()">保存</button>
-            </div>
-        </div>
+    <div class="fab-menu" id="fab-menu">
+        <button class="fab sub-fab" onclick="quickAddIncome()" title="収入を追加">
+            <i class="material-icons">add_circle</i>
+        </button>
+        <button class="fab sub-fab" onclick="quickAddExpense()" title="支出を追加">
+            <i class="material-icons">remove_circle</i>
+        </button>
+        <button class="fab sub-fab" onclick="location.href='{{ url_for('simulation.create') }}'" title="シミュレーション作成">
+            <i class="material-icons">analytics</i>
+        </button>
     </div>
 </div>
 
 <!-- ヘルプモーダル -->
-<div id="help-modal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>ヘルプ・使い方</h3>
-            <button type="button" class="modal-close" onclick="closeModal('help-modal')">
-                <i class="material-icons">close</i>
-            </button>
-        </div>
-        <div class="modal-body">
-            <div class="help-sections">
-                <div class="help-section">
-                    <h4><i class="material-icons">dashboard</i> ダッシュボード</h4>
-                    <p>収入・支出の概要と最近の活動を確認できます。</p>
+<div class="modal" id="help-modal">
+    <div class="modal-header">
+        <h3 class="modal-title">ヘルプ・サポート</h3>
+        <button class="modal-close" onclick="closeModal('help')">
+            <i class="material-icons">close</i>
+        </button>
+    </div>
+    <div class="modal-body">
+        <div class="help-content">
+            <div class="help-section">
+                <h4>基本的な使い方</h4>
+                <ul>
+                    <li>家計簿で日々の収支を記録</li>
+                    <li>収入・支出設定で将来の計画を立てる</li>
+                    <li>シミュレーションで長期的な資産推移を確認</li>
+                </ul>
+            </div>
+            
+            <div class="help-section">
+                <h4>よくある質問</h4>
+                <div class="faq-item">
+                    <strong>Q: データのバックアップはどうなっていますか？</strong>
+                    <p>A: データは定期的に自動バックアップされています。</p>
                 </div>
-                <div class="help-section">
-                    <h4><i class="material-icons">attach_money</i> 収入管理</h4>
-                    <p>給与、副業、投資、年金などの収入を登録・管理します。</p>
-                </div>
-                <div class="help-section">
-                    <h4><i class="material-icons">money_off</i> 支出管理</h4>
-                    <p>住居費、生活費、教育費、保険料などの支出を登録・管理します。</p>
-                </div>
-                <div class="help-section">
-                    <h4><i class="material-icons">trending_up</i> シミュレーション</h4>
-                    <p>将来の資産推移をシミュレーションして、ライフプランを立てます。</p>
-                </div>
-                <div class="help-section">
-                    <h4><i class="material-icons">book</i> 家計簿</h4>
-                    <p>日々の収入・支出を記録して、家計管理を行います。</p>
+                <div class="faq-item">
+                    <strong>Q: スマートフォンでも使えますか？</strong>
+                    <p>A: はい、レスポンシブデザインでスマートフォンにも対応しています。</p>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" onclick="closeModal('help-modal')">閉じる</button>
+            
+            <div class="help-section">
+                <h4>お問い合わせ</h4>
+                <p>ご不明な点がございましたら、以下にお問い合わせください：</p>
+                <p><strong>メール:</strong> support@lifeplan-app.com</p>
             </div>
         </div>
     </div>
-</div>
-
-<!-- アプリについてモーダル -->
-<div id="about-modal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>アプリについて</h3>
-            <button type="button" class="modal-close" onclick="closeModal('about-modal')">
-                <i class="material-icons">close</i>
-            </button>
-        </div>
-        <div class="modal-body">
-            <div class="about-content">
-                <div class="app-info">
-                    <h4>ライフプランナー</h4>
-                    <p class="version">バージョン 1.0.0</p>
-                    <p class="description">
-                        将来の収入・支出を管理し、ライフプランをシミュレーションするためのWebアプリケーションです。
-                    </p>
-                </div>
-                <div class="features">
-                    <h5>主な機能</h5>
-                    <ul>
-                        <li>収入・支出の詳細管理</li>
-                        <li>将来の資産推移シミュレーション</li>
-                        <li>家計簿機能</li>
-                        <li>データのエクスポート・インポート</li>
-                        <li>レスポンシブデザイン</li>
-                    </ul>
-                </div>
-                <div class="tech-info">
-                    <h5>技術情報</h5>
-                    <ul>
-                        <li>フロントエンド: HTML5, CSS3, JavaScript</li>
-                        <li>バックエンド: Python Flask</li>
-                        <li>データベース: SQLite</li>
-                        <li>チャート: Chart.js</li>
-                    </ul>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" onclick="closeModal('about-modal')">閉じる</button>
-            </div>
-        </div>
+    <div class="modal-footer">
+        <button class="btn btn-primary" onclick="closeModal('help')">閉じる</button>
     </div>
 </div>
-
-<!-- 土地分析モーダル -->
-<div id="land-analysis-modal" class="modal">
-    <div class="modal-content" style="max-width: 90vw; width: 800px; max-height: 85vh;">
-        <div class="modal-header">
-            <h3>土地分析ツール</h3>
-            <button type="button" class="modal-close" onclick="closeModal('land-analysis-modal')">
-                <i class="material-icons">close</i>
-            </button>
-        </div>
-        <div class="modal-body">
-            <div class="land-analysis-container">
-                <!-- 入力セクション -->
-                <div class="input-section">
-                    <h4>分析条件</h4>
-                    <div class="form-group">
-                        <label class="form-label">都道府県</label>
-                        <select class="form-control" id="prefecture-select">
-                            <option value="">都道府県を選択</option>
-                            <option value="tokyo">東京都</option>
-                            <option value="osaka">大阪府</option>
-                            <option value="kyoto">京都府</option>
-                            <option value="kanagawa">神奈川県</option>
-                            <option value="aichi">愛知県</option>
-                            <option value="saitama">埼玉県</option>
-                            <option value="chiba">千葉県</option>
-                            <option value="hyogo">兵庫県</option>
-                            <option value="fukuoka">福岡県</option>
-                            <option value="hokkaido">北海道</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">市区町村</label>
-                        <select class="form-control" id="city-select" disabled>
-                            <option value="">市区町村を選択</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">土地面積（㎡）</label>
-                        <input type="number" class="form-control" id="land-area" placeholder="例: 100" min="1">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">用途地域</label>
-                        <select class="form-control" id="land-use">
-                            <option value="">用途地域を選択</option>
-                            <option value="residential">第一種低層住居専用地域</option>
-                            <option value="residential2">第二種低層住居専用地域</option>
-                            <option value="residential3">第一種中高層住居専用地域</option>
-                            <option value="residential4">第二種中高層住居専用地域</option>
-                            <option value="residential5">第一種住居地域</option>
-                            <option value="residential6">第二種住居地域</option>
-                            <option value="commercial">近隣商業地域</option>
-                            <option value="commercial2">商業地域</option>
-                            <option value="industrial">準工業地域</option>
-                            <option value="industrial2">工業地域</option>
-                        </select>
-                    </div>
-                    <button type="button" class="btn btn-primary" onclick="analyzeLand()" style="width: 100%; margin-top: 16px;">
-                        <i class="material-icons">analytics</i>
-                        分析実行
-                    </button>
-                </div>
-
-                <!-- 結果セクション -->
-                <div class="result-section" id="result-section" style="display: none;">
-                    <h4>分析結果</h4>
-                    <div class="analysis-results">
-                        <div class="result-card">
-                            <div class="result-header">
-                                <i class="material-icons">attach_money</i>
-                                <span>推定価格</span>
-                            </div>
-                            <div class="result-value" id="estimated-price">-</div>
-                        </div>
-                        <div class="result-card">
-                            <div class="result-header">
-                                <i class="material-icons">trending_up</i>
-                                <span>価格傾向</span>
-                            </div>
-                            <div class="result-value" id="price-trend">-</div>
-                        </div>
-                        <div class="result-card">
-                            <div class="result-header">
-                                <i class="material-icons">location_city</i>
-                                <span>地域特性</span>
-                            </div>
-                            <div class="result-value" id="area-characteristics">-</div>
-                        </div>
-                        <div class="result-card">
-                            <div class="result-header">
-                                <i class="material-icons">info</i>
-                                <span>投資判断</span>
-                            </div>
-                            <div class="result-value" id="investment-judgment">-</div>
-                        </div>
-                    </div>
-                    <div class="detailed-analysis" id="detailed-analysis">
-                        <h5>詳細分析</h5>
-                        <div id="analysis-details"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<style>
-/* 土地分析モーダル専用スタイル */
-.land-analysis-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-    max-height: 70vh;
-    overflow-y: auto;
-}
-
-.input-section, .result-section {
-    padding: 16px;
-    background: #f8f9fa;
-    border-radius: 8px;
-}
-
-.analysis-results {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 20px;
-}
-
-.result-card {
-    background: white;
-    padding: 16px;
-    border-radius: 8px;
-    border: 1px solid #e9ecef;
-}
-
-.result-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
-    font-size: 14px;
-    color: #6c757d;
-}
-
-.result-header .material-icons {
-    font-size: 18px;
-}
-
-.result-value {
-    font-size: 18px;
-    font-weight: 600;
-    color: #212529;
-}
-
-.detailed-analysis {
-    background: white;
-    padding: 16px;
-    border-radius: 8px;
-    border: 1px solid #e9ecef;
-}
-
-.detailed-analysis h5 {
-    margin-bottom: 12px;
-    color: #495057;
-}
-
-/* レスポンシブ対応 */
-@media (max-width: 768px) {
-    .land-analysis-container {
-        grid-template-columns: 1fr;
-        gap: 16px;
-    }
-    
-    .analysis-results {
-        grid-template-columns: 1fr;
-    }
-    
-    #land-analysis-modal .modal-content {
-        width: 95vw !important;
-        max-width: 95vw !important;
-    }
-}
-</style>
 {% endblock %}
 
-{% block scripts %}
+{% block extra_js %}
 <script>
-// モーダル表示関数（エラーハンドリング付き）
-function showProfileEdit() {
-    const modal = document.getElementById('profile-edit-modal');
-    if (modal) {
-        modal.style.display = 'flex';
-    }
-}
-
-function showPasswordChange() {
-    const modal = document.getElementById('password-change-modal');
-    if (modal) {
-        modal.style.display = 'flex';
-    }
-}
-
-function showLogoutConfirmation() {
-    const modal = document.getElementById('logout-confirmation-modal');
-    if (modal) {
-        modal.style.display = 'flex';
-    }
-}
-
-function showAccountDeletion() {
-    const modal = document.getElementById('account-deletion-modal');
-    if (modal) {
-        modal.style.display = 'flex';
-    }
-}
-
-// データエクスポート機能
-async function showDataExport() {
-    try {
-        showToast('データをエクスポート中...', 'info');
-        
-        // まず簡素化版を試行
-        let response = await fetch('/api/export-data-simple', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
-        
-        // 簡素化版が失敗した場合は完全版を試行
-        if (!response.ok) {
-            console.log('簡素化版エクスポートに失敗、完全版を試行中...');
-            response = await fetch('/api/export-data', {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            });
-        }
-        
-        if (response.ok) {
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            
-            // ファイル名を取得（Content-Dispositionヘッダーから）
-            const contentDisposition = response.headers.get('Content-Disposition');
-            let filename = 'lifeplan_data.json';
-            if (contentDisposition) {
-                const matches = contentDisposition.match(/filename="(.+)"/);
-                if (matches) {
-                    filename = matches[1];
-                }
-            }
-            
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-            
-            showToast('データエクスポートが完了しました', 'success');
-        } else {
-            const data = await response.json();
-            showToast(data.error || 'データエクスポートに失敗しました', 'error');
-        }
-    } catch (error) {
-        console.error('Export error:', error);
-        showToast('データエクスポート中にエラーが発生しました', 'error');
-    }
-}
-
-// データインポート機能
-function showDataImport() {
-    const modal = document.getElementById('data-import-modal');
-    if (modal) {
-        modal.style.display = 'flex';
-    }
-}
-
-// 通知設定機能
-function showNotificationSettings() {
-    const modal = document.getElementById('notification-settings-modal');
-    if (modal) {
-        modal.style.display = 'flex';
-    }
-}
-
-// テーマ設定機能
-function showThemeSettings() {
-    const modal = document.getElementById('theme-settings-modal');
-    if (modal) {
-        modal.style.display = 'flex';
-    }
-}
-
-// ヘルプ機能
-function showHelp() {
-    const modal = document.getElementById('help-modal');
-    if (modal) {
-        modal.style.display = 'flex';
-    }
-}
-
-// アプリについて機能
-function showAbout() {
-    const modal = document.getElementById('about-modal');
-    if (modal) {
-        modal.style.display = 'flex';
-    }
-}
-
-// モーダル閉じる関数（エラーハンドリング付き）
-function closeModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.style.display = 'none';
-    }
-}
-
-// ログアウト実行
-async function performLogout() {
-    try {
-        // モーダルを閉じる
-        closeModal('logout-confirmation-modal');
-        
-        // まずセッションをクリア
-        if (typeof(Storage) !== "undefined") {
-            localStorage.clear();
-            sessionStorage.clear();
-        }
-        
-        // 複数のログアウトエンドポイントを試行
-        const logoutEndpoints = ['/logout', '/auth/logout', '/api/logout'];
-        let logoutSuccess = false;
-        
-        for (const endpoint of logoutEndpoints) {
-            try {
-                const response = await fetch(endpoint, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    credentials: 'same-origin'
-                });
-                
-                if (response.ok) {
-                    logoutSuccess = true;
-                    console.log(`Logout successful with endpoint: ${endpoint}`);
-                    break;
-                }
-            } catch (fetchError) {
-                console.log(`Logout failed with endpoint ${endpoint}:`, fetchError);
-            }
-        }
-        
-        // GETリクエストでのログアウトも試行
-        if (!logoutSuccess) {
-            try {
-                window.location.href = '/logout';
-                return; // GETリクエストなのでここで終了
-            } catch (getError) {
-                console.log('GET logout failed:', getError);
-            }
-        }
-        
-        showToast('ログアウトしました', 'success');
-        
-        // ログインページにリダイレクト
-        setTimeout(() => {
-            window.location.href = '/login';
-        }, 1000);
-        
-    } catch (error) {
-        console.error('Logout error:', error);
-        // エラーが発生してもログアウト処理を続行
-        showToast('ログアウトしました', 'success');
-        setTimeout(() => {
-            window.location.href = '/login';
-        }, 1000);
-    }
-}
-
-// プロフィール更新
-async function updateProfile(event) {
-    event.preventDefault();
-    
-    const username = document.getElementById('edit-username').value;
-    const email = document.getElementById('edit-email').value;
-    
-    try {
-        const response = await fetch('/api/update-profile', {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                username: username,
-                email: email
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            showToast('プロフィールを更新しました', 'success');
-            closeModal('profile-edit-modal');
-            // ページをリロードして更新された情報を表示
-            setTimeout(() => {
-                location.reload();
-            }, 1000);
-        } else {
-            showToast(data.error || 'プロフィール更新に失敗しました', 'error');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        showToast('プロフィール更新中にエラーが発生しました', 'error');
-    }
-}
-
-// パスワード変更
-async function changePassword(event) {
-    event.preventDefault();
-    
-    const currentPassword = document.getElementById('current-password').value;
-    const newPassword = document.getElementById('new-password').value;
-    const confirmPassword = document.getElementById('confirm-password').value;
-    
-    if (newPassword !== confirmPassword) {
-        showToast('新しいパスワードが一致しません', 'error');
-        return;
-    }
-    
-    try {
-        const response = await fetch('/api/change-password', {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                current_password: currentPassword,
-                new_password: newPassword
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            showToast('パスワードを変更しました', 'success');
-            closeModal('password-change-modal');
-            document.getElementById('password-change-form').reset();
-        } else {
-            showToast(data.error || 'パスワード変更に失敗しました', 'error');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        showToast('パスワード変更中にエラーが発生しました', 'error');
-    }
-}
-
-// アカウント削除
-async function deleteAccount(event) {
-    event.preventDefault();
-    
-    const password = document.getElementById('deletion-password').value;
-    
-    if (!confirm('本当にアカウントを削除しますか？この操作は取り消せません。')) {
-        return;
-    }
-    
-    try {
-        const response = await fetch('/api/delete-account', {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                password: password
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            showToast('アカウントを削除しました', 'success');
-            setTimeout(() => {
-                window.location.href = '/login';
-            }, 2000);
-        } else {
-            showToast(data.error || 'アカウント削除に失敗しました', 'error');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        showToast('アカウント削除中にエラーが発生しました', 'error');
-    }
-}
-
-// データインポート機能
-async function importData(event) {
-    event.preventDefault();
-    
-    const fileInput = document.getElementById('import-file');
-    const file = fileInput.files[0];
-    
-    if (!file) {
-        showToast('ファイルを選択してください', 'error');
-        return;
-    }
-    
-    try {
-        const text = await file.text();
-        const data = JSON.parse(text);
-        
-        // データ形式の簡単な検証
-        if (!data.user_info || !data.income_data || !data.expense_data) {
-            showToast('無効なデータ形式です', 'error');
-            return;
-        }
-        
-        showToast('データインポート機能は準備中です', 'info');
-        closeModal('data-import-modal');
-        
-    } catch (error) {
-        console.error('Import error:', error);
-        showToast('ファイルの読み込みに失敗しました', 'error');
-    }
-}
-
-// 通知設定保存
-function saveNotificationSettings() {
-    const settings = {
-        enableNotifications: document.getElementById('enable-notifications').checked,
-        monthlyReminder: document.getElementById('monthly-reminder').checked,
-        backupReminder: document.getElementById('backup-reminder').checked,
-        updateNotifications: document.getElementById('update-notifications').checked
-    };
-    
-    // ローカルストレージに保存
-    localStorage.setItem('notificationSettings', JSON.stringify(settings));
-    
-    showToast('通知設定を保存しました', 'success');
-    closeModal('notification-settings-modal');
-}
-
-// テーマ設定保存
-function saveThemeSettings() {
-    const theme = document.querySelector('input[name="theme"]:checked').value;
-    const fontSize = document.getElementById('font-size').value;
-    
-    const settings = {
-        theme: theme,
-        fontSize: fontSize
-    };
-    
-    // ローカルストレージに保存
-    localStorage.setItem('themeSettings', JSON.stringify(settings));
-    
-    // テーマを適用
-    applyTheme(theme, fontSize);
-    
-    showToast('テーマ設定を保存しました', 'success');
-    closeModal('theme-settings-modal');
-}
-
-// テーマ適用
-function applyTheme(theme, fontSize) {
-    const body = document.body;
-    
-    // テーマクラスをリセット
-    body.classList.remove('theme-light', 'theme-dark', 'theme-auto');
-    body.classList.remove('font-small', 'font-medium', 'font-large');
-    
-    // 新しいテーマを適用
-    body.classList.add(`theme-${theme}`);
-    body.classList.add(`font-${fontSize}`);
-    
-    // ダークモードの処理
-    if (theme === 'dark') {
-        body.classList.add('dark-mode');
-    } else if (theme === 'auto') {
-        // システムの設定に従う
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            body.classList.add('dark-mode');
-        } else {
-            body.classList.remove('dark-mode');
-        }
-    } else {
-        body.classList.remove('dark-mode');
-    }
-}
-
-// 設定の読み込み
-function loadSettings() {
-    // 通知設定の読み込み
-    const notificationSettings = localStorage.getItem('notificationSettings');
-    if (notificationSettings) {
-        const settings = JSON.parse(notificationSettings);
-        document.getElementById('enable-notifications').checked = settings.enableNotifications;
-        document.getElementById('monthly-reminder').checked = settings.monthlyReminder;
-        document.getElementById('backup-reminder').checked = settings.backupReminder;
-        document.getElementById('update-notifications').checked = settings.updateNotifications;
-    }
-    
-    // テーマ設定の読み込み
-    const themeSettings = localStorage.getItem('themeSettings');
-    if (themeSettings) {
-        const settings = JSON.parse(themeSettings);
-        document.querySelector(`input[name="theme"][value="${settings.theme}"]`).checked = true;
-        document.getElementById('font-size').value = settings.fontSize;
-        applyTheme(settings.theme, settings.fontSize);
-    }
-}
-
-// ページ読み込み時に設定を適用
-document.addEventListener('DOMContentLoaded', function() {
-    loadSettings();
-    
-    // 各モーダルを初期状態で非表示にする
-    const modals = document.getElementsByClassName('modal');
-    for (let modal of modals) {
-        modal.style.display = 'none';
-    }
-    
-    // 土地分析の都道府県選択イベント
-    const prefectureSelect = document.getElementById('prefecture-select');
-    if (prefectureSelect) {
-        prefectureSelect.addEventListener('change', updateCityOptions);
-    }
-});
-
-// モーダル外クリックで閉じる（特定のモーダルのみ対象）
-document.addEventListener('click', function(event) {
-    const modals = document.getElementsByClassName('modal');
-    for (let modal of modals) {
-        if (event.target === modal && modal.style.display === 'flex') {
-            modal.style.display = 'none';
-        }
-    }
-});
-
-// 土地分析モーダル表示
+// 土地分析表示
 function showLandAnalysis() {
-    // ポート8206にリダイレクト
     window.open('http://localhost:8206', '_blank');
 }
 
-// 都道府県選択時の市区町村更新
-function updateCityOptions() {
-    const prefectureSelect = document.getElementById('prefecture-select');
-    const citySelect = document.getElementById('city-select');
-    const selectedPrefecture = prefectureSelect.value;
+// ヘルプモーダル表示
+function showHelp() {
+    const modal = document.getElementById('help-modal');
+    const overlay = document.getElementById('overlay');
     
-    // 市区町村をリセット
-    citySelect.innerHTML = '<option value="">市区町村を選択</option>';
-    citySelect.disabled = true;
+    modal.classList.add('active');
+    overlay.classList.add('active');
+}
+
+// モーダル閉じる
+function closeModal(type) {
+    const modal = document.getElementById(type + '-modal');
+    const overlay = document.getElementById('overlay');
     
-    if (!selectedPrefecture) return;
+    modal.classList.remove('active');
+    overlay.classList.remove('active');
+}
+
+// FABメニュー制御
+let fabMenuOpen = false;
+
+function toggleFabMenu() {
+    const fabMenu = document.getElementById('fab-menu');
+    const fabIcon = document.getElementById('fab-icon');
     
-    // 都道府県別の市区町村データ
-    const cityData = {
-        tokyo: ['千代田区', '中央区', '港区', '新宿区', '文京区', '台東区', '墨田区', '江東区', '品川区', '目黒区', '大田区', '世田谷区', '渋谷区', '中野区', '杉並区', '豊島区', '北区', '荒川区', '板橋区', '練馬区', '足立区', '葛飾区', '江戸川区'],
-        osaka: ['大阪市', '堺市', '岸和田市', '豊中市', '池田市', '吹田市', '泉大津市', '高槻市', '貝塚市', '守口市', '枚方市', '茨木市', '八尾市', '泉佐野市', '富田林市', '寝屋川市', '河内長野市', '松原市', '大東市', '和泉市', '箕面市', '柏原市', '羽曳野市', '門真市', '摂津市', '高石市', '藤井寺市', '東大阪市', '泉南市', '四條畷市', '交野市', '大阪狭山市', '阪南市'],
-        kyoto: ['京都市', '福知山市', '舞鶴市', '綾部市', '宇治市', '宮津市', '亀岡市', '城陽市', '向日市', '長岡京市', '八幡市', '京田辺市', '京丹後市', '南丹市', '木津川市'],
-        kanagawa: ['横浜市', '川崎市', '相模原市', '横須賀市', '平塚市', '鎌倉市', '藤沢市', '小田原市', '茅ヶ崎市', '逗子市', '三浦市', '秦野市', '厚木市', '大和市', '伊勢原市', '海老名市', '座間市', '南足柄市', '綾瀬市'],
-        aichi: ['名古屋市', '豊橋市', '岡崎市', '一宮市', '瀬戸市', '半田市', '春日井市', '豊川市', '津島市', '碧南市', '刈谷市', '豊田市', '安城市', '西尾市', '蒲郡市', '犬山市', '常滑市', '江南市', '小牧市', '稲沢市', '新城市', '東海市', '大府市', '知多市', '知立市', '尾張旭市', '高浜市', '岩倉市', '豊明市', '日進市', '田原市', '愛西市', '清須市', '北名古屋市', '弥富市', 'みよし市', 'あま市', '長久手市'],
-        saitama: ['さいたま市', '川越市', '熊谷市', '川口市', '行田市', '秩父市', '所沢市', '飯能市', '加須市', '本庄市', '東松山市', '春日部市', '狭山市', '羽生市', '鴻巣市', '深谷市', '上尾市', '草加市', '越谷市', '蕨市', '戸田市', '入間市', '朝霞市', '志木市', '和光市', '新座市', '桶川市', '久喜市', '北本市', '八潮市', '富士見市', '三郷市', '蓮田市', '坂戸市', '幸手市', '鶴ヶ島市', '日高市', '吉川市', 'ふじみ野市', '白岡市'],
-        chiba: ['千葉市', '銚子市', '市川市', '船橋市', '館山市', '木更津市', '松戸市', '野田市', '茂原市', '成田市', '佐倉市', '東金市', '旭市', '習志野市', '柏市', '勝浦市', '市原市', '流山市', '八千代市', '我孫子市', '鴨川市', '鎌ケ谷市', '君津市', '富津市', '浦安市', '四街道市', '袖ケ浦市', '八街市', '印西市', '白井市', '富里市', '南房総市', '匝瑳市', '香取市', '山武市', 'いすみ市', '大網白里市', '酒々井町', '栄町', '神崎町', '多古町', '東庄町', '九十九里町', '芝山町', '横芝光町', '一宮町', '睦沢町', '長生村', '白子町', '長柄町', '長南町', '大多喜町', '御宿町', '鋸南町'],
-        hyogo: ['神戸市', '姫路市', '尼崎市', '明石市', '西宮市', '洲本市', '芦屋市', '伊丹市', '相生市', '豊岡市', '加古川市', '赤穂市', '西脇市', '宝塚市', '三木市', '高砂市', '川西市', '小野市', '三田市', '加西市', '丹波篠山市', '養父市', '丹波市', '南あわじ市', '朝来市', '淡路市', '宍粟市', '加東市', 'たつの市'],
-        fukuoka: ['福岡市', '北九州市', '大牟田市', '久留米市', '直方市', '飯塚市', '田川市', '柳川市', '八女市', '筑後市', '大川市', '行橋市', '豊前市', '中間市', '小郡市', '筑紫野市', '春日市', '大野城市', '宗像市', '太宰府市', '古賀市', '福津市', 'うきは市', '宮若市', '嘉麻市', '朝倉市', 'みやま市', '糸島市'],
-        hokkaido: ['札幌市', '函館市', '小樽市', '旭川市', '室蘭市', '釧路市', '帯広市', '北見市', '夕張市', '岩見沢市', '網走市', '留萌市', '苫小牧市', '稚内市', '美唄市', '芦別市', '江別市', '赤平市', '紋別市', '士別市', '名寄市', '三笠市', '根室市', '千歳市', '滝川市', '砂川市', '歌志内市', '深川市', '富良野市', '登別市', '恵庭市', '伊達市', '北広島市', '石狩市', '北斗市']
-    };
+    fabMenuOpen = !fabMenuOpen;
     
-    if (cityData[selectedPrefecture]) {
-        cityData[selectedPrefecture].forEach(city => {
-            const option = document.createElement('option');
-            option.value = city;
-            option.textContent = city;
-            citySelect.appendChild(option);
+    if (fabMenuOpen) {
+        fabMenu.classList.add('active');
+        fabIcon.textContent = 'close';
+    } else {
+        fabMenu.classList.remove('active');
+        fabIcon.textContent = 'add';
+    }
+}
+
+// クイック収入追加
+function quickAddIncome() {
+    // 簡単な収入追加ダイアログを表示
+    const amount = prompt('収入金額を入力してください（円）:');
+    const description = prompt('収入の説明を入力してください:');
+    
+    if (amount && !isNaN(amount)) {
+        // API呼び出しで収入を追加
+        fetch('/household/entry/create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                amount: parseFloat(amount),
+                category_id: 1, // デフォルトの収入カテゴリ
+                category_type: 'income',
+                description: description || '収入',
+                date: new Date().toISOString().split('T')[0]
+            })
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('収入を追加しました');
+                toggleFabMenu();
+            } else {
+                alert('収入の追加に失敗しました');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('ネットワークエラーが発生しました');
         });
-        citySelect.disabled = false;
     }
 }
 
-// 土地分析実行
-function analyzeLand() {
-    const prefecture = document.getElementById('prefecture-select').value;
-    const city = document.getElementById('city-select').value;
-    const area = document.getElementById('land-area').value;
-    const landUse = document.getElementById('land-use').value;
+// クイック支出追加
+function quickAddExpense() {
+    // 簡単な支出追加ダイアログを表示
+    const amount = prompt('支出金額を入力してください（円）:');
+    const description = prompt('支出の説明を入力してください:');
     
-    // 入力チェック
-    if (!prefecture || !city || !area || !landUse) {
-        showToast('すべての項目を入力してください', 'error');
-        return;
+    if (amount && !isNaN(amount)) {
+        // API呼び出しで支出を追加
+        fetch('/household/entry/create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                amount: parseFloat(amount),
+                category_id: 1, // デフォルトの支出カテゴリ
+                category_type: 'expense',
+                description: description || '支出',
+                date: new Date().toISOString().split('T')[0]
+            })
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('支出を追加しました');
+                toggleFabMenu();
+            } else {
+                alert('支出の追加に失敗しました');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('ネットワークエラーが発生しました');
+        });
     }
-    
-    // 分析実行（シミュレーション）
-    const analysisResult = performLandAnalysis(prefecture, city, area, landUse);
-    
-    // 結果表示
-    displayAnalysisResults(analysisResult);
 }
 
-// 土地分析ロジック（シミュレーション）
-function performLandAnalysis(prefecture, city, area, landUse) {
-    // 基準価格（㎡あたり）
-    const basePrices = {
-        tokyo: 150000,
-        osaka: 120000,
-        kyoto: 100000,
-        kanagawa: 130000,
-        aichi: 110000,
-        saitama: 80000,
-        chiba: 70000,
-        hyogo: 90000,
-        fukuoka: 85000,
-        hokkaido: 50000
-    };
-    
-    // 用途地域係数
-    const landUseFactors = {
-        residential: 1.0,
-        residential2: 1.1,
-        residential3: 1.2,
-        residential4: 1.3,
-        residential5: 1.4,
-        residential6: 1.5,
-        commercial: 1.8,
-        commercial2: 2.2,
-        industrial: 0.7,
-        industrial2: 0.5
-    };
-    
-    // 面積係数（大きいほど単価が下がる）
-    const areaFactor = Math.max(0.8, 1 - (area - 100) * 0.001);
-    
-    // 推定価格計算
-    const basePrice = basePrices[prefecture] || 80000;
-    const useFactor = landUseFactors[landUse] || 1.0;
-    const estimatedPrice = Math.round(basePrice * useFactor * areaFactor * area);
-    
-    // 価格傾向
-    const trends = ['上昇傾向', '横ばい', '微減', '安定'];
-    const trend = trends[Math.floor(Math.random() * trends.length)];
-    
-    // 地域特性
-    const characteristics = {
-        tokyo: '都心部・交通利便性高',
-        osaka: '関西圏・商業地として有望',
-        kyoto: '観光地・文化財保護地域',
-        kanagawa: '首都圏・ベッドタウン',
-        aichi: '中部圏・工業地帯',
-        saitama: '首都圏・住宅地',
-        chiba: '首都圏・新興住宅地',
-        hyogo: '関西圏・港湾都市',
-        fukuoka: '九州圏・地方中核都市',
-        hokkaido: '北海道・自然環境豊富'
-    };
-    
-    // 投資判断
-    const judgments = ['投資推奨', '要検討', '慎重判断', '投資適正'];
-    const judgment = judgments[Math.floor(Math.random() * judgments.length)];
-    
-    return {
-        estimatedPrice: estimatedPrice,
-        trend: trend,
-        characteristics: characteristics[prefecture] || '地域特性分析中',
-        judgment: judgment,
-        details: generateDetailedAnalysis(prefecture, city, area, landUse)
-    };
-}
-
-// 詳細分析生成
-function generateDetailedAnalysis(prefecture, city, area, landUse) {
-    const details = [];
-    
-    // 交通アクセス
-    details.push(`<strong>交通アクセス:</strong> ${city}は主要駅まで徒歩10-15分圏内で、通勤・通学に便利な立地です。`);
-    
-    // 周辺環境
-    details.push(`<strong>周辺環境:</strong> スーパー、コンビニ、医療機関が徒歩圏内にあり、生活利便性が高い地域です。`);
-    
-    // 将来性
-    details.push(`<strong>将来性:</strong> 都市計画により、今後5-10年でインフラ整備が進む見込みです。`);
-    
-    // リスク要因
-    details.push(`<strong>リスク要因:</strong> 地震や洪水などの自然災害リスクを考慮する必要があります。`);
-    
-    return details.join('<br><br>');
-}
-
-// 分析結果表示
-function displayAnalysisResults(result) {
-    document.getElementById('estimated-price').textContent = `${result.estimatedPrice.toLocaleString()}万円`;
-    document.getElementById('price-trend').textContent = result.trend;
-    document.getElementById('area-characteristics').textContent = result.characteristics;
-    document.getElementById('investment-judgment').textContent = result.judgment;
-    document.getElementById('analysis-details').innerHTML = result.details;
-    
-    // 結果セクションを表示
-    document.getElementById('result-section').style.display = 'block';
-    
-    showToast('土地分析が完了しました', 'success');
-}
+// FABメニューの外側クリックで閉じる
+document.addEventListener('click', function(event) {
+    const fabContainer = document.querySelector('.fab-container');
+    if (!fabContainer.contains(event.target) && fabMenuOpen) {
+        toggleFabMenu();
+    }
+});
 </script>
 {% endblock %} 

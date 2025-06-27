@@ -1,0 +1,406 @@
+{% extends "base-new.html" %}
+
+{% block title %}生活費 - {% if expense_id %}編集{% else %}新規登録{% endif %}{% endblock %}
+{% block page_title %}生活費 - {% if expense_id %}編集{% else %}新規登録{% endif %}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            {% if expense_id %}
+                生活費編集 <span class="badge badge-secondary">#{{ expense_id }}</span>
+            {% else %}
+                生活費新規登録
+            {% endif %}
+        </h3>
+        <a href="/expenses/living" class="btn btn-secondary btn-sm">
+            <i class="material-icons">arrow_back</i> 一覧に戻る
+        </a>
+    </div>
+    <div class="card-body">
+        <form id="livingExpensesForm">
+            <input type="hidden" name="id" value="{{ expense_id or '' }}">
+            
+            <div class="form-group">
+                <label class="form-label">項目名 <span class="text-danger">*</span></label>
+                <input type="text" name="name" class="form-control" placeholder="例：基本生活費" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">説明</label>
+                <input type="text" name="description" class="form-control" placeholder="詳細説明（任意）">
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">開始年 <span class="text-danger">*</span></label>
+                        <select name="start_year" class="form-control" required>
+                            <!-- JavaScript で動的に生成 -->
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">終了年 <span class="text-danger">*</span></label>
+                        <select name="end_year" class="form-control" required>
+                            <!-- JavaScript で動的に生成 -->
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">物価上昇率（年率%）</label>
+                <input type="number" name="inflation_rate" class="form-control" placeholder="2.0" min="0" max="20" step="0.1" value="2.0">
+                <small class="form-text text-muted">年間の物価上昇率を設定してください</small>
+            </div>
+            
+            <!-- 食費 -->
+            <h4 class="form-section-title">食費</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">自炊（万円）</label>
+                        <input type="number" name="food_home" class="form-control" placeholder="3" min="0" step="0.1">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">外食（万円）</label>
+                        <input type="number" name="food_outside" class="form-control" placeholder="2" min="0" step="0.1">
+                    </div>
+                </div>
+            </div>
+            
+        <!-- 光熱費 -->
+            <h4 class="form-section-title">光熱費</h4>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="form-label">電気（万円）</label>
+                        <input type="number" name="utility_electricity" class="form-control" placeholder="0.8" min="0" step="0.1">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="form-label">ガス（万円）</label>
+                        <input type="number" name="utility_gas" class="form-control" placeholder="0.5" min="0" step="0.1">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="form-label">水道（万円）</label>
+                        <input type="number" name="utility_water" class="form-control" placeholder="0.3" min="0" step="0.1">
+                    </div>
+                </div>
+            </div>
+            
+        <!-- 通信費 -->
+            <h4 class="form-section-title">通信費</h4>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="form-label">携帯（万円）</label>
+                        <input type="number" name="phone" class="form-control" placeholder="0.8" min="0" step="0.1">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="form-label">ネット（万円）</label>
+                        <input type="number" name="internet" class="form-control" placeholder="0.5" min="0" step="0.1">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="form-label">サブスク（万円）</label>
+                        <input type="number" name="subscription_services" class="form-control" placeholder="0.3" min="0" step="0.1">
+                    </div>
+                </div>
+            </div>
+            
+        <!-- 日用品・美容 -->
+            <h4 class="form-section-title">日用品・美容</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">日用品（万円）</label>
+                        <input type="number" name="household_goods" class="form-control" placeholder="0.5" min="0" step="0.1">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">衛生用品（万円）</label>
+                        <input type="number" name="hygiene" class="form-control" placeholder="0.3" min="0" step="0.1">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">被服（万円）</label>
+                        <input type="number" name="clothing" class="form-control" placeholder="1" min="0" step="0.1">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">美容（万円）</label>
+                        <input type="number" name="beauty" class="form-control" placeholder="0.5" min="0" step="0.1">
+                    </div>
+                </div>
+            </div>
+            
+        <!-- 子供費用 -->
+            <h4 class="form-section-title">子供費用</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">子供食費（万円）</label>
+                        <input type="number" name="child_food" class="form-control" placeholder="1" min="0" step="0.1">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">子供衣服（万円）</label>
+                        <input type="number" name="child_clothing" class="form-control" placeholder="0.5" min="0" step="0.1">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">子供医療費（万円）</label>
+                        <input type="number" name="child_medical" class="form-control" placeholder="0.3" min="0" step="0.1">
+                    </div>
+                    </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">子供その他（万円）</label>
+                        <input type="number" name="child_other" class="form-control" placeholder="0.5" min="0" step="0.1">
+                    </div>
+                </div>
+            </div>
+            
+        <!-- その他 -->
+            <h4 class="form-section-title">その他</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">交通費（万円）</label>
+                        <input type="number" name="transport" class="form-control" placeholder="1.5" min="0" step="0.1">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">娯楽費（万円）</label>
+                        <input type="number" name="entertainment" class="form-control" placeholder="2" min="0" step="0.1">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">ペット費用（万円）</label>
+                        <input type="number" name="pet_costs" class="form-control" placeholder="0.5" min="0" step="0.1">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">その他費用（万円）</label>
+                        <input type="number" name="other_expenses" class="form-control" placeholder="1" min="0" step="0.1">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group mt-4">
+                <div class="row">
+                    <div class="col-md-6">
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <i class="material-icons">arrow_forward</i>
+                            <span class="submit-text">
+                                {% if expense_id %}生活費を更新{% else %}生活費を登録{% endif %}
+                            </span>
+                        </button>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="/expenses/living" class="btn btn-secondary btn-block">
+                            <i class="material-icons">cancel</i> キャンセル
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- フローティングアクションボタン -->
+<div class="form-fab-container">
+    <a href="/expenses/living" class="fab-button cancel" id="cancelFabButton" title="キャンセル">
+        <i class="material-icons">close</i>
+    </a>
+    <button type="button" class="fab-button submit" id="formFabButton" onclick="submitFormViaFab()" title="保存">
+        {% if expense_id %}
+            <i class="material-icons">arrow_forward</i>
+        {% else %}
+            <i class="material-icons">add</i>
+        {% endif %}
+    </button>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 年度セレクトボックスを初期化
+    initializeYearSelects();
+    
+    // 編集モードの場合はデータを読み込み
+    const expenseId = document.querySelector('[name="id"]').value;
+    if (expenseId) {
+        loadExpenseData(expenseId);
+    }
+    
+    // フォーム送信イベント設定
+    setupFormHandler();
+});
+
+// フォーム送信イベント設定
+function setupFormHandler() {
+    const livingForm = document.getElementById('livingExpensesForm');
+    if (livingForm) {
+        livingForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await handleFormSubmit(this);
+        });
+    }
+}
+
+// フォーム送信処理
+async function handleFormSubmit(form) {
+    if (!validateRequired(form)) {
+        return;
+    }
+    
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    
+    // 数値変換（万円を円に変換）
+    const numericFields = [
+        'food_home', 'food_outside', 'utility_electricity', 'utility_gas', 'utility_water',
+        'subscription_services', 'internet', 'phone', 'household_goods', 'hygiene',
+        'clothing', 'beauty', 'child_food', 'child_clothing', 'child_medical', 'child_other',
+        'transport', 'entertainment', 'pet_costs', 'other_expenses'
+    ];
+    
+    numericFields.forEach(field => {
+        data[field] = (parseFloat(data[field]) || 0) * 10000;
+    });
+    
+    // 月額合計を計算
+    data.monthly_total_amount = numericFields.reduce((sum, field) => {
+        return sum + (parseFloat(data[field]) || 0);
+    }, 0);
+    
+    data.start_year = parseInt(data.start_year) || 2024;
+    data.end_year = parseInt(data.end_year) || 2050;
+    data.inflation_rate = parseFloat(data.inflation_rate) || 2.0;
+    
+    const isUpdate = data.id && data.id !== '';
+    const method = isUpdate ? 'PUT' : 'POST';
+    const messageType = isUpdate ? '更新' : '登録';
+    
+    // 送信ボタンを無効化してローディング状態にする
+    const submitButton = form.querySelector('button[type="submit"]');
+    const submitText = submitButton.querySelector('.submit-text');
+    const originalText = submitText.textContent;
+    
+    submitButton.disabled = true;
+    submitText.textContent = '処理中...';
+    
+    try {
+        const response = await fetch('/api/living-expenses', {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            submitText.textContent = '完了！';
+            showToast(`生活費を${messageType}しました`, 'success');
+            // 一覧ページに戻る（高速化・アニメーション付き）
+            document.body.style.opacity = '0.8';
+            setTimeout(() => {
+                window.location.href = '/expenses/living';
+            }, 300);
+        } else {
+            submitButton.disabled = false;
+            submitText.textContent = originalText;
+            showToast(`生活費の${messageType}に失敗しました`, 'error');
+        }
+    } catch (error) {
+        console.error('生活費 submission error:', error);
+        submitButton.disabled = false;
+        submitText.textContent = originalText;
+        showToast(`生活費の${messageType}に失敗しました`, 'error');
+    }
+}
+
+// 編集データ読み込み
+async function loadExpenseData(expenseId) {
+    try {
+        const expenses = await apiCall('/api/living-expenses');
+        const expense = expenses.find(e => e.id === parseInt(expenseId));
+        if (!expense) {
+            showToast('データが見つかりません', 'error');
+            return;
+        }
+        
+        // フォームに値を設定（万円表示に変換）
+        const form = document.getElementById('livingExpensesForm');
+        form.querySelector('[name="name"]').value = expense.name;
+        form.querySelector('[name="description"]').value = expense.description || '';
+        form.querySelector('[name="start_year"]').value = expense.start_year;
+        form.querySelector('[name="end_year"]').value = expense.end_year;
+        form.querySelector('[name="inflation_rate"]').value = expense.inflation_rate || 2.0;
+        
+        // 各項目の値を設定（万円表示に変換）
+        const setValue = (name, value) => {
+            const field = form.querySelector(`[name="${name}"]`);
+            if (field) {
+                const numValue = parseFloat(((value || 0) / 10000).toFixed(1));
+                field.value = numValue === 0 ? '' : numValue.toString();
+            }
+        };
+        
+        setValue('food_home', expense.food_home);
+        setValue('food_outside', expense.food_outside);
+        setValue('utility_electricity', expense.utility_electricity);
+        setValue('utility_gas', expense.utility_gas);
+        setValue('utility_water', expense.utility_water);
+        setValue('subscription_services', expense.subscription_services);
+        setValue('internet', expense.internet);
+        setValue('phone', expense.phone);
+        setValue('household_goods', expense.household_goods);
+        setValue('hygiene', expense.hygiene);
+        setValue('clothing', expense.clothing);
+        setValue('beauty', expense.beauty);
+        setValue('child_food', expense.child_food);
+        setValue('child_clothing', expense.child_clothing);
+        setValue('child_medical', expense.child_medical);
+        setValue('child_other', expense.child_other);
+        setValue('transport', expense.transport);
+        setValue('entertainment', expense.entertainment);
+        setValue('pet_costs', expense.pet_costs);
+        setValue('other_expenses', expense.other_expenses);
+        
+    } catch (error) {
+        console.error('Error loading expense for edit:', error);
+        showToast('編集データの読み込みに失敗しました', 'error');
+    }
+}
+</script>
+{% endblock %} 

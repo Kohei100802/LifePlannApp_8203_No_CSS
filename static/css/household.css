@@ -442,14 +442,213 @@
     margin: 0;
 }
 
-/* 家計簿固有レスポンシブ */
+/* スマホ向けフォーム最適化 */
 @media (max-width: 768px) {
+    /* ページヘッダーの最適化 */
+    .page-header {
+        padding: var(--spacing-sm) 0;
+        margin-bottom: var(--spacing-md);
+    }
+    
     .page-header-content {
         flex-direction: column;
-        gap: var(--spacing-md);
+        gap: var(--spacing-sm);
         align-items: stretch;
     }
     
+    .page-title {
+        font-size: var(--font-size-lg);
+        margin: 0;
+    }
+    
+    .page-title i {
+        font-size: 20px;
+    }
+    
+    /* カードの最適化 */
+    .card {
+        margin-bottom: var(--spacing-md);
+        border-radius: var(--border-radius-sm);
+    }
+    
+    .card-header {
+        padding: var(--spacing-sm) var(--spacing-md);
+        margin-bottom: var(--spacing-sm);
+    }
+    
+    .card-title {
+        font-size: var(--font-size-base);
+        margin: 0;
+    }
+    
+    .card-title i {
+        font-size: 18px;
+    }
+    
+    .card-body {
+        padding: var(--spacing-md);
+    }
+    
+    /* フォーム要素の最適化 */
+    .form-group {
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .form-label {
+        font-size: var(--font-size-xs);
+        margin-bottom: var(--spacing-xs);
+        font-weight: var(--font-weight-semibold);
+    }
+    
+    .form-control {
+        padding: var(--spacing-sm);
+        font-size: var(--font-size-sm);
+        height: 44px; /* タップしやすい高さ */
+        border-radius: var(--border-radius-sm);
+    }
+    
+    .form-text {
+        font-size: 11px;
+        margin-top: 2px;
+    }
+    
+    /* グリッドレイアウトの最適化 */
+    .grid {
+        gap: var(--spacing-sm);
+    }
+    
+    .grid.grid-cols-2 {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .grid.grid-cols-3 {
+        grid-template-columns: 1fr;
+    }
+    
+    /* コンパクトグリッド（2列維持） */
+    .grid.compact-mobile {
+        gap: var(--spacing-xs);
+    }
+    
+    .grid.compact-mobile .form-group {
+        margin-bottom: var(--spacing-sm);
+    }
+    
+    .grid.compact-mobile .form-label {
+        font-size: 11px;
+        margin-bottom: 2px;
+    }
+    
+    .grid.compact-mobile .form-control {
+        padding: 8px;
+        font-size: var(--font-size-xs);
+        height: 38px;
+    }
+    
+    /* 左右分割レイアウト（項目名：入力欄 = 1:1） */
+    .form-row {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        margin-bottom: var(--spacing-sm);
+        min-height: 44px;
+    }
+    
+    .form-row .form-label {
+        flex: 1;
+        margin: 0;
+        font-size: var(--font-size-sm);
+        font-weight: var(--font-weight-medium);
+        color: var(--text-color);
+    }
+    
+    .form-row .form-control {
+        flex: 1;
+        margin: 0;
+        height: 38px;
+        padding: var(--spacing-xs);
+        font-size: var(--font-size-sm);
+    }
+    
+    .form-row .form-text {
+        font-size: 10px;
+        margin-top: 2px;
+        color: var(--text-muted);
+    }
+    
+    /* ボタンの最適化 */
+    .btn {
+        padding: var(--spacing-sm) var(--spacing-md);
+        font-size: var(--font-size-sm);
+        min-height: 44px;
+        border-radius: var(--border-radius-sm);
+    }
+    
+    .btn i {
+        font-size: 16px;
+    }
+    
+    /* フレックスレイアウトの調整 */
+    .flex {
+        gap: var(--spacing-sm);
+    }
+    
+    .flex.gap-2 {
+        gap: var(--spacing-xs);
+    }
+    
+    /* プレビュー要素の最適化 */
+    .preview-summary {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-xs);
+    }
+    
+    .preview-category {
+        padding: var(--spacing-sm);
+    }
+    
+    .preview-category h4 {
+        font-size: 11px;
+        margin-bottom: 2px;
+    }
+    
+    .preview-category .amount {
+        font-size: var(--font-size-sm);
+    }
+    
+    /* タブの最適化 */
+    .tabs {
+        gap: var(--spacing-xs);
+    }
+    
+    .tab {
+        padding: var(--spacing-sm);
+        font-size: var(--font-size-sm);
+        min-height: 44px;
+    }
+    
+    .tab i {
+        font-size: 16px;
+    }
+    
+    /* モーダルの最適化 */
+    .modal {
+        padding: var(--spacing-sm);
+    }
+    
+    .modal-header {
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+    
+    .modal-title {
+        font-size: var(--font-size-base);
+    }
+    
+    .modal-body {
+        padding: var(--spacing-md);
+    }
+    
+    /* 既存の家計簿要素 */
     .filter-controls {
         flex-direction: column;
         align-items: stretch;

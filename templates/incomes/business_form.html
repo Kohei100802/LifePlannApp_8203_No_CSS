@@ -21,45 +21,43 @@
         <form id="businessIncomeForm">
             <input type="hidden" name="id" value="{{ income_id or '' }}">
             
-            <div class="form-group">
+            <div class="form-row">
                 <label class="form-label">事業名 <span class="text-danger">*</span></label>
                 <input type="text" name="name" class="form-control" placeholder="例：コンサルティング事業、小売業" required>
             </div>
             
-            <div class="form-group">
+            <div class="form-row">
                 <label class="form-label">説明</label>
                 <input type="text" name="description" class="form-control" placeholder="事業の詳細説明（任意）">
             </div>
             
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label class="form-label">開始年 <span class="text-danger">*</span></label>
-                        <select name="start_year" class="form-control" required>
-                            <!-- JavaScript で動的に生成 -->
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label class="form-label">終了年 <span class="text-danger">*</span></label>
-                        <select name="end_year" class="form-control" required>
-                            <!-- JavaScript で動的に生成 -->
-                        </select>
-                    </div>
-                </div>
+            <div class="form-row">
+                <label class="form-label">開始年 <span class="text-danger">*</span></label>
+                <select name="start_year" class="form-control" required>
+                    <!-- JavaScript で動的に生成 -->
+                </select>
+            </div>
+            <div class="form-row">
+                <label class="form-label">終了年 <span class="text-danger">*</span></label>
+                <select name="end_year" class="form-control" required>
+                    <!-- JavaScript で動的に生成 -->
+                </select>
             </div>
             
-            <div class="form-group">
+            <div class="form-row">
                 <label class="form-label">月額収入（万円） <span class="text-danger">*</span></label>
-                <input type="number" name="monthly_amount" class="form-control" placeholder="50" min="0" step="0.1" required>
-                <small class="form-text text-muted">事業からの月平均収入額</small>
+                <div>
+                    <input type="number" name="monthly_amount" class="form-control" placeholder="50" min="0" step="0.1" required>
+                    <small class="form-text text-muted">事業からの月平均収入額</small>
+                </div>
             </div>
             
-            <div class="form-group">
+            <div class="form-row">
                 <label class="form-label">収入増加率（年率%）</label>
-                <input type="number" name="income_increase_rate" class="form-control" placeholder="5.0" min="0" max="20" step="0.1" value="0.0">
-                <small class="form-text text-muted">事業収入の年間増加率</small>
+                <div>
+                    <input type="number" name="income_increase_rate" class="form-control" placeholder="5.0" min="0" max="20" step="0.1" value="0.0">
+                    <small class="form-text text-muted">事業収入の年間増加率</small>
+                </div>
             </div>
             
             <!-- 上限設定 -->

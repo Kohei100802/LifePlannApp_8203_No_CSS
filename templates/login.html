@@ -1,76 +1,184 @@
-{% extends "base-new.html" %}
-
-{% block title %}ログイン{% endblock %}
-
-{% block content %}
-<div class="auth-page">
-    <div class="auth-container-clean">
-        <div class="auth-header-clean">
-            <h1 class="auth-title-clean">ライフプランシミュレーター</h1>
-            <p class="auth-subtitle-clean">将来の収支を可視化して、賢い人生設計を始めましょう</p>
-        </div>
-        
-        <div class="auth-form-container">
-            <h2 class="form-title-clean">ログイン</h2>
-        
-            <form id="loginForm" class="form-clean">
-                <div class="input-group-clean">
-                    <label for="username" class="label-clean">ユーザー名</label>
-                    <input type="text" id="username" name="username" class="input-clean" placeholder="ユーザー名を入力" required>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ログイン - ライフプランアプリ</title>
+    
+    <!-- ファビコン -->
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+</head>
+<body class="auth-body">
+    <div class="auth-container">
+        <div class="auth-card">
+            <!-- ヘッダー -->
+            <div class="auth-header">
+                <div class="auth-logo">
+                    <i class="material-icons">trending_up</i>
+                    <h1>ライフプランアプリ</h1>
                 </div>
-                
-                <div class="input-group-clean">
-                    <label for="password" class="label-clean">パスワード</label>
-                    <input type="password" id="password" name="password" class="input-clean" placeholder="パスワードを入力" required>
+                <p class="auth-subtitle">アカウントにログインしてください</p>
             </div>
             
-                <button type="submit" class="submit-btn-clean">
-                    <span>ログイン</span>
-                    <i class="material-icons">arrow_forward</i>
+            <!-- フラッシュメッセージ -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <!-- ログインフォーム -->
+            <form class="auth-form" id="login-form">
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="material-icons">person</i>
+                        ユーザー名
+                    </label>
+                    <input type="text" class="form-control" id="username" name="username" required autocomplete="username">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="material-icons">lock</i>
+                        パスワード
+                    </label>
+                    <div class="password-input">
+                        <input type="password" class="form-control" id="password" name="password" required autocomplete="current-password">
+                        <button type="button" class="password-toggle" onclick="togglePassword()">
+                            <i class="material-icons" id="password-icon">visibility</i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="form-options">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="remember" name="remember">
+                        <span class="checkmark"></span>
+                        ログイン状態を保持
+                    </label>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-full" id="login-btn">
+                    <span class="btn-text">ログイン</span>
+                    <div class="spinner" id="login-spinner" style="display: none;"></div>
                 </button>
             </form>
             
-            <div class="auth-divider-clean">
-                <span>または</span>
+            <!-- フッター -->
+            <div class="auth-footer">
+                <p>アカウントをお持ちでない方は</p>
+                <a href="{{ url_for('auth.register') }}" class="auth-link">新規登録</a>
             </div>
-            
-            <a href="{{ url_for('register') }}" class="register-link-clean">
-                新規アカウント作成
-            </a>
+        </div>
+        
+        <!-- 背景装飾 -->
+        <div class="auth-decoration">
+            <div class="decoration-circle circle-1"></div>
+            <div class="decoration-circle circle-2"></div>
+            <div class="decoration-circle circle-3"></div>
         </div>
     </div>
-</div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-document.getElementById('loginForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
     
-    if (!validateRequired(this)) {
-        return;
-    }
-    
-    const submitBtn = this.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    
-    try {
-        // ローディング状態
-        submitBtn.innerHTML = '<span>ログイン中...</span><i class="material-icons rotating">refresh</i>';
-        submitBtn.disabled = true;
+    <script>
+        // ログインフォーム処理
+        document.getElementById('login-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const loginBtn = document.getElementById('login-btn');
+            const btnText = loginBtn.querySelector('.btn-text');
+            const spinner = document.getElementById('login-spinner');
+            
+            // ローディング状態
+            loginBtn.disabled = true;
+            btnText.style.display = 'none';
+            spinner.style.display = 'inline-block';
+            
+            const formData = {
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value,
+                remember: document.getElementById('remember').checked
+            };
+            
+            try {
+                const response = await fetch('{{ url_for("auth.login") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // ログイン成功
+                    window.location.href = data.redirect_url || '{{ url_for("main.dashboard") }}';
+                } else {
+                    // エラー表示
+                    showAlert(data.message || 'ログインに失敗しました', 'error');
+                }
+            } catch (error) {
+                showAlert('ネットワークエラーが発生しました', 'error');
+            } finally {
+                // ローディング状態を解除
+                loginBtn.disabled = false;
+                btnText.style.display = 'inline';
+                spinner.style.display = 'none';
+            }
+        });
         
-        const response = await submitForm(this, '/login');
-        if (response.success) {
-            submitBtn.innerHTML = '<span>成功!</span><i class="material-icons">check</i>';
-            setTimeout(() => {
-            window.location.href = '/dashboard';
-            }, 500);
+        // パスワード表示切り替え
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const passwordIcon = document.getElementById('password-icon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                passwordIcon.textContent = 'visibility_off';
+            } else {
+                passwordInput.type = 'password';
+                passwordIcon.textContent = 'visibility';
+            }
         }
-    } catch (error) {
-        console.error('Login error:', error);
-        submitBtn.innerHTML = originalText;
-        submitBtn.disabled = false;
-    }
-});
-</script>
-{% endblock %} 
+        
+        // アラート表示
+        function showAlert(message, type) {
+            // 既存のアラートを削除
+            const existingAlert = document.querySelector('.alert');
+            if (existingAlert) {
+                existingAlert.remove();
+            }
+            
+            // 新しいアラートを作成
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            
+            // フォームの前に挿入
+            const form = document.querySelector('.auth-form');
+            form.parentNode.insertBefore(alert, form);
+            
+            // 5秒後に自動削除
+            setTimeout(() => {
+                if (alert.parentNode) {
+                    alert.remove();
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html> 

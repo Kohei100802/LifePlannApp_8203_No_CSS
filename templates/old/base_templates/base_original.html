@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>{% block title %}{% endblock %} - ライフプランシミュレーター</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/fab-unified.css') }}">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#FFFFFF">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <div class="app-container">
+        {% if current_user.is_authenticated %}
+        <nav class="navigation">
+            <div class="nav-content">
+                <div class="nav-title">
+                    <h1>{% block page_title %}ライフプランシミュレーター{% endblock %}</h1>
+                </div>
+                <div class="nav-actions">
+                    <a href="#" onclick="toggleMenu()" class="nav-link" id="menu-toggle">
+                        <i class="material-icons">menu</i>
+                    </a>
+                    <a href="{{ url_for('mypage') }}" class="nav-link">
+                        <i class="material-icons">person</i>
+                    </a>
+                </div>
+            </div>
+        </nav>
+        
+        <!-- メニューモーダル -->
+        <div id="menu-modal" class="modal-overlay">
+            <div class="modal-content" style="max-width: 400px; margin-top: 80px;">
+                <div class="modal-header">
+                    <h3>メニュー</h3>
+                    <button class="close-button" onclick="closeMenuModal()">
+                        <i class="material-icons">close</i>
+                    </button>
+                </div>
+                <div class="modal-body" style="padding: 0;">
+                    <div class="menu-items">
+                        <a href="/dashboard" class="menu-item" onclick="closeMenuModal()">
+                            <div class="menu-item-icon">
+                                <i class="material-icons">home</i>
+                            </div>
+                            <div class="menu-item-content">
+                                <div class="menu-item-title">トップ</div>
+                            </div>
+                            <div class="menu-item-arrow">
+                                <i class="material-icons">chevron_right</i>
+                            </div>
+                        </a>
+                        <a href="#" onclick="goToCurrentMonthHousehold(); closeMenuModal();" class="menu-item">
+                            <div class="menu-item-icon">
+                                <i class="material-icons">book</i>
+                            </div>
+                            <div class="menu-item-content">
+                                <div class="menu-item-title">家計簿</div>
+                            </div>
+                            <div class="menu-item-arrow">
+                                <i class="material-icons">chevron_right</i>
+                            </div>
+                        </a>
+                        <a href="/expenses/incomes" class="menu-item" onclick="closeMenuModal()">
+                            <div class="menu-item-icon">
+                                <i class="material-icons">account_balance_wallet</i>
+                            </div>
+                            <div class="menu-item-content">
+                                <div class="menu-item-title">支出/収入</div>
+                            </div>
+                            <div class="menu-item-arrow">
+                                <i class="material-icons">chevron_right</i>
+                            </div>
+                        </a>
+                        <a href="/simulation" class="menu-item" onclick="closeMenuModal()">
+                            <div class="menu-item-icon">
+                                <i class="material-icons">trending_up</i>
+                            </div>
+                            <div class="menu-item-content">
+                                <div class="menu-item-title">シミュレーション</div>
+                            </div>
+                            <div class="menu-item-arrow">
+                                <i class="material-icons">chevron_right</i>
+                            </div>
+                        </a>
+                        <a href="{{ url_for('logout') }}" class="menu-item menu-item-danger" onclick="closeMenuModal()">
+                            <div class="menu-item-icon">
+                                <i class="material-icons">logout</i>
+                            </div>
+                            <div class="menu-item-content">
+                                <div class="menu-item-title">ログアウト</div>
+                            </div>
+                            <div class="menu-item-arrow">
+                                <i class="material-icons">chevron_right</i>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% block monthly_header %}{% endblock %}
+        
+        {% block tab_navigation %}{% endblock %}
+        
+        <main class="main-content">
+            {% block content %}{% endblock %}
+        </main>
+        
+        {% if current_user.is_authenticated %}
+        <footer class="footer-nav">
+            <a href="/dashboard" class="footer-item {{ 'active' if request.endpoint == 'dashboard' }}">
+                <i class="material-icons">home</i>
+                <span>トップ</span>
+            </a>
+            <a href="#" onclick="goToCurrentMonthHousehold()" class="footer-item {{ 'active' if request.endpoint in ['household_menu', 'household_book', 'household_books', 'household_book_monthly'] }}">
+                <i class="material-icons">book</i>
+                <span>家計簿</span>
+            </a>
+            <a href="/expenses/incomes" class="footer-item {{ 'active' if request.endpoint in ['expenses', 'incomes', 'expenses_incomes'] }}">
+                <i class="material-icons">account_balance_wallet</i>
+                <span>支出/収入</span>
+            </a>
+            <a href="/simulation" class="footer-item {{ 'active' if request.endpoint == 'simulation' }}">
+                <i class="material-icons">trending_up</i>
+                <span>シミュレーション</span>
+            </a>
+            <a href="/mypage" class="footer-item {{ 'active' if request.endpoint == 'mypage' }}">
+                <i class="material-icons">person</i>
+                <span>マイページ</span>
+            </a>
+        </footer>
+        {% endif %}
+    </div>
+    
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">処理中...</div>
+    </div>
+    
+    <div id="toast-container" class="toast-container"></div>
+    
+    <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+    <script>
+    function goToCurrentMonthHousehold() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth() + 1;
+        window.location.href = `/household-books/${year}/${month}`;
+    }
+    
+    function toggleMenu() {
+        const modal = document.getElementById('menu-modal');
+        modal.classList.toggle('show');
+        
+        if (modal.classList.contains('show')) {
+            // スクロール防止処理
+        } else {
+            // スクロール復元処理
+        }
+    }
+    
+    function closeMenuModal() {
+        const modal = document.getElementById('menu-modal');
+        modal.classList.remove('show');
+        // スクロール復元処理
+    }
+    
+    document.addEventListener('click', function(event) {
+        const modal = document.getElementById('menu-modal');
+        const modalContent = modal ? modal.querySelector('.modal-content') : null;
+        const menuToggle = document.getElementById('menu-toggle');
+        
+        if (modal && modal.classList.contains('show') && 
+            !modalContent.contains(event.target) && 
+            !menuToggle.contains(event.target)) {
+            closeMenuModal();
+        }
+    });
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html> 

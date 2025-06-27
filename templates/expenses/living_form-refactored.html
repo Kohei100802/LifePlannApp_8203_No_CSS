@@ -34,7 +34,7 @@
         <form id="livingExpensesForm">
             <input type="hidden" name="id" value="{{ expense_id or '' }}">
             
-            <div class="grid grid-cols-2 gap-4 mb-4">
+            <div class="grid grid-cols-2 compact-mobile gap-4 mb-4">
                 <div class="form-group">
                     <label class="form-label">項目名 <span class="text-danger">*</span></label>
                     <input type="text" name="name" class="form-control" placeholder="例：基本生活費" required>
@@ -46,7 +46,7 @@
                 </div>
             </div>
             
-            <div class="grid grid-cols-3 gap-4 mb-4">
+            <div class="grid grid-cols-2 compact-mobile gap-4 mb-4">
                 <div class="form-group">
                     <label class="form-label">開始年 <span class="text-danger">*</span></label>
                     <select name="start_year" class="form-control" required>
@@ -61,10 +61,11 @@
                     </select>
                 </div>
                 
-                <div class="form-group">
-                    <label class="form-label">物価上昇率（年率%）</label>
-                    <input type="number" name="inflation_rate" class="form-control" placeholder="2.0" min="0" max="20" step="0.1" value="2.0">
-                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">物価上昇率（年率%）</label>
+                <input type="number" name="inflation_rate" class="form-control" placeholder="2.0" min="0" max="20" step="0.1" value="2.0">
             </div>
         </form>
     </div>
@@ -79,15 +80,13 @@
         </h3>
     </div>
     <div class="card-body">
-        <div class="grid grid-cols-2 gap-4">
-            <div class="form-group">
-                <label class="form-label">自炊（万円）</label>
-                <input type="number" name="food_home" class="form-control" placeholder="3" min="0" step="0.1" form="livingExpensesForm">
-            </div>
-            <div class="form-group">
-                <label class="form-label">外食（万円）</label>
-                <input type="number" name="food_outside" class="form-control" placeholder="2" min="0" step="0.1" form="livingExpensesForm">
-            </div>
+        <div class="form-row">
+            <label class="form-label">自炊（万円）</label>
+            <input type="number" name="food_home" class="form-control" placeholder="3" min="0" step="0.1" form="livingExpensesForm">
+        </div>
+        <div class="form-row">
+            <label class="form-label">外食（万円）</label>
+            <input type="number" name="food_outside" class="form-control" placeholder="2" min="0" step="0.1" form="livingExpensesForm">
         </div>
     </div>
 </div>
@@ -101,19 +100,17 @@
         </h3>
     </div>
     <div class="card-body">
-        <div class="grid grid-cols-3 gap-4">
-            <div class="form-group">
-                <label class="form-label">電気（万円）</label>
-                <input type="number" name="utility_electricity" class="form-control" placeholder="0.8" min="0" step="0.1" form="livingExpensesForm">
-            </div>
-            <div class="form-group">
-                <label class="form-label">ガス（万円）</label>
-                <input type="number" name="utility_gas" class="form-control" placeholder="0.5" min="0" step="0.1" form="livingExpensesForm">
-            </div>
-            <div class="form-group">
-                <label class="form-label">水道（万円）</label>
-                <input type="number" name="utility_water" class="form-control" placeholder="0.3" min="0" step="0.1" form="livingExpensesForm">
-            </div>
+        <div class="form-row">
+            <label class="form-label">電気（万円）</label>
+            <input type="number" name="utility_electricity" class="form-control" placeholder="0.8" min="0" step="0.1" form="livingExpensesForm">
+        </div>
+        <div class="form-row">
+            <label class="form-label">ガス（万円）</label>
+            <input type="number" name="utility_gas" class="form-control" placeholder="0.5" min="0" step="0.1" form="livingExpensesForm">
+        </div>
+        <div class="form-row">
+            <label class="form-label">水道（万円）</label>
+            <input type="number" name="utility_water" class="form-control" placeholder="0.3" min="0" step="0.1" form="livingExpensesForm">
         </div>
     </div>
 </div>
@@ -127,19 +124,17 @@
         </h3>
     </div>
     <div class="card-body">
-        <div class="grid grid-cols-3 gap-4">
-            <div class="form-group">
-                <label class="form-label">携帯（万円）</label>
-                <input type="number" name="phone" class="form-control" placeholder="0.8" min="0" step="0.1" form="livingExpensesForm">
-            </div>
-            <div class="form-group">
-                <label class="form-label">ネット（万円）</label>
-                <input type="number" name="internet" class="form-control" placeholder="0.5" min="0" step="0.1" form="livingExpensesForm">
-            </div>
-            <div class="form-group">
-                <label class="form-label">サブスク（万円）</label>
-                <input type="number" name="subscription_services" class="form-control" placeholder="0.3" min="0" step="0.1" form="livingExpensesForm">
-            </div>
+        <div class="form-row">
+            <label class="form-label">携帯（万円）</label>
+            <input type="number" name="phone" class="form-control" placeholder="0.8" min="0" step="0.1" form="livingExpensesForm">
+        </div>
+        <div class="form-row">
+            <label class="form-label">ネット（万円）</label>
+            <input type="number" name="internet" class="form-control" placeholder="0.5" min="0" step="0.1" form="livingExpensesForm">
+        </div>
+        <div class="form-row">
+            <label class="form-label">サブスク（万円）</label>
+            <input type="number" name="subscription_services" class="form-control" placeholder="0.3" min="0" step="0.1" form="livingExpensesForm">
         </div>
     </div>
 </div>
@@ -153,23 +148,21 @@
         </h3>
     </div>
     <div class="card-body">
-        <div class="grid grid-cols-2 gap-4">
-            <div class="form-group">
-                <label class="form-label">日用品（万円）</label>
-                <input type="number" name="household_goods" class="form-control" placeholder="0.5" min="0" step="0.1" form="livingExpensesForm">
-            </div>
-            <div class="form-group">
-                <label class="form-label">衛生用品（万円）</label>
-                <input type="number" name="hygiene" class="form-control" placeholder="0.3" min="0" step="0.1" form="livingExpensesForm">
-            </div>
-            <div class="form-group">
-                <label class="form-label">被服（万円）</label>
-                <input type="number" name="clothing" class="form-control" placeholder="1" min="0" step="0.1" form="livingExpensesForm">
-            </div>
-            <div class="form-group">
-                <label class="form-label">美容（万円）</label>
-                <input type="number" name="beauty" class="form-control" placeholder="0.5" min="0" step="0.1" form="livingExpensesForm">
-            </div>
+        <div class="form-row">
+            <label class="form-label">日用品（万円）</label>
+            <input type="number" name="household_goods" class="form-control" placeholder="0.5" min="0" step="0.1" form="livingExpensesForm">
+        </div>
+        <div class="form-row">
+            <label class="form-label">衛生用品（万円）</label>
+            <input type="number" name="hygiene" class="form-control" placeholder="0.3" min="0" step="0.1" form="livingExpensesForm">
+        </div>
+        <div class="form-row">
+            <label class="form-label">被服（万円）</label>
+            <input type="number" name="clothing" class="form-control" placeholder="1" min="0" step="0.1" form="livingExpensesForm">
+        </div>
+        <div class="form-row">
+            <label class="form-label">美容（万円）</label>
+            <input type="number" name="beauty" class="form-control" placeholder="0.5" min="0" step="0.1" form="livingExpensesForm">
         </div>
     </div>
 </div>
@@ -183,23 +176,21 @@
         </h3>
     </div>
     <div class="card-body">
-        <div class="grid grid-cols-2 gap-4">
-            <div class="form-group">
-                <label class="form-label">子供食費（万円）</label>
-                <input type="number" name="child_food" class="form-control" placeholder="1" min="0" step="0.1" form="livingExpensesForm">
-            </div>
-            <div class="form-group">
-                <label class="form-label">子供衣服（万円）</label>
-                <input type="number" name="child_clothing" class="form-control" placeholder="0.5" min="0" step="0.1" form="livingExpensesForm">
-            </div>
-            <div class="form-group">
-                <label class="form-label">子供医療費（万円）</label>
-                <input type="number" name="child_medical" class="form-control" placeholder="0.3" min="0" step="0.1" form="livingExpensesForm">
-            </div>
-            <div class="form-group">
-                <label class="form-label">子供その他（万円）</label>
-                <input type="number" name="child_other" class="form-control" placeholder="0.5" min="0" step="0.1" form="livingExpensesForm">
-            </div>
+        <div class="form-row">
+            <label class="form-label">子供食費（万円）</label>
+            <input type="number" name="child_food" class="form-control" placeholder="1" min="0" step="0.1" form="livingExpensesForm">
+        </div>
+        <div class="form-row">
+            <label class="form-label">子供衣服（万円）</label>
+            <input type="number" name="child_clothing" class="form-control" placeholder="0.5" min="0" step="0.1" form="livingExpensesForm">
+        </div>
+        <div class="form-row">
+            <label class="form-label">子供医療費（万円）</label>
+            <input type="number" name="child_medical" class="form-control" placeholder="0.3" min="0" step="0.1" form="livingExpensesForm">
+        </div>
+        <div class="form-row">
+            <label class="form-label">子供その他（万円）</label>
+            <input type="number" name="child_other" class="form-control" placeholder="0.5" min="0" step="0.1" form="livingExpensesForm">
         </div>
     </div>
 </div>
@@ -213,23 +204,21 @@
         </h3>
     </div>
     <div class="card-body">
-        <div class="grid grid-cols-2 gap-4">
-            <div class="form-group">
-                <label class="form-label">交通費（万円）</label>
-                <input type="number" name="transport" class="form-control" placeholder="1.5" min="0" step="0.1" form="livingExpensesForm">
-            </div>
-            <div class="form-group">
-                <label class="form-label">娯楽費（万円）</label>
-                <input type="number" name="entertainment" class="form-control" placeholder="2" min="0" step="0.1" form="livingExpensesForm">
-            </div>
-            <div class="form-group">
-                <label class="form-label">医療費（万円）</label>
-                <input type="number" name="medical" class="form-control" placeholder="1" min="0" step="0.1" form="livingExpensesForm">
-            </div>
-            <div class="form-group">
-                <label class="form-label">その他（万円）</label>
-                <input type="number" name="other" class="form-control" placeholder="1" min="0" step="0.1" form="livingExpensesForm">
-            </div>
+        <div class="form-row">
+            <label class="form-label">交通費（万円）</label>
+            <input type="number" name="transport" class="form-control" placeholder="1.5" min="0" step="0.1" form="livingExpensesForm">
+        </div>
+        <div class="form-row">
+            <label class="form-label">娯楽費（万円）</label>
+            <input type="number" name="entertainment" class="form-control" placeholder="2" min="0" step="0.1" form="livingExpensesForm">
+        </div>
+        <div class="form-row">
+            <label class="form-label">医療費（万円）</label>
+            <input type="number" name="medical" class="form-control" placeholder="1" min="0" step="0.1" form="livingExpensesForm">
+        </div>
+        <div class="form-row">
+            <label class="form-label">その他（万円）</label>
+            <input type="number" name="other" class="form-control" placeholder="1" min="0" step="0.1" form="livingExpensesForm">
         </div>
     </div>
 </div>
