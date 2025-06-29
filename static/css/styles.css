@@ -2903,52 +2903,6 @@ select.form-control {
     color: #6c757d;
 }
 
-/* モバイル対応の教育費表示 */
-@media (max-width: 768px) {
-    .select-with-cost {
-        margin-bottom: 1rem;
-    }
-    
-    .cost-display {
-        font-size: 0.8rem;
-        padding: 3px 6px;
-    }
-    
-    .total-cost-display {
-        padding: 0.75rem;
-        margin-top: 1rem;
-    }
-    
-    .total-cost-display h5 {
-        font-size: 1rem;
-        margin-bottom: 0.5rem;
-    }
-    
-    .total-amount {
-        font-size: 0.9rem;
-    }
-    
-    .action-buttons {
-        opacity: 1; /* モバイルでは常に表示 */
-    }
-    
-    .education-periods {
-        padding: 10px 12px;
-        font-size: 0.85rem;
-    }
-    
-    .period-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 2px;
-    }
-    
-    .stage-name {
-        min-width: auto;
-    }
-}
-
-/* マイページスタイル */
 .mypage-container {
     /* max-width: 600px; 横幅制限を削除 */
     margin: 0 auto;
