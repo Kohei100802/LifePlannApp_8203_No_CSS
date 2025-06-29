@@ -767,6 +767,62 @@ body.client-browser.client-mobile.client-ios .app-container {
 .main-content {
     flex: 1;
     padding: 12px 16px calc(88px + env(safe-area-inset-bottom)); /* スマホ向けに適度なpadding追加 */
+    /* margin-top: 0; 削除 - 各ページで個別に設定 */
+}
+
+/* ページ固有のmargin-top設定 */
+/* ダッシュボードページ */
+.dashboard-page .main-content {
+    margin-top: 0;
+}
+
+/* 家計簿ページ */
+.household-page .main-content {
+    margin-top: 0;
+}
+
+/* 収入ページ */
+.incomes-page .main-content {
+    margin-top: 0;
+}
+
+/* 支出ページ */
+.expenses-page .main-content {
+    margin-top: 0;
+}
+
+/* シミュレーションページ */
+.simulation-page .main-content {
+    margin-top: 0;
+}
+
+/* マイページ */
+.mypage-page .main-content {
+    margin-top: 0;
+}
+
+/* ログインページ */
+.login-page .main-content {
+    margin-top: 0;
+}
+
+/* 登録ページ */
+.register-page .main-content {
+    margin-top: 0;
+}
+
+/* アカウント管理ページ */
+.account-management-page .main-content {
+    margin-top: 0;
+}
+
+/* ランディングページ */
+.landing-page .main-content {
+    margin-top: 0;
+}
+
+/* エラーページ */
+.error-page .main-content {
     margin-top: 0;
 }
 
@@ -1787,6 +1843,51 @@ select.form-control {
         padding-bottom: calc(var(--spacing-xl) + 80px + env(safe-area-inset-bottom));
     }
 
+    /* ページ固有のmargin-top設定（デスクトップ） */
+    .dashboard-page .main-content {
+        margin-top: 0;
+    }
+
+    .household-page .main-content {
+        margin-top: 0;
+    }
+
+    .incomes-page .main-content {
+        margin-top: 0;
+    }
+
+    .expenses-page .main-content {
+        margin-top: 0;
+    }
+
+    .simulation-page .main-content {
+        margin-top: 0;
+    }
+
+    .mypage-page .main-content {
+        margin-top: 0;
+    }
+
+    .login-page .main-content {
+        margin-top: 0;
+    }
+
+    .register-page .main-content {
+        margin-top: 0;
+    }
+
+    .account-management-page .main-content {
+        margin-top: 0;
+    }
+
+    .landing-page .main-content {
+        margin-top: 0;
+    }
+
+    .error-page .main-content {
+        margin-top: 0;
+    }
+
     .expense-nav-grid {
         /* 縦一列レイアウトを維持 */
         gap: var(--spacing-md);
@@ -2672,27 +2773,7 @@ select.form-control {
 }
 
 /* ブラウザ版のモバイル対応設定 */
-@media (max-width: 768px) {
-    .client-browser .footer-nav {
-        height: calc(80px + env(safe-area-inset-bottom, 0px));
-    }
 
-    .client-browser .footer-item {
-        padding: 8px 4px;
-    }
-
-    .client-browser .footer-item .material-icons {
-        font-size: 20px;
-    }
-
-    .client-browser .footer-item span {
-        font-size: 10px;
-    }
-
-    .client-browser .main-content {
-        padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px) + 24px);
-    }
-}
 
 /* アプリ版での家計簿専用設定 */
 .client-app .mf-balance-summary {
@@ -3197,16 +3278,7 @@ select.form-control {
     opacity: 0.7;
 }
 
-@media (max-width: 768px) {
-    .quote-content {
-        padding: var(--spacing-md);
-    }
-    
-    .quote-text {
-        font-size: 1rem;
-        line-height: 1.5;
-    }
-}
+
 
 .alert li {
     margin-bottom: var(--spacing-xs);
@@ -3570,20 +3642,7 @@ select.form-control {
 }
 
 /* モバイル対応 */
-@media (max-width: 768px) {
-    .info-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .detail-toggle {
-        padding: var(--spacing-md) 0;
-        font-size: var(--font-size-base);
-    }
-    
-    .detail-toggle:hover {
-        padding: var(--spacing-md);
-    }
-}
+
 
 
 
@@ -6007,6 +6066,8 @@ html {
     .client-browser .main-content {
         padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px) + 24px);
     }
+}
+
 .nav-link:hover,
 .nav-link:focus {
     color: var(--color-accent);
@@ -7150,4 +7211,49 @@ body.client-app .dropdown-item:hover {
     .popup-menu-item .material-icons {
         color: #0A84FF;
     }
+}
+
+/* ページ固有のmargin-top設定（モバイル） */
+.client-app .dashboard-page .main-content {
+    margin-top: calc(48px + env(safe-area-inset-top, 0px));
+}
+
+.client-app .household-page .main-content {
+    margin-top: calc(48px + env(safe-area-inset-top, 0px));
+}
+
+.client-app .incomes-page .main-content {
+    margin-top: calc(48px + env(safe-area-inset-top, 0px));
+}
+
+.client-app .expenses-page .main-content {
+    margin-top: calc(48px + env(safe-area-inset-top, 0px));
+}
+
+.client-app .simulation-page .main-content {
+    margin-top: calc(48px + env(safe-area-inset-top, 0px));
+}
+
+.client-app .mypage-page .main-content {
+    margin-top: calc(48px + env(safe-area-inset-top, 0px));
+}
+
+.client-app .login-page .main-content {
+    margin-top: calc(48px + env(safe-area-inset-top, 0px));
+}
+
+.client-app .register-page .main-content {
+    margin-top: calc(48px + env(safe-area-inset-top, 0px));
+}
+
+.client-app .account-management-page .main-content {
+    margin-top: calc(48px + env(safe-area-inset-top, 0px));
+}
+
+.client-app .landing-page .main-content {
+    margin-top: calc(48px + env(safe-area-inset-top, 0px));
+}
+
+.client-app .error-page .main-content {
+    margin-top: calc(48px + env(safe-area-inset-top, 0px));
 }

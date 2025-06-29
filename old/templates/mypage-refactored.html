@@ -1,0 +1,405 @@
+{% extends "base-refactored.html" %}
+
+{% block title %}マイページ - ライフプランアプリ{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/mypage.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">
+        <i class="material-icons">person</i>
+        マイページ
+    </h1>
+    <p class="page-subtitle">あなたのライフプランを管理しましょう</p>
+</div>
+
+<!-- ユーザー情報カード -->
+<div class="card user-info-card mb-4">
+    <div class="user-avatar">
+        <i class="material-icons">account_circle</i>
+    </div>
+    <div class="user-details">
+        <h2>{{ current_user.username }}</h2>
+        <p>ライフプランアプリへようこそ</p>
+        <div class="user-stats">
+            <div class="stat-item">
+                <span class="stat-value">3</span>
+                <span class="stat-label">シミュレーション</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">24</span>
+                <span class="stat-label">家計簿エントリー</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- メニューグリッド -->
+<div class="menu-grid">
+    <!-- 家計簿管理 -->
+    <div class="menu-section">
+        <h3 class="section-title">
+            <i class="material-icons">account_balance_wallet</i>
+            家計簿管理
+        </h3>
+        <div class="menu-cards">
+            <a href="{{ url_for('household.monthly') }}" class="menu-card">
+                <div class="menu-icon">
+                    <i class="material-icons">calendar_today</i>
+                </div>
+                <div class="menu-content">
+                    <h4>月別家計簿</h4>
+                    <p>月ごとの収支を管理</p>
+                </div>
+                <i class="material-icons menu-arrow">arrow_forward_ios</i>
+            </a>
+            
+            <a href="{{ url_for('household.calendar') }}" class="menu-card">
+                <div class="menu-icon">
+                    <i class="material-icons">event</i>
+                </div>
+                <div class="menu-content">
+                    <h4>カレンダー表示</h4>
+                    <p>日別の収支をカレンダーで確認</p>
+                </div>
+                <i class="material-icons menu-arrow">arrow_forward_ios</i>
+            </a>
+        </div>
+    </div>
+
+    <!-- 収入・支出管理 -->
+    <div class="menu-section">
+        <h3 class="section-title">
+            <i class="material-icons">trending_up</i>
+            収入・支出管理
+        </h3>
+        <div class="menu-cards">
+            <a href="{{ url_for('incomes.salary') }}" class="menu-card">
+                <div class="menu-icon income">
+                    <i class="material-icons">work</i>
+                </div>
+                <div class="menu-content">
+                    <h4>給与収入</h4>
+                    <p>給与・賞与の管理</p>
+                </div>
+                <i class="material-icons menu-arrow">arrow_forward_ios</i>
+            </a>
+            
+            <a href="{{ url_for('incomes.sidejob') }}" class="menu-card">
+                <div class="menu-icon income">
+                    <i class="material-icons">business_center</i>
+                </div>
+                <div class="menu-content">
+                    <h4>副業収入</h4>
+                    <p>副業・フリーランス収入</p>
+                </div>
+                <i class="material-icons menu-arrow">arrow_forward_ios</i>
+            </a>
+            
+            <a href="{{ url_for('expenses.living') }}" class="menu-card">
+                <div class="menu-icon expense">
+                    <i class="material-icons">home</i>
+                </div>
+                <div class="menu-content">
+                    <h4>生活費</h4>
+                    <p>日常の生活費管理</p>
+                </div>
+                <i class="material-icons menu-arrow">arrow_forward_ios</i>
+            </a>
+            
+            <a href="{{ url_for('expenses.housing') }}" class="menu-card">
+                <div class="menu-icon expense">
+                    <i class="material-icons">house</i>
+                </div>
+                <div class="menu-content">
+                    <h4>住居費</h4>
+                    <p>家賃・住宅ローン管理</p>
+                </div>
+                <i class="material-icons menu-arrow">arrow_forward_ios</i>
+            </a>
+        </div>
+    </div>
+
+    <!-- ライフプランシミュレーション -->
+    <div class="menu-section">
+        <h3 class="section-title">
+            <i class="material-icons">analytics</i>
+            ライフプランシミュレーション
+        </h3>
+        <div class="menu-cards">
+            <a href="{{ url_for('simulation.create') }}" class="menu-card featured">
+                <div class="menu-icon primary">
+                    <i class="material-icons">add_chart</i>
+                </div>
+                <div class="menu-content">
+                    <h4>新規シミュレーション</h4>
+                    <p>新しいライフプランを作成</p>
+                </div>
+                <i class="material-icons menu-arrow">arrow_forward_ios</i>
+            </a>
+            
+            <a href="{{ url_for('simulation.list') }}" class="menu-card">
+                <div class="menu-icon">
+                    <i class="material-icons">list_alt</i>
+                </div>
+                <div class="menu-content">
+                    <h4>シミュレーション一覧</h4>
+                    <p>過去のシミュレーションを確認</p>
+                </div>
+                <i class="material-icons menu-arrow">arrow_forward_ios</i>
+            </a>
+        </div>
+    </div>
+
+    <!-- 分析・レポート -->
+    <div class="menu-section">
+        <h3 class="section-title">
+            <i class="material-icons">assessment</i>
+            分析・レポート
+        </h3>
+        <div class="menu-cards">
+            <button class="menu-card" onclick="showLandAnalysis()">
+                <div class="menu-icon warning">
+                    <i class="material-icons">terrain</i>
+                </div>
+                <div class="menu-content">
+                    <h4>土地分析</h4>
+                    <p>土地投資の分析</p>
+                </div>
+                <i class="material-icons menu-arrow">arrow_forward_ios</i>
+            </button>
+            
+            <a href="{{ url_for('main.dashboard') }}" class="menu-card">
+                <div class="menu-icon info">
+                    <i class="material-icons">dashboard</i>
+                </div>
+                <div class="menu-content">
+                    <h4>ダッシュボード</h4>
+                    <p>総合的な財務状況</p>
+                </div>
+                <i class="material-icons menu-arrow">arrow_forward_ios</i>
+            </a>
+        </div>
+    </div>
+
+    <!-- 設定・その他 -->
+    <div class="menu-section">
+        <h3 class="section-title">
+            <i class="material-icons">settings</i>
+            設定・その他
+        </h3>
+        <div class="menu-cards">
+            <a href="{{ url_for('auth.account_management') }}" class="menu-card">
+                <div class="menu-icon">
+                    <i class="material-icons">manage_accounts</i>
+                </div>
+                <div class="menu-content">
+                    <h4>アカウント管理</h4>
+                    <p>プロフィール・パスワード変更</p>
+                </div>
+                <i class="material-icons menu-arrow">arrow_forward_ios</i>
+            </a>
+            
+            <button class="menu-card" onclick="showHelp()">
+                <div class="menu-icon">
+                    <i class="material-icons">help</i>
+                </div>
+                <div class="menu-content">
+                    <h4>ヘルプ・サポート</h4>
+                    <p>使い方やよくある質問</p>
+                </div>
+                <i class="material-icons menu-arrow">arrow_forward_ios</i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- クイックアクション FAB -->
+<div class="fab-container">
+    <button class="fab main-fab" onclick="toggleFabMenu()">
+        <i class="material-icons" id="fab-icon">add</i>
+    </button>
+    
+    <div class="fab-menu" id="fab-menu">
+        <button class="fab sub-fab" onclick="quickAddIncome()" title="収入を追加">
+            <i class="material-icons">add_circle</i>
+        </button>
+        <button class="fab sub-fab" onclick="quickAddExpense()" title="支出を追加">
+            <i class="material-icons">remove_circle</i>
+        </button>
+        <button class="fab sub-fab" onclick="location.href='{{ url_for('simulation.create') }}'" title="シミュレーション作成">
+            <i class="material-icons">analytics</i>
+        </button>
+    </div>
+</div>
+
+<!-- ヘルプモーダル -->
+<div class="modal" id="help-modal">
+    <div class="modal-header">
+        <h3 class="modal-title">ヘルプ・サポート</h3>
+        <button class="modal-close" onclick="closeModal('help')">
+            <i class="material-icons">close</i>
+        </button>
+    </div>
+    <div class="modal-body">
+        <div class="help-content">
+            <div class="help-section">
+                <h4>基本的な使い方</h4>
+                <ul>
+                    <li>家計簿で日々の収支を記録</li>
+                    <li>収入・支出設定で将来の計画を立てる</li>
+                    <li>シミュレーションで長期的な資産推移を確認</li>
+                </ul>
+            </div>
+            
+            <div class="help-section">
+                <h4>よくある質問</h4>
+                <div class="faq-item">
+                    <strong>Q: データのバックアップはどうなっていますか？</strong>
+                    <p>A: データは定期的に自動バックアップされています。</p>
+                </div>
+                <div class="faq-item">
+                    <strong>Q: スマートフォンでも使えますか？</strong>
+                    <p>A: はい、レスポンシブデザインでスマートフォンにも対応しています。</p>
+                </div>
+            </div>
+            
+            <div class="help-section">
+                <h4>お問い合わせ</h4>
+                <p>ご不明な点がございましたら、以下にお問い合わせください：</p>
+                <p><strong>メール:</strong> support@lifeplan-app.com</p>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-primary" onclick="closeModal('help')">閉じる</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// 土地分析表示
+function showLandAnalysis() {
+    window.open('http://localhost:8206', '_blank');
+}
+
+// ヘルプモーダル表示
+function showHelp() {
+    const modal = document.getElementById('help-modal');
+    const overlay = document.getElementById('overlay');
+    
+    modal.classList.add('active');
+    overlay.classList.add('active');
+}
+
+// モーダル閉じる
+function closeModal(type) {
+    const modal = document.getElementById(type + '-modal');
+    const overlay = document.getElementById('overlay');
+    
+    modal.classList.remove('active');
+    overlay.classList.remove('active');
+}
+
+// FABメニュー制御
+let fabMenuOpen = false;
+
+function toggleFabMenu() {
+    const fabMenu = document.getElementById('fab-menu');
+    const fabIcon = document.getElementById('fab-icon');
+    
+    fabMenuOpen = !fabMenuOpen;
+    
+    if (fabMenuOpen) {
+        fabMenu.classList.add('active');
+        fabIcon.textContent = 'close';
+    } else {
+        fabMenu.classList.remove('active');
+        fabIcon.textContent = 'add';
+    }
+}
+
+// クイック収入追加
+function quickAddIncome() {
+    // 簡単な収入追加ダイアログを表示
+    const amount = prompt('収入金額を入力してください（円）:');
+    const description = prompt('収入の説明を入力してください:');
+    
+    if (amount && !isNaN(amount)) {
+        // API呼び出しで収入を追加
+        fetch('/household/entry/create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                amount: parseFloat(amount),
+                category_id: 1, // デフォルトの収入カテゴリ
+                category_type: 'income',
+                description: description || '収入',
+                date: new Date().toISOString().split('T')[0]
+            })
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('収入を追加しました');
+                toggleFabMenu();
+            } else {
+                alert('収入の追加に失敗しました');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('ネットワークエラーが発生しました');
+        });
+    }
+}
+
+// クイック支出追加
+function quickAddExpense() {
+    // 簡単な支出追加ダイアログを表示
+    const amount = prompt('支出金額を入力してください（円）:');
+    const description = prompt('支出の説明を入力してください:');
+    
+    if (amount && !isNaN(amount)) {
+        // API呼び出しで支出を追加
+        fetch('/household/entry/create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                amount: parseFloat(amount),
+                category_id: 1, // デフォルトの支出カテゴリ
+                category_type: 'expense',
+                description: description || '支出',
+                date: new Date().toISOString().split('T')[0]
+            })
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('支出を追加しました');
+                toggleFabMenu();
+            } else {
+                alert('支出の追加に失敗しました');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('ネットワークエラーが発生しました');
+        });
+    }
+}
+
+// FABメニューの外側クリックで閉じる
+document.addEventListener('click', function(event) {
+    const fabContainer = document.querySelector('.fab-container');
+    if (!fabContainer.contains(event.target) && fabMenuOpen) {
+        toggleFabMenu();
+    }
+});
+</script>
+{% endblock %} 

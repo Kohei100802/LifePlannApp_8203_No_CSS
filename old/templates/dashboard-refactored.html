@@ -1,0 +1,428 @@
+{% extends "base-refactored.html" %}
+
+{% block title %}ダッシュボード - ライフプランアプリ{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">ダッシュボード</h1>
+    <p class="page-subtitle">あなたのライフプランの概要をご確認ください</p>
+</div>
+
+<!-- サマリーカード -->
+<div class="grid grid-cols-4 mb-4">
+    <div class="card summary-card summary-card-income">
+        <div class="summary-card-icon">
+            <i class="material-icons">trending_up</i>
+        </div>
+        <div class="summary-card-content">
+            <h3 class="summary-card-title">総収入</h3>
+            <p class="summary-card-value">¥<span id="total-income">0</span></p>
+            <p class="summary-card-change positive">+5.2%</p>
+        </div>
+    </div>
+    
+    <div class="card summary-card summary-card-expense">
+        <div class="summary-card-icon">
+            <i class="material-icons">trending_down</i>
+        </div>
+        <div class="summary-card-content">
+            <h3 class="summary-card-title">総支出</h3>
+            <p class="summary-card-value">¥<span id="total-expense">0</span></p>
+            <p class="summary-card-change negative">-2.1%</p>
+        </div>
+    </div>
+    
+    <div class="card summary-card summary-card-balance">
+        <div class="summary-card-icon">
+            <i class="material-icons">account_balance</i>
+        </div>
+        <div class="summary-card-content">
+            <h3 class="summary-card-title">純資産</h3>
+            <p class="summary-card-value">¥<span id="net-worth">0</span></p>
+            <p class="summary-card-change positive">+8.7%</p>
+        </div>
+    </div>
+    
+    <div class="card summary-card summary-card-goal">
+        <div class="summary-card-icon">
+            <i class="material-icons">flag</i>
+        </div>
+        <div class="summary-card-content">
+            <h3 class="summary-card-title">目標達成率</h3>
+            <p class="summary-card-value"><span id="goal-progress">75</span>%</p>
+            <div class="progress mt-2">
+                <div class="progress-bar" style="width: 75%"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- チャートセクション -->
+<div class="grid grid-cols-2 mb-4">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="material-icons">show_chart</i>
+                資産推移
+            </h3>
+            <div class="card-actions">
+                <button class="btn btn-sm" onclick="refreshChart('assets')">
+                    <i class="material-icons">refresh</i>
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <canvas id="assets-chart" width="400" height="200"></canvas>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="material-icons">pie_chart</i>
+                支出内訳
+            </h3>
+            <div class="card-actions">
+                <button class="btn btn-sm" onclick="refreshChart('expenses')">
+                    <i class="material-icons">refresh</i>
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <canvas id="expenses-chart" width="400" height="200"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- 最近のアクティビティ -->
+<div class="grid grid-cols-3">
+    <div class="card col-span-2">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="material-icons">history</i>
+                最近のアクティビティ
+            </h3>
+            <a href="{{ url_for('household.monthly') }}" class="btn btn-sm btn-primary">
+                すべて表示
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="activity-list" id="recent-activities">
+                <!-- アクティビティがここに動的に読み込まれます -->
+                <div class="activity-item">
+                    <div class="activity-icon icon-circle expense">
+                        <i class="material-icons">shopping_cart</i>
+                    </div>
+                    <div class="activity-content">
+                        <p class="activity-title">食費</p>
+                        <p class="activity-description">スーパーマーケット</p>
+                        <p class="activity-date">2024/06/27</p>
+                    </div>
+                    <div class="activity-amount expense">
+                        -¥3,500
+                    </div>
+                </div>
+                
+                <div class="activity-item">
+                    <div class="activity-icon icon-circle income">
+                        <i class="material-icons">account_balance_wallet</i>
+                    </div>
+                    <div class="activity-content">
+                        <p class="activity-title">給与</p>
+                        <p class="activity-description">月給</p>
+                        <p class="activity-date">2024/06/25</p>
+                    </div>
+                    <div class="activity-amount income">
+                        +¥350,000
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- クイックアクション -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="material-icons">flash_on</i>
+                クイックアクション
+            </h3>
+        </div>
+        <div class="card-body">
+            <div class="quick-actions">
+                <button class="quick-action-btn" onclick="openModal('add-expense')">
+                    <i class="material-icons">remove_circle</i>
+                    <span>支出追加</span>
+                </button>
+                
+                <button class="quick-action-btn" onclick="openModal('add-income')">
+                    <i class="material-icons">add_circle</i>
+                    <span>収入追加</span>
+                </button>
+                
+                <button class="quick-action-btn" onclick="location.href='{{ url_for('simulation.create') }}'">
+                    <i class="material-icons">analytics</i>
+                    <span>シミュレーション</span>
+                </button>
+                
+                <button class="quick-action-btn" onclick="location.href='{{ url_for('household.monthly') }}'">
+                    <i class="material-icons">calendar_today</i>
+                    <span>家計簿</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 支出追加モーダル -->
+<div class="modal" id="add-expense-modal">
+    <div class="modal-header">
+        <h3 class="modal-title">支出を追加</h3>
+        <button class="modal-close" onclick="closeModal('add-expense')">
+            <i class="material-icons">close</i>
+        </button>
+    </div>
+    <div class="modal-body">
+        <form id="expense-form">
+            <div class="form-group">
+                <label class="form-label">金額</label>
+                <input type="number" class="form-control" id="expense-amount" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">カテゴリ</label>
+                <select class="form-control" id="expense-category" required>
+                    <option value="">選択してください</option>
+                    <option value="1">食費</option>
+                    <option value="2">交通費</option>
+                    <option value="3">娯楽</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">説明</label>
+                <input type="text" class="form-control" id="expense-description">
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" onclick="closeModal('add-expense')">キャンセル</button>
+        <button class="btn btn-primary" onclick="submitExpense()">追加</button>
+    </div>
+</div>
+
+<!-- 収入追加モーダル -->
+<div class="modal" id="add-income-modal">
+    <div class="modal-header">
+        <h3 class="modal-title">収入を追加</h3>
+        <button class="modal-close" onclick="closeModal('add-income')">
+            <i class="material-icons">close</i>
+        </button>
+    </div>
+    <div class="modal-body">
+        <form id="income-form">
+            <div class="form-group">
+                <label class="form-label">金額</label>
+                <input type="number" class="form-control" id="income-amount" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">カテゴリ</label>
+                <select class="form-control" id="income-category" required>
+                    <option value="">選択してください</option>
+                    <option value="1">給与</option>
+                    <option value="2">副業</option>
+                    <option value="3">投資</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">説明</label>
+                <input type="text" class="form-control" id="income-description">
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" onclick="closeModal('add-income')">キャンセル</button>
+        <button class="btn btn-primary" onclick="submitIncome()">追加</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ダッシュボード初期化
+document.addEventListener('DOMContentLoaded', function() {
+    loadDashboardData();
+    initializeCharts();
+});
+
+// ダッシュボードデータの読み込み
+async function loadDashboardData() {
+    try {
+        const response = await fetch('/api/dashboard/summary');
+        const data = await response.json();
+        
+        document.getElementById('total-income').textContent = data.total_income.toLocaleString();
+        document.getElementById('total-expense').textContent = data.total_expense.toLocaleString();
+        document.getElementById('net-worth').textContent = data.net_worth.toLocaleString();
+        document.getElementById('goal-progress').textContent = data.goal_progress;
+        
+        // プログレスバーの更新
+        document.querySelector('.progress-bar').style.width = data.goal_progress + '%';
+        
+    } catch (error) {
+        console.error('ダッシュボードデータの読み込みに失敗しました:', error);
+    }
+}
+
+// チャートの初期化
+function initializeCharts() {
+    // 資産推移チャート
+    const assetsCtx = document.getElementById('assets-chart').getContext('2d');
+    new Chart(assetsCtx, {
+        type: 'line',
+        data: {
+            labels: ['1月', '2月', '3月', '4月', '5月', '6月'],
+            datasets: [{
+                label: '資産',
+                data: [1000000, 1050000, 1100000, 1080000, 1150000, 1200000],
+                borderColor: 'var(--primary-color)',
+                backgroundColor: 'var(--primary-light)',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+    
+    // 支出内訳チャート
+    const expensesCtx = document.getElementById('expenses-chart').getContext('2d');
+    new Chart(expensesCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['食費', '交通費', '娯楽', '光熱費', 'その他'],
+            datasets: [{
+                data: [30, 15, 20, 10, 25],
+                backgroundColor: [
+                    '#FF5722',
+                    '#2196F3',
+                    '#9C27B0',
+                    '#FF9800',
+                    '#666666'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+// モーダル制御
+function openModal(type) {
+    const modal = document.getElementById(type + '-modal');
+    const overlay = document.getElementById('overlay');
+    
+    modal.classList.add('active');
+    overlay.classList.add('active');
+}
+
+function closeModal(type) {
+    const modal = document.getElementById(type + '-modal');
+    const overlay = document.getElementById('overlay');
+    
+    modal.classList.remove('active');
+    overlay.classList.remove('active');
+}
+
+// 支出追加
+async function submitExpense() {
+    const amount = document.getElementById('expense-amount').value;
+    const category = document.getElementById('expense-category').value;
+    const description = document.getElementById('expense-description').value;
+    
+    if (!amount || !category) {
+        alert('金額とカテゴリは必須です');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/household/entry/create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                amount: parseFloat(amount),
+                category_id: parseInt(category),
+                category_type: 'expense',
+                description: description,
+                date: new Date().toISOString().split('T')[0]
+            })
+        });
+        
+        if (response.ok) {
+            closeModal('add-expense');
+            loadDashboardData();
+            document.getElementById('expense-form').reset();
+        }
+    } catch (error) {
+        console.error('支出の追加に失敗しました:', error);
+    }
+}
+
+// 収入追加
+async function submitIncome() {
+    const amount = document.getElementById('income-amount').value;
+    const category = document.getElementById('income-category').value;
+    const description = document.getElementById('income-description').value;
+    
+    if (!amount || !category) {
+        alert('金額とカテゴリは必須です');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/household/entry/create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                amount: parseFloat(amount),
+                category_id: parseInt(category),
+                category_type: 'income',
+                description: description,
+                date: new Date().toISOString().split('T')[0]
+            })
+        });
+        
+        if (response.ok) {
+            closeModal('add-income');
+            loadDashboardData();
+            document.getElementById('income-form').reset();
+        }
+    } catch (error) {
+        console.error('収入の追加に失敗しました:', error);
+    }
+}
+
+// チャート更新
+function refreshChart(type) {
+    // チャートデータを再読み込み
+    console.log('Refreshing', type, 'chart');
+}
+</script>
+{% endblock %} 

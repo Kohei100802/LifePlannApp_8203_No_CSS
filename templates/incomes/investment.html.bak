@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base-new.html" %}
 
 {% block title %}投資収入管理{% endblock %}
 {% block page_title %}投資収入管理{% endblock %}

@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base-new.html" %}
 
 {% block title %}住居費 - {% if expense_id %}編集{% else %}新規登録{% endif %}{% endblock %}
 {% block page_title %}住居費 - {% if expense_id %}編集{% else %}新規登録{% endif %}{% endblock %}

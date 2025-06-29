@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base-new.html" %}
 
 {% block title %}教育費管理{% endblock %}
 {% block page_title %}教育費管理{% endblock %}

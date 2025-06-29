@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base-new.html" %}
 
 {% block title %}住居費管理{% endblock %}
 {% block page_title %}住居費管理{% endblock %}

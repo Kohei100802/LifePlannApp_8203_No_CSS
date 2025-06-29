@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base-new.html" %}
 
 {% block title %}保険料管理{% endblock %}
 {% block page_title %}保険料管理{% endblock %}
