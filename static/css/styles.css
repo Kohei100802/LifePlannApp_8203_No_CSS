@@ -5740,11 +5740,6 @@ select.form-control {
     margin: 0 auto;
     margin-bottom: 0; /* グラフ下部の余白を削除 */
 }
-@media (max-width: 480px) {
-    .chart-container {
-        margin: 2px 0 0 0; /* 下部余白を削除 */
-    }
-}
 
 /* Chart responsive adjustments */
 @media (max-width: 768px) {
@@ -5766,19 +5761,6 @@ select.form-control {
     /* Hide chart title on very small screens to save space */
     .chart-container canvas {
         max-height: 220px;
-    }
-}
-
-/* Footer */
-.footer {
-    background-color: var(--color-bg-secondary);
-    border-top: 1px solid var(--color-border);
-    padding: var(--spacing-sm) 0;
-    text-align: center;
-    color: var(--color-text-secondary);
-    font-size: var(--font-size-sm);
-    position: fixed;
-    bottom: 0;
     left: 0;
     right: 0;
     width: 100%;
@@ -6699,36 +6681,6 @@ body.client-app .dropdown-item:hover {
     
     .chart-modal-body {
         padding: 4px;
-    }
-    
-    .chart-expand-hint {
-        font-size: 11px;
-        padding: 4px 8px;
-    }
-    
-    .chart-expand-hint .material-icons {
-        font-size: 14px;
-    }
-}
-
-/* グラフ拡大機能 */
-.chart-expand-btn {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    width: 36px;
-    height: 36px;
-    border: none;
-    border-radius: 50%;
-    background: rgba(0, 0, 0, 0.05);
-    color: var(--color-text-secondary);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-    z-index: 10;
-}
 
 .chart-expand-btn:hover {
     background: var(--color-accent);
@@ -7065,35 +7017,6 @@ body.client-app .dropdown-item:hover {
     
     .popup-close .material-icons {
         color: #9CA3AF;
-    }
-    
-    .popup-section h4 {
-        color: #9CA3AF;
-    }
-    
-    .popup-menu-item {
-        background: #2C2C2E;
-        color: #F2F2F7;
-        border-color: #3A3A3C;
-    }
-    
-    .popup-menu-item:hover {
-        background: #3A3A3C;
-        border-color: #0A84FF;
-        box-shadow: 0 2px 8px rgba(10, 132, 255, 0.2);
-    }
-    
-    .popup-menu-item .material-icons {
-        color: #0A84FF;
-    }
-}
-
-/* ページ固有のmargin-top設定（モバイル） */
-.client-app .dashboard-page .main-content {
-    margin-top: calc(48px + env(safe-area-inset-top, 0px));
-}
-
-.client-app .household-page .main-content {
     margin-top: calc(48px + env(safe-area-inset-top, 0px));
 }
 
