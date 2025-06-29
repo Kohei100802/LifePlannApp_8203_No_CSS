@@ -235,3 +235,9 @@
 .month-selector-bar {
     margin-top: 100px;
 }
+
+@media (max-width: 768px) {
+  .account-management-page .main-content {
+    margin-top: 0 !important;
+  }
+}

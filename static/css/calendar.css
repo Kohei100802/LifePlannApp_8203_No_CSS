@@ -14,7 +14,7 @@
 
 /* カレンダーページ用のメインコンテンツ調整 */
 .calendar-page .main-content {
-    margin-top: 60px; /* ヘッダー分のマージン */
+    margin-top: 0px; /* ヘッダー分のマージン */
     padding: 0;
     background: #f5f5f5;
 }
