@@ -1,0 +1,196 @@
+/* 選択UI用のスタイル */
+.selection-mode {
+    position: relative;
+}
+
+.selection-checkbox {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    background: rgba(255, 255, 255, 0.9);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 100;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s ease;
+}
+
+.selection-mode .selection-checkbox {
+    display: flex;
+}
+
+.selection-checkbox.checked {
+    background: #007AFF;
+    border-color: #007AFF;
+}
+
+.selection-checkbox.checked::after {
+    content: '✓';
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+/* 選択モード時のカードスタイル */
+.selection-mode .modern-menu-card {
+    position: relative;
+}
+
+.selection-mode .modern-menu-card.selected {
+    border: 2px solid #007AFF;
+    background: rgba(0, 122, 255, 0.05);
+}
+
+/* 選択UI用FABコンテナ - 既存のfab-containerと同じ高さ */
+.selection-fab-container {
+    position: fixed;
+    bottom: 104px; /* フッター(80px) + マージン(24px) = 104px */
+    left: 24px;
+    z-index: 1001; /* フッターより上 */
+    display: flex;
+    gap: 27px;
+    align-items: center;
+    flex-direction: row;
+}
+
+/* 選択UI用FABボタン - 既存のfab-buttonと同じスタイル */
+.selection-fab {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #007AFF;
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: bold;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    text-decoration: none !important;
+}
+
+.selection-fab:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.selection-fab.cancel {
+    background: #FF3B30;
+    box-shadow: 0 2px 8px rgba(255, 59, 48, 0.15);
+}
+
+.selection-fab.cancel:hover {
+    box-shadow: 0 4px 16px rgba(255, 59, 48, 0.25);
+}
+
+.selection-fab.copy {
+    background: #FF9500;
+    box-shadow: 0 2px 8px rgba(255, 149, 0, 0.15);
+}
+
+.selection-fab.copy:hover {
+    box-shadow: 0 4px 16px rgba(255, 149, 0, 0.25);
+}
+
+.selection-fab.delete {
+    background: #FF3B30;
+    box-shadow: 0 2px 8px rgba(255, 59, 48, 0.15);
+}
+
+.selection-fab.delete:hover {
+    box-shadow: 0 4px 16px rgba(255, 59, 48, 0.25);
+}
+
+.selection-fab.edit {
+    background: #34C759;
+    box-shadow: 0 2px 8px rgba(52, 199, 89, 0.15);
+}
+
+.selection-fab.edit:hover {
+    box-shadow: 0 4px 16px rgba(52, 199, 89, 0.25);
+}
+
+/* 右下のボタングループ */
+.selection-fab-group {
+    position: fixed;
+    bottom: 104px; /* フッター(80px) + マージン(24px) = 104px */
+    right: 24px;
+    z-index: 1001; /* フッターより上 */
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.selection-fab-group .selection-fab {
+    width: 64px;
+    height: 64px;
+    font-size: 14px;
+}
+
+/* 選択カウント表示 */
+.selection-count {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: bold;
+    z-index: 1000;
+    display: none;
+}
+
+.selection-mode .selection-count {
+    display: block;
+}
+
+/* アニメーション */
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.selection-checkbox {
+    animation: fadeIn 0.2s ease;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 480px) {
+    .selection-fab-container {
+        bottom: 96px; /* モバイル版フッター + マージン */
+        left: 16px;
+        gap: 23px;
+    }
+    
+    .selection-fab-group {
+        bottom: 96px; /* モバイル版フッター + マージン */
+        right: 16px;
+    }
+    
+    .selection-fab,
+    .selection-fab-group .selection-fab {
+        width: 56px;
+        height: 56px;
+        font-size: 14px;
+    }
+    
+    .selection-checkbox {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .selection-checkbox.checked::after {
+        font-size: 12px;
+    }
+} 

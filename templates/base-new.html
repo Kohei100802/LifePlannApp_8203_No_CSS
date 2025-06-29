@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/calendar.css') }}?v=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/account-management.css') }}?v=2.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/fab-unified.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/selection-ui.css') }}">
     
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -63,7 +64,7 @@
         <!-- フッターコンポーネント -->
         {% if current_user.is_authenticated %}
         <footer class="app-footer">
-            <a href="#" onclick="goToCurrentMonthHousehold()" class="footer-item {{ 'active' if request.endpoint in ['household_menu', 'household_book', 'household_books', 'household_book_monthly'] }}">
+            <a href="#" onclick="goToCurrentMonthHousehold()" class="footer-item {{ 'active' if request.endpoint in ['household_menu', 'household_book', 'household_books', 'household_book_monthly', 'household_calendar', 'household_swipe', 'household_swipe_dev'] }}">
                 <i class="material-icons">book</i>
                 <span>家計簿</span>
             </a>
@@ -75,11 +76,11 @@
                 <i class="material-icons">home</i>
                 <span>トップ</span>
             </a>
-            <a href="javascript:void(0)" onclick="showExpenseIncomePopup()" class="footer-item {{ 'active' if request.endpoint in ['expenses', 'incomes', 'expenses_incomes'] }}">
+            <a href="/expenses/incomes" class="footer-item {{ 'active' if request.endpoint in ['expenses', 'incomes', 'expenses_incomes', 'expenses_living', 'expenses_housing', 'expenses_education', 'expenses_insurance', 'expenses_events', 'incomes_salary', 'incomes_sidejob', 'incomes_investment', 'incomes_pension', 'incomes_other', 'expenses_living_edit', 'expenses_housing_edit', 'expenses_education_edit', 'expenses_insurance_edit', 'expenses_events_edit', 'incomes_salary_edit', 'incomes_sidejob_edit', 'incomes_investment_edit', 'incomes_pension_edit', 'incomes_other_edit'] }}">
                 <i class="material-icons">account_balance_wallet</i>
                 <span>支出/収入</span>
             </a>
-            <a href="/simulation" class="footer-item {{ 'active' if request.endpoint == 'simulation' }}">
+            <a href="/simulation" class="footer-item {{ 'active' if request.endpoint in ['simulation', 'simulation_run'] }}">
                 <i class="material-icons">trending_up</i>
                 <span>シミュレーション</span>
             </a>
@@ -88,8 +89,15 @@
         
     </div>
     
-    <!-- フローティングボタンコンポーネント（独立） -->
-    {% block floating_buttons %}{% endblock %}
+    <!-- 右下フローティング支出/収入切り替えボタン -->
+    <div class="fab-switch-container">
+        <a href="/expenses" class="fab-switch fab-expenses" title="支出ページへ">
+            <i class="material-icons">remove_circle</i>
+        </a>
+        <a href="/incomes" class="fab-switch fab-incomes" title="収入ページへ">
+            <i class="material-icons">add_circle</i>
+        </a>
+    </div>
     
     <!-- メニューモーダル -->
     {% if current_user.is_authenticated %}
@@ -164,7 +172,7 @@
     </div>
     {% endif %}
     
-    <!-- 支出・収入選択ポップアップ -->
+    <!-- 支出/収入選択ポップアップ -->
     <div id="expense-income-popup-overlay" class="expense-income-popup-overlay" style="display: none;">
         <div class="expense-income-popup">
             <div class="popup-header">
@@ -176,6 +184,10 @@
             <div class="popup-content">
                 <div class="popup-section">
                     <h4>支出管理</h4>
+                    <a href="/expenses" class="popup-menu-item" onclick="closeExpenseIncomePopup()">
+                        <i class="material-icons">remove_circle</i>
+                        <span>支出一覧</span>
+                    </a>
                     <a href="/expenses/living" class="popup-menu-item" onclick="closeExpenseIncomePopup()">
                         <i class="material-icons">home</i>
                         <span>生活費</span>
@@ -199,6 +211,10 @@
                 </div>
                 <div class="popup-section">
                     <h4>収入管理</h4>
+                    <a href="/incomes" class="popup-menu-item" onclick="closeExpenseIncomePopup()">
+                        <i class="material-icons">add_circle</i>
+                        <span>収入一覧</span>
+                    </a>
                     <a href="/incomes/salary" class="popup-menu-item" onclick="closeExpenseIncomePopup()">
                         <i class="material-icons">work</i>
                         <span>給与収入</span>
@@ -224,6 +240,39 @@
         </div>
     </div>
     
+    <!-- 支出/収入バルーン（新規） -->
+    <div id="expense-income-balloon" class="expense-income-balloon">
+        <div class="balloon-content">
+            <a href="/expenses" class="balloon-btn">支出へ</a>
+            <a href="/incomes" class="balloon-btn">収入へ</a>
+            <button class="balloon-close" onclick="closeExpenseIncomeBalloon()">×</button>
+        </div>
+    </div>
+    <script>
+    function toggleExpenseIncomeBalloon() {
+        const balloon = document.getElementById('expense-income-balloon');
+        if (!balloon.classList.contains('show')) {
+            balloon.classList.add('show');
+            document.addEventListener('mousedown', balloonOutsideClick);
+        } else {
+            closeExpenseIncomeBalloon();
+        }
+    }
+    function closeExpenseIncomeBalloon() {
+        const balloon = document.getElementById('expense-income-balloon');
+        balloon.classList.remove('show');
+        document.removeEventListener('mousedown', balloonOutsideClick);
+    }
+    function balloonOutsideClick(e) {
+        const balloon = document.getElementById('expense-income-balloon');
+        if (balloon && !balloon.contains(e.target)) {
+            closeExpenseIncomeBalloon();
+        }
+    }
+    window.toggleExpenseIncomeBalloon = toggleExpenseIncomeBalloon;
+    window.closeExpenseIncomeBalloon = closeExpenseIncomeBalloon;
+    </script>
+    
     <!-- 共通UI要素 -->
     <div id="loading-overlay" class="loading-overlay hidden">
         <div class="loading-spinner"></div>
@@ -234,6 +283,7 @@
     
     <!-- 共通JavaScript -->
     <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/selection-ui.js') }}"></script>
     <script>
     // スクロール位置復元を防ぐ
     if ('scrollRestoration' in history) {

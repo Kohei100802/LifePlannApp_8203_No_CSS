@@ -17,218 +17,98 @@
 </div>
 
 <!-- フローティングボタン -->
-<div class="fab-container multiple-buttons" id="fabContainer">
+<div class="fab-container" id="fabContainer">
     <a href="/expenses/living/new" class="fab-button add" title="新規追加">
         <i class="material-icons">add</i>
     </a>
-    <button id="toolsFab" class="fab-button tools" title="ツール" style="display: none;">
-        <i class="material-icons">more_horiz</i>
-    </button>
-</div>
-
-<!-- ツールメニュー -->
-<div id="toolsMenu" class="tools-menu" style="display: none;">
-    <div class="tools-menu-content">
-        <button id="copyToolBtn" class="tool-menu-item">
-            <i class="material-icons">content_copy</i>
-            <span>コピー</span>
-        </button>
-        <button id="deleteToolBtn" class="tool-menu-item">
-            <i class="material-icons">delete</i>
-            <span>削除</span>
-        </button>
-    </div>
-</div>
-
-<!-- データ選択モーダル -->
-<div id="dataSelectionModal" class="modal-overlay">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 id="modalTitle">データを選択してください</h3>
-            <button class="close-button" onclick="closeDataSelectionModal()">
-                <i class="material-icons">close</i>
-            </button>
-        </div>
-        <div class="modal-body">
-            <div id="dataSelectionList">
-                <!-- 動的に生成 -->
-            </div>
-        </div>
-        <div class="modal-footer" style="padding: 16px; border-top: 1px solid #e0e0e0; display: flex; justify-content: flex-end; gap: 12px;">
-            <button class="btn btn-secondary" onclick="closeDataSelectionModal()">キャンセル</button>
-            <button id="executeActionBtn" class="btn btn-primary" style="display: none;">実行</button>
-        </div>
-    </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-let currentAction = null;
-let selectedItems = [];
 let livingExpensesData = [];
 
 document.addEventListener('DOMContentLoaded', function() {
     // 生活費データ読み込み
     loadLivingExpenses();
     
-    // ツールボタンのイベントリスナー
-    setupToolsMenu();
+    // 選択UIを初期化
+    initializeSelectionUI();
 });
 
-// ツールメニューの設定
-function setupToolsMenu() {
-    const toolsFab = document.getElementById('toolsFab');
-    const toolsMenu = document.getElementById('toolsMenu');
-    const copyToolBtn = document.getElementById('copyToolBtn');
-    const deleteToolBtn = document.getElementById('deleteToolBtn');
-    
-    // ツールボタンクリック
-    toolsFab.addEventListener('click', function(e) {
-        e.stopPropagation();
-        const isVisible = toolsMenu.style.display !== 'none';
-        toolsMenu.style.display = isVisible ? 'none' : 'block';
+// 選択UIの初期化
+function initializeSelectionUI() {
+    window.selectionUI = new SelectionUI({
+        onCopy: handleCopy,
+        onDelete: handleDelete,
+        onEdit: handleEdit,
+        onCancel: handleCancel,
+        getItemId: (element) => element.dataset.expenseId
+    });
+}
+
+// コピー処理
+async function handleCopy(selectedIds) {
+    try {
+        let successCount = 0;
         
-        if (!isVisible) {
-            // メニューの位置を調整
-            const fabRect = toolsFab.getBoundingClientRect();
-            toolsMenu.style.bottom = (window.innerHeight - fabRect.top + 10) + 'px';
-            toolsMenu.style.right = (window.innerWidth - fabRect.right) + 'px';
+        for (const id of selectedIds) {
+            const response = await fetch(`/api/living-expenses/${id}/copy`, {
+                method: 'POST'
+            });
+            const result = await response.json();
+            if (result.success) successCount++;
         }
-    });
-    
-    // コピーボタンクリック
-    copyToolBtn.addEventListener('click', function() {
-        currentAction = 'copy';
-        toolsMenu.style.display = 'none';
-        showDataSelectionModal('コピーするデータを選択してください');
-    });
-    
-    // 削除ボタンクリック
-    deleteToolBtn.addEventListener('click', function() {
-        currentAction = 'delete';
-        toolsMenu.style.display = 'none';
-        showDataSelectionModal('削除するデータを選択してください');
-    });
-    
-    // 外部クリックでメニューを閉じる
-    document.addEventListener('click', function() {
-        toolsMenu.style.display = 'none';
-    });
-    
-    toolsMenu.addEventListener('click', function(e) {
-        e.stopPropagation();
-    });
-}
-
-// データ選択モーダルを表示
-function showDataSelectionModal(title) {
-    if (livingExpensesData.length === 0) {
-        showToast('選択できるデータがありません', 'warning');
-        return;
-    }
-    
-    const modal = document.getElementById('dataSelectionModal');
-    const modalTitle = document.getElementById('modalTitle');
-    const dataList = document.getElementById('dataSelectionList');
-    const executeBtn = document.getElementById('executeActionBtn');
-    
-    modalTitle.textContent = title;
-    selectedItems = [];
-    
-    // データリストを生成
-    let html = '<div class="data-selection-list">';
-    livingExpensesData.forEach(expense => {
-        const monthlyTotal = (expense.monthly_total_amount || 0) / 10000;
-        const periodText = `${expense.start_year}年-${expense.end_year}年`;
         
-        html += `
-            <label class="data-selection-item">
-                <input type="checkbox" value="${expense.id}" onchange="updateSelectedItems()">
-                <div class="selection-item-content">
-                    <div class="selection-item-title">${expense.name}</div>
-                    <div class="selection-item-details">
-                        ${periodText} | 月額 ${monthlyTotal.toFixed(1)}万円
-                        ${expense.description ? `<br><span style="color: #666; font-size: 0.9em;">${expense.description}</span>` : ''}
-                    </div>
-                </div>
-            </label>
-        `;
-    });
-    html += '</div>';
-    
-    dataList.innerHTML = html;
-    executeBtn.style.display = 'none';
-    executeBtn.textContent = currentAction === 'copy' ? 'コピー' : '削除';
-    executeBtn.onclick = executeSelectedAction;
-    
-    modal.classList.add('show');
+        if (successCount > 0) {
+            showToast(`${successCount}件の生活費をコピーしました`, 'success');
+            loadLivingExpenses();
+        } else {
+            showToast('生活費のコピーに失敗しました', 'error');
+        }
+    } catch (error) {
+        console.error('Error copying living expenses:', error);
+        showToast('生活費のコピー中にエラーが発生しました', 'error');
+    }
 }
 
-// 選択項目の更新
-function updateSelectedItems() {
-    const checkboxes = document.querySelectorAll('#dataSelectionList input[type="checkbox"]:checked');
-    selectedItems = Array.from(checkboxes).map(cb => parseInt(cb.value));
-    
-    const executeBtn = document.getElementById('executeActionBtn');
-    executeBtn.style.display = selectedItems.length > 0 ? 'block' : 'none';
-}
-
-// 選択したアクションを実行
-async function executeSelectedAction() {
-    if (selectedItems.length === 0) return;
-    
-    const actionText = currentAction === 'copy' ? 'コピー' : '削除';
-    const confirmMessage = `選択した${selectedItems.length}件のデータを${actionText}しますか？`;
-    
+// 削除処理
+async function handleDelete(selectedIds) {
+    const confirmMessage = `選択した${selectedIds.length}件の生活費を削除しますか？`;
     if (!confirm(confirmMessage)) return;
     
     try {
         let successCount = 0;
         
-        for (const id of selectedItems) {
-            let success = false;
-            
-            if (currentAction === 'copy') {
-                const response = await fetch(`/api/living-expenses/${id}/copy`, {
-                    method: 'POST'
-                });
-                const result = await response.json();
-                success = result.success;
-            } else if (currentAction === 'delete') {
-                const response = await fetch(`/api/living-expenses/${id}`, {
-                    method: 'DELETE'
-                });
-                const result = await response.json();
-                success = result.success;
-            }
-            
-            if (success) successCount++;
+        for (const id of selectedIds) {
+            const response = await fetch(`/api/living-expenses/${id}`, {
+                method: 'DELETE'
+            });
+            const result = await response.json();
+            if (result.success) successCount++;
         }
         
         if (successCount > 0) {
-            showToast(`${successCount}件のデータを${actionText}しました`, 'success');
-            loadLivingExpenses(); // 一覧を再読み込み
+            showToast(`${successCount}件の生活費を削除しました`, 'success');
+            loadLivingExpenses();
+        } else {
+            showToast('生活費の削除に失敗しました', 'error');
         }
-        
-        if (successCount < selectedItems.length) {
-            showToast(`${selectedItems.length - successCount}件の${actionText}に失敗しました`, 'error');
-        }
-        
     } catch (error) {
-        console.error(`Error ${currentAction}ing expenses:`, error);
-        showToast(`${actionText}に失敗しました`, 'error');
+        console.error('Error deleting living expenses:', error);
+        showToast('生活費の削除中にエラーが発生しました', 'error');
     }
-    
-    closeDataSelectionModal();
 }
 
-// モーダルを閉じる
-function closeDataSelectionModal() {
-    const modal = document.getElementById('dataSelectionModal');
-    modal.classList.remove('show');
-    selectedItems = [];
-    currentAction = null;
+// 編集処理
+async function handleEdit(expenseId) {
+    window.location.href = `/expenses/living/edit/${expenseId}`;
+}
+
+// キャンセル処理
+function handleCancel() {
+    // 選択モード終了時の処理
+    console.log('Selection mode cancelled');
 }
 
 // 生活費データ読み込み
@@ -237,6 +117,15 @@ async function loadLivingExpenses() {
         const livingExpenses = await apiCall('/api/living-expenses');
         livingExpensesData = livingExpenses;
         displayLivingExpenses(livingExpenses);
+        
+        // 選択UIの表示制御
+        if (window.selectionUI) {
+            if (livingExpenses.length > 0) {
+                window.selectionUI.show();
+            } else {
+                window.selectionUI.hide();
+            }
+        }
     } catch (error) {
         console.error('Error loading living expenses:', error);
         showToast('生活費の読み込みに失敗しました', 'error');
@@ -246,8 +135,6 @@ async function loadLivingExpenses() {
 // 生活費表示
 function displayLivingExpenses(livingExpenses) {
     const listContainer = document.getElementById('living-expenses-list');
-    const toolsFab = document.getElementById('toolsFab');
-    const fabContainer = document.getElementById('fabContainer');
     
     if (livingExpenses.length === 0) {
         listContainer.innerHTML = `
@@ -259,40 +146,26 @@ function displayLivingExpenses(livingExpenses) {
                 </div>
             </div>
         `;
-        // データがない場合はツールボタンを非表示
-        if (toolsFab) {
-            toolsFab.style.display = 'none';
-        }
-        // multiple-buttonsクラスを削除
-        if (fabContainer) {
-            fabContainer.classList.remove('multiple-buttons');
-        }
         return;
-    }
-    
-    // データがある場合はツールボタンを表示
-    if (toolsFab) {
-        toolsFab.style.display = 'inline-flex';
-    }
-    // multiple-buttonsクラスを追加
-    if (fabContainer) {
-        fabContainer.classList.add('multiple-buttons');
     }
     
     const html = `
         <div class="modern-menu-grid">
             ${livingExpenses.map(expense => {
-        const monthlyTotal = (expense.monthly_total_amount || 0) / 10000;
-        const annualTotal = monthlyTotal * 12;
+                const monthlyTotal = (expense.monthly_total_amount || 0) / 10000;
                 const periodText = `${expense.start_year}年-${expense.end_year}年`;
-        
-        return `
-                    <div class="modern-menu-card plan-card" style="position: relative; cursor: pointer; display: flex; align-items: center; min-height: 80px;" onclick="showExpenseDetails(${expense.id})">
+                
+                return `
+                    <div class="modern-menu-card plan-card" 
+                         data-selectable="true" 
+                         data-expense-id="${expense.id}"
+                         style="position: relative; cursor: pointer; display: flex; align-items: center; min-height: 80px;" 
+                         onclick="handleExpenseClick(${expense.id})">
                         <div class="card-content" style="flex: 1;">
                             <h3 class="card-title" style="margin-bottom: 8px; font-size: 1.1em; font-weight: 600;">${expense.name}</h3>
                             <p class="card-description" style="margin-bottom: 0; line-height: 1.4; color: var(--color-text-secondary);">
                                 ${periodText}<br>
-                                月額 ${monthlyTotal.toFixed(1)}万円 | 年額 ${annualTotal.toFixed(1)}万円
+                                月額 ${monthlyTotal.toFixed(1)}万円
                                 ${expense.description ? `<br><span style="color: var(--color-text-secondary); font-size: 0.9em; font-style: italic;">${expense.description}</span>` : ''}
                             </p>
                         </div>
@@ -302,15 +175,19 @@ function displayLivingExpenses(livingExpenses) {
                     </div>
                 `;
             }).join('')}
-            </div>
-        `;
+        </div>
+    `;
     
     listContainer.innerHTML = html;
 }
 
-// 生活費詳細表示（カードクリック時）
-function showExpenseDetails(expenseId) {
-    // 編集ページに遷移
+// 生活費クリック処理
+function handleExpenseClick(expenseId) {
+    // 選択モード中はクリックを無効化
+    if (window.selectionUI && window.selectionUI.isSelectionMode) {
+        return;
+    }
+    
     window.location.href = `/expenses/living/edit/${expenseId}`;
 }
 </script>

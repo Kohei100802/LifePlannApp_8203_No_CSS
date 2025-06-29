@@ -67,11 +67,11 @@
 
     <!-- フローティングアクションボタン -->
     <div class="fab-container multiple-buttons">
-        <button class="fab-button tools" onclick="switchToCalendarView()" title="カレンダー表示に切り替え">
-            <i class="material-icons">calendar_month</i>
-        </button>
         <button class="fab-button add" onclick="showEntryModal('expense')" title="支出・収入を追加">
             <i class="material-icons">add</i>
+        </button>
+        <button class="fab-button tools" onclick="switchToCalendarView()" title="カレンダー表示に切り替え">
+            <i class="material-icons">calendar_month</i>
         </button>
     </div>
 </div>
@@ -946,6 +946,9 @@
     
     document.addEventListener('DOMContentLoaded', function() {
         initializeMonthlyPage();
+        
+        // 選択UIを初期化
+        initializeSelectionUI();
     });
     
     function initializeMonthlyPage() {
@@ -991,6 +994,15 @@
                 currentEntries = data || [];
                 displayEntries(currentEntries);
                 updateSummary(currentEntries);
+                
+                // 選択UIの表示制御
+                if (window.selectionUI) {
+                    if (currentEntries.length > 0) {
+                        window.selectionUI.show();
+                    } else {
+                        window.selectionUI.hide();
+                    }
+                }
             })
             .catch(error => {
                 console.error('エントリー読み込みエラー:', error);
@@ -1000,6 +1012,11 @@
                 currentEntries = [];
                 displayEntries(currentEntries);
                 updateSummary(currentEntries);
+                
+                // 選択UIを非表示
+                if (window.selectionUI) {
+                    window.selectionUI.hide();
+                }
             });
     }
     
@@ -1113,7 +1130,10 @@
                         <span class="mf-date-total">¥${calculateDayTotal(dayEntries).toLocaleString()}</span>
                     </div>
                     ${dayEntries.map(entry => `
-                        <div class="mf-entry-item" onclick="editEntry(${entry.id})">
+                        <div class="mf-entry-item" 
+                             data-selectable="true" 
+                             data-entry-id="${entry.id}"
+                             onclick="handleEntryClick(${entry.id})">
                             <div class="mf-entry-icon ${entry.entry_type}">
                                 <i class="material-icons">${getCategoryIcon(entry)}</i>
                             </div>
@@ -1618,5 +1638,91 @@
         const month = parseInt(pathParts[3]);
         window.location.href = `/household-calendar/${year}/${month}`;
     }
+    
+    // 選択UIの初期化
+    function initializeSelectionUI() {
+        window.selectionUI = new SelectionUI({
+            onCopy: handleCopy,
+            onDelete: handleDelete,
+            onEdit: handleEdit,
+            onCancel: handleCancel,
+            getItemId: (element) => element.dataset.entryId
+        });
+    }
+    
+    // コピー処理
+    async function handleCopy(selectedIds) {
+        try {
+            let successCount = 0;
+            
+            for (const id of selectedIds) {
+                const response = await fetch(`/api/household-entries/${id}/copy`, {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                if (result.success) successCount++;
+            }
+            
+            if (successCount > 0) {
+                showToast(`${successCount}件の取引をコピーしました`, 'success');
+                loadEntries();
+            } else {
+                showToast('取引のコピーに失敗しました', 'error');
+            }
+        } catch (error) {
+            console.error('Error copying entries:', error);
+            showToast('取引のコピー中にエラーが発生しました', 'error');
+        }
+    }
+    
+    // 削除処理
+    async function handleDelete(selectedIds) {
+        const confirmMessage = `選択した${selectedIds.length}件の取引を削除しますか？`;
+        if (!confirm(confirmMessage)) return;
+        
+        try {
+            let successCount = 0;
+            
+            for (const id of selectedIds) {
+                const response = await fetch(`/api/household-entries/${id}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                if (result.success) successCount++;
+            }
+            
+            if (successCount > 0) {
+                showToast(`${successCount}件の取引を削除しました`, 'success');
+                loadEntries();
+            } else {
+                showToast('取引の削除に失敗しました', 'error');
+            }
+        } catch (error) {
+            console.error('Error deleting entries:', error);
+            showToast('取引の削除中にエラーが発生しました', 'error');
+        }
+    }
+    
+    // 編集処理
+    async function handleEdit(entryId) {
+        editEntry(entryId);
+    }
+    
+    // キャンセル処理
+    function handleCancel() {
+        // 選択モード終了時の処理
+        console.log('Selection mode cancelled');
+    }
+    
+    function handleEntryClick(entryId) {
+        // 選択モード中はクリックを無効化
+        if (window.selectionUI && window.selectionUI.isSelectionMode) {
+            return;
+        }
+        
+        editEntry(entryId);
+    }
     </script>
-    {% endblock %} 
+    {% endblock %}
+
+{% block main_class %}household-books-content{% endblock %} 

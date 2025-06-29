@@ -1439,4 +1439,17 @@ function submitFormViaFab() {
     });
     
     targetForm.dispatchEvent(submitEvent);
-} 
+}
+
+// フッターの支出・収入ポップアップを表示
+function showExpenseIncomePopup() {
+    const popup = document.getElementById('expense-income-popup-overlay');
+    if (popup) {
+        popup.style.display = 'flex';
+        setTimeout(() => {
+            popup.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }, 10);
+    }
+}
+window.showExpenseIncomePopup = showExpenseIncomePopup; 

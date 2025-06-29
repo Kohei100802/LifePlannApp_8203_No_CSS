@@ -332,15 +332,12 @@ struct WebViewContainer: UIViewRepresentable {
     }
     
     func updateUIView(_ webView: WKWebView, context: Context) {
-        // URL変更時の対応（初回読み込み後は実行しない）
-        if webView.url != url && !hasLoadedOnce {
-            DispatchQueue.main.async {
-                self.isLoading = true
-                self.loadingProgress = 0.0
-            }
+        // 初回のみロード（webView.urlがnilのときのみ）
+        if webView.url == nil && !hasLoadedOnce {
             let request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalAndRemoteCacheData)
             webView.load(request)
         }
+        // それ以外は何もしない
     }
     
     func makeCoordinator() -> Coordinator {

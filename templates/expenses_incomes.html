@@ -9,6 +9,11 @@
 {% endblock %}
 
 {% block content %}
+<!-- タブUI追加 -->
+<div class="tab-switch-ui" style="margin-bottom: 1em;">
+  <button class="tab-btn active" id="expenses-tab-btn">支出</button>
+  <button class="tab-btn" id="incomes-tab-btn">収入</button>
+</div>
 <div class="modern-tabs-container">
     <!-- 支出管理コンテンツ -->
     <div id="expenses-tab" class="modern-tab-content active">
@@ -73,7 +78,7 @@
     </div>
 
     <!-- 収入タブコンテンツ -->
-    <div id="incomes-tab" class="modern-tab-content">
+    <div id="incomes-tab" class="modern-tab-content" style="display:none;">
         <div class="content-section">
             <div class="modern-menu-grid">
                 <a href="{{ url_for('incomes_salary') }}" class="modern-menu-card">
@@ -138,6 +143,26 @@
 
 {% block scripts %}
 <script>
+// タブ切り替えJS
+const expensesTabBtn = document.getElementById('expenses-tab-btn');
+const incomesTabBtn = document.getElementById('incomes-tab-btn');
+const expensesTab = document.getElementById('expenses-tab');
+const incomesTab = document.getElementById('incomes-tab');
+
+expensesTabBtn.addEventListener('click', function() {
+  expensesTab.style.display = '';
+  incomesTab.style.display = 'none';
+  expensesTabBtn.classList.add('active');
+  incomesTabBtn.classList.remove('active');
+});
+
+incomesTabBtn.addEventListener('click', function() {
+  expensesTab.style.display = 'none';
+  incomesTab.style.display = '';
+  incomesTabBtn.classList.add('active');
+  expensesTabBtn.classList.remove('active');
+});
+
 // ページ読み込み時のアニメーション
 document.addEventListener('DOMContentLoaded', function() {
     const cards = document.querySelectorAll('.modern-menu-card');
@@ -153,4 +178,26 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+<style>
+.tab-switch-ui {
+  display: flex;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 1em;
+}
+.tab-btn {
+  flex: 1;
+  padding: 1em;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-size: 1em;
+  cursor: pointer;
+  transition: border-bottom 0.2s, color 0.2s;
+}
+.tab-btn.active {
+  border-bottom: 2px solid #2196f3;
+  font-weight: bold;
+  color: #2196f3;
+}
+</style>
 {% endblock %} 

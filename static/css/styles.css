@@ -1027,6 +1027,9 @@ body.client-browser.client-mobile.client-ios .app-container {
     box-shadow: var(--shadow-sm);
     margin-bottom: var(--spacing-sm);
     overflow: hidden;
+    /* 追加: transformを完全に無効化 */
+    transform: none !important;
+    -webkit-transform: none !important;
 }
 
 .card-header {
@@ -4194,8 +4197,9 @@ select.form-control {
 
 /* Modern Tabs UI */
 .modern-tabs-container {
-    padding: 0;
-    min-height: 100vh;
+    /* min-height: 100vh; を削除し、高さはautoに */
+    min-height: auto;
+    height: auto;
 }
 
 .modern-tab-header {
@@ -4620,7 +4624,13 @@ select.form-control {
     }
     
     .modern-menu-card:hover {
-        transform: none;
+        transform: none !important;
+        box-shadow: var(--shadow-sm) !important;
+        border-color: var(--color-separator) !important;
+    }
+    .modern-menu-card:hover .card-arrow {
+        transform: none !important;
+        color: var(--color-text-secondary) !important;
     }
 }
 
@@ -7054,4 +7064,286 @@ body.client-app .dropdown-item:hover {
 
 .client-app .error-page .main-content {
     margin-top: calc(48px + env(safe-area-inset-top, 0px));
+}
+
+.expense-income-popup-overlay {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  position: fixed;
+  left: 0; right: 0; top: 0; bottom: 0;
+  z-index: 2000;
+  background: rgba(0,0,0,0.2);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+.expense-income-popup-overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* 支出/収入バルーン（フッター直上） */
+.expense-income-balloon {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 90px; /* フッターの高さ+余白 */
+  display: none;
+  z-index: 3000;
+  pointer-events: none;
+  justify-content: center;
+  align-items: flex-end;
+  transition: opacity 0.2s;
+  opacity: 0;
+}
+.expense-income-balloon.show {
+  display: flex;
+  opacity: 1;
+  pointer-events: auto;
+}
+.balloon-content {
+  background: #fff;
+  border-radius: 16px 16px 24px 24px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+  padding: 20px 32px 16px 32px;
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  position: relative;
+  min-width: 220px;
+}
+.balloon-btn {
+  background: #007AFF;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.balloon-btn:hover {
+  background: #005bb5;
+}
+.balloon-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #888;
+  cursor: pointer;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+.balloon-close:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+@media (max-width: 480px) {
+  .balloon-content {
+    padding: 16px 8px 12px 8px;
+    gap: 12px;
+    min-width: 140px;
+  }
+  .balloon-btn {
+    font-size: 14px;
+    padding: 8px 12px;
+  }
+}
+
+/* 支出/収入バルーン（画面全面・最前面） */
+.expense-income-balloon {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  display: flex !important;
+  z-index: 99999 !important;
+  justify-content: center;
+  align-items: flex-end;
+  background: rgba(0,0,0,0.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+.expense-income-balloon.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+.balloon-content {
+  background: #fff;
+  border-radius: 16px 16px 24px 24px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+  padding: 20px 32px 16px 32px;
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  position: relative;
+  min-width: 220px;
+  margin-bottom: 60px;
+}
+@media (max-width: 480px) {
+  .balloon-content {
+    padding: 16px 8px 12px 8px;
+    gap: 12px;
+    min-width: 140px;
+    margin-bottom: 40px;
+  }
+}
+
+/* --- シミュレーション実行画面のカードエフェクト無効化 --- */
+.simulation-page .modern-menu-card:hover {
+  transform: none !important;
+  box-shadow: var(--shadow-sm) !important;
+  border-color: var(--color-separator) !important;
+}
+.simulation-page .modern-menu-card:hover .card-arrow {
+  transform: none !important;
+  color: var(--color-text-secondary) !important;
+}
+
+/* 右下フローティング支出/収入切り替えボタン */
+.fab-switch-container {
+  position: fixed;
+  right: 24px;
+  bottom: 100px;
+  z-index: 12000;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: flex-end;
+}
+.fab-switch {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+  background: #fff;
+  color: #fff;
+  font-size: 32px;
+  transition: box-shadow 0.2s, transform 0.2s;
+  text-decoration: none;
+  margin-bottom: 0;
+}
+.fab-switch.fab-expenses {
+  background: linear-gradient(135deg, #ff5252, #d32f2f);
+}
+.fab-switch.fab-incomes {
+  background: linear-gradient(135deg, #4CAF50, #43e97b);
+}
+.fab-switch:hover {
+  box-shadow: 0 8px 32px rgba(0,0,0,0.28);
+  transform: translateY(-2px) scale(1.07);
+  opacity: 0.92;
+}
+.fab-switch .material-icons {
+  font-size: 32px;
+  color: #fff;
+}
+@media (max-width: 600px) {
+  .fab-switch-container {
+    right: 12px;
+    bottom: 84px;
+    gap: 12px;
+  }
+  .fab-switch {
+    width: 48px;
+    height: 48px;
+    font-size: 26px;
+  }
+  .fab-switch .material-icons {
+    font-size: 26px;
+  }
+}
+
+/* 右下フローティング支出/収入切り替えボタン（ツールFABと同じデザイン・配置） */
+.fab-switch-container {
+  position: fixed;
+  right: 24px;
+  bottom: 32px;
+  z-index: 12000;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: flex-end;
+}
+.fab-switch {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+  background: #fff;
+  color: #fff;
+  font-size: 32px;
+  transition: box-shadow 0.2s, transform 0.2s, background 0.2s;
+  text-decoration: none;
+  border: none;
+  outline: none;
+  cursor: pointer;
+}
+.fab-switch.fab-expenses {
+  background: linear-gradient(135deg, #ff5252, #d32f2f);
+}
+.fab-switch.fab-incomes {
+  background: linear-gradient(135deg, #4CAF50, #43e97b);
+}
+.fab-switch:hover, .fab-switch:focus {
+  box-shadow: 0 12px 32px rgba(0,0,0,0.28);
+  transform: translateY(-2px) scale(1.07);
+  opacity: 0.95;
+}
+.fab-switch .material-icons {
+  font-size: 32px;
+  color: #fff;
+}
+@media (max-width: 600px) {
+  .fab-switch-container {
+    right: 12px;
+    bottom: 20px;
+    gap: 12px;
+  }
+  .fab-switch {
+    width: 48px;
+    height: 48px;
+    font-size: 26px;
+  }
+  .fab-switch .material-icons {
+    font-size: 26px;
+  }
+}
+
+/* 右下フローティング支出/収入切り替えボタン（フッター上10px） */
+.fab-switch-container {
+  position: fixed;
+  right: 24px;
+  bottom: 98px; /* フッター(88px) + 10px */
+  z-index: 12000;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: flex-end;
+}
+@media (max-width: 600px) {
+  .fab-switch-container {
+    right: 12px;
+    bottom: 90px; /* モバイルフッター(80px) + 10px */
+    gap: 12px;
+  }
 }

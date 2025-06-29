@@ -1,6 +1,6 @@
 /* === 家計簿カレンダー画面 === */
 /* デバッグ用：このCSSが読み込まれていることを確認 */
-.calendar-container::before {
+/* .calendar-container::before {
     content: "Calendar CSS Loaded" !important;
     position: fixed !important;
     top: 0 !important;
@@ -10,11 +10,11 @@
     padding: 5px !important;
     z-index: 9999 !important;
     font-size: 12px !important;
-}
+} */
 
 /* カレンダーページ用のメインコンテンツ調整 */
 .calendar-page .main-content {
-    margin-top: 0px; /* ヘッダー分のマージン */
+    margin-top: 60px !important; /* ヘッダー分のマージン */
     padding: 0;
     background: #f5f5f5;
 }

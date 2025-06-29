@@ -187,6 +187,9 @@
     .content-title {
         font-size: var(--font-size-large);
     }
+    body.household-page .main-content {
+        margin-top: 0 !important;
+    }
 }
 
 @media (max-width: 480px) {
@@ -240,4 +243,36 @@
   .account-management-page .main-content {
     margin-top: 0 !important;
   }
+}
+
+body.household-page .main-content {
+    margin-top: 0 !important;
+}
+
+.household-books-content {
+    padding: 16px;
+    margin-top: 0 !important;
+    margin-bottom: 80px; /* フッター分 */
+    min-height: calc(100vh - 140px);
+}
+
+.client-app .household-books-content {
+    margin-top: calc(0px + env(safe-area-inset-top, 0px)) !important;
+    margin-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+}
+
+@media (max-width: 768px) {
+    .household-books-content {
+        padding: 12px;
+        margin-top: 0 !important;
+    }
+    .client-app .household-books-content {
+        margin-top: calc(0px + env(safe-area-inset-top, 0px)) !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .household-books-content {
+        padding: 8px;
+    }
 }

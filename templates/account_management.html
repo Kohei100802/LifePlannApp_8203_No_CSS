@@ -138,49 +138,11 @@
     </div>
 </div>
 
-<!-- フローティングアクションボタン -->
-<div class="fab-container multiple-buttons" id="fabContainer">
-    <button class="fab-button add" onclick="showCreateAccountModal()" title="新規口座作成">
+<!-- フローティングボタン -->
+<div class="fab-container" id="fabContainer">
+    <button class="fab-button add" title="新規口座作成" onclick="showCreateAccountModal()">
         <i class="material-icons">add</i>
     </button>
-    <button id="toolsFab" class="fab-button tools" title="ツール" style="display: none;">
-        <i class="material-icons">more_horiz</i>
-    </button>
-</div>
-
-<!-- ツールメニュー -->
-<div id="toolsMenu" class="tools-menu" style="display: none;">
-    <div class="tools-menu-content">
-        <button id="editToolBtn" class="tool-menu-item">
-            <i class="material-icons">edit</i>
-            <span>編集</span>
-        </button>
-        <button id="deleteToolBtn" class="tool-menu-item">
-            <i class="material-icons">delete</i>
-            <span>削除</span>
-        </button>
-    </div>
-</div>
-
-<!-- 口座選択モーダル -->
-<div id="accountSelectionModal" class="modal-overlay">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 id="accountModalTitle">口座を選択してください</h3>
-            <button class="close-button" onclick="closeAccountSelectionModal()">
-                <i class="material-icons">close</i>
-            </button>
-        </div>
-        <div class="modal-body">
-            <div id="accountSelectionList">
-                <!-- 動的に生成 -->
-            </div>
-        </div>
-        <div class="modal-footer" style="padding: 16px; border-top: 1px solid #e0e0e0; display: flex; justify-content: flex-end; gap: 12px;">
-            <button class="btn btn-secondary" onclick="closeAccountSelectionModal()">キャンセル</button>
-            <button id="executeAccountActionBtn" class="btn btn-primary" style="display: none;">実行</button>
-        </div>
-    </div>
 </div>
 
 <!-- 口座作成モーダル -->
@@ -415,10 +377,11 @@ document.addEventListener('DOMContentLoaded', function() {
     loadAccounts();
     loadExpenseCategories();
     setupLongPressDrag();
-    setupToolsMenu();
     initializeMonth();
     loadMonthlySummary();
-    setupHouseholdEntryForm();
+    
+    // 選択UIを初期化
+    initializeSelectionUI();
 });
 
 // 月の初期化
@@ -475,13 +438,18 @@ function loadMonthlySummary() {
             const monthlyBalance = document.getElementById('monthlyBalance');
             const monthlyBalanceCard = document.getElementById('monthlyBalanceCard');
             
-            if (monthlyIncome) monthlyIncome.textContent = `¥${data.income.toLocaleString()}`;
-            if (monthlyExpense) monthlyExpense.textContent = `¥${data.expense.toLocaleString()}`;
-            if (monthlyBalance) monthlyBalance.textContent = `¥${data.balance.toLocaleString()}`;
+            // APIから返されるキーに合わせて修正
+            const income = data.total_income || 0;
+            const expense = data.total_expense || 0;
+            const balance = data.balance || 0;
+            
+            if (monthlyIncome) monthlyIncome.textContent = `¥${income.toLocaleString()}`;
+            if (monthlyExpense) monthlyExpense.textContent = `¥${expense.toLocaleString()}`;
+            if (monthlyBalance) monthlyBalance.textContent = `¥${balance.toLocaleString()}`;
             
             // 収支の色を設定
             if (monthlyBalanceCard) {
-                monthlyBalanceCard.className = 'summary-item balance ' + (data.balance >= 0 ? 'positive' : 'negative');
+                monthlyBalanceCard.className = 'summary-item balance ' + (balance >= 0 ? 'positive' : 'negative');
             }
         })
         .catch(error => {
@@ -573,8 +541,6 @@ function handleHouseholdEntrySubmit(e) {
         showToast('登録に失敗しました', 'error');
     });
 }
-
-
 
 // 家計簿登録モーダルを閉じる
 function closeHouseholdEntryModal() {
@@ -1003,33 +969,34 @@ function getElementData(element) {
     return null;
 }
 
-// 既存の関数（口座管理関連）
+// 口座データの読み込み
 function loadAccounts() {
     fetch('/api/accounts')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
+        .then(response => response.json())
         .then(data => {
-            if (data.success) {
-                accounts = data.accounts || [];
-                renderAccounts();
-            } else {
-                throw new Error(data.error || '口座データの取得に失敗しました');
+            // data.accounts が配列ならそれを使う
+            accounts = Array.isArray(data) ? data : data.accounts || [];
+            renderAccounts(accounts);
+            
+            // 選択UIの表示制御
+            if (window.selectionUI) {
+                if (accounts.length > 0) {
+                    window.selectionUI.show();
+                } else {
+                    window.selectionUI.hide();
+                }
             }
         })
         .catch(error => {
-            console.error('口座データの読み込みに失敗しました:', error);
-            showToast('口座データの読み込みに失敗しました: ' + error.message, 'error');
-            // 空の配列で初期化
-            accounts = [];
-            renderAccounts();
+            console.error('口座データの読み込みエラー:', error);
+            // エラー時も選択UIを非表示
+            if (window.selectionUI) {
+                window.selectionUI.hide();
+            }
         });
 }
 
-function renderAccounts() {
+function renderAccounts(accounts) {
     const content = document.getElementById('accounts-content');
     content.innerHTML = '';
     
@@ -1037,18 +1004,13 @@ function renderAccounts() {
         const accountCard = createAccountCard(account);
         content.appendChild(accountCard);
     });
-    
-    // ツールボタンの表示を更新
-    const toolsFab = document.getElementById('toolsFab');
-    if (toolsFab) {
-        toolsFab.style.display = accounts.length > 0 ? 'block' : 'none';
-    }
 }
 
 function createAccountCard(account) {
     const card = document.createElement('div');
     card.className = 'account-card';
     card.dataset.accountId = account.id;
+    card.dataset.selectable = 'true';
     
     card.innerHTML = `
         <div class="account-header">
@@ -1272,160 +1234,6 @@ function deleteAccount(accountId) {
     }
 }
 
-// ツールメニューの設定
-function setupToolsMenu() {
-    const toolsFab = document.getElementById('toolsFab');
-    const toolsMenu = document.getElementById('toolsMenu');
-    const editToolBtn = document.getElementById('editToolBtn');
-    const deleteToolBtn = document.getElementById('deleteToolBtn');
-    
-    // 口座がある場合のみツールボタンを表示
-    if (accounts.length > 0) {
-        toolsFab.style.display = 'block';
-    }
-    
-    // ツールボタンクリック
-    toolsFab.addEventListener('click', function(e) {
-        e.stopPropagation();
-        const isVisible = toolsMenu.style.display !== 'none';
-        toolsMenu.style.display = isVisible ? 'none' : 'block';
-        
-        if (!isVisible) {
-            // メニューの位置を調整
-            const fabRect = toolsFab.getBoundingClientRect();
-            toolsMenu.style.bottom = (window.innerHeight - fabRect.top + 10) + 'px';
-            toolsMenu.style.right = (window.innerWidth - fabRect.right) + 'px';
-        }
-    });
-    
-    // 編集ボタンクリック
-    editToolBtn.addEventListener('click', function() {
-        currentAction = 'edit';
-        toolsMenu.style.display = 'none';
-        showAccountSelectionModal('編集する口座を選択してください');
-    });
-    
-    // 削除ボタンクリック
-    deleteToolBtn.addEventListener('click', function() {
-        currentAction = 'delete';
-        toolsMenu.style.display = 'none';
-        showAccountSelectionModal('削除する口座を選択してください');
-    });
-    
-    // 外部クリックでメニューを閉じる
-    document.addEventListener('click', function() {
-        toolsMenu.style.display = 'none';
-    });
-    
-    toolsMenu.addEventListener('click', function(e) {
-        e.stopPropagation();
-    });
-}
-
-// 口座選択モーダルを表示
-function showAccountSelectionModal(title) {
-    if (accounts.length === 0) {
-        showToast('選択できる口座がありません', 'warning');
-        return;
-    }
-    
-    const modal = document.getElementById('accountSelectionModal');
-    const modalTitle = document.getElementById('accountModalTitle');
-    const accountList = document.getElementById('accountSelectionList');
-    const executeBtn = document.getElementById('executeAccountActionBtn');
-    
-    modalTitle.textContent = title;
-    selectedItems = [];
-    
-    // 口座リストを生成
-    let html = '<div class="account-selection-list">';
-    accounts.forEach(account => {
-        html += `
-            <label class="account-selection-item">
-                <input type="checkbox" value="${account.id}" onchange="updateSelectedAccounts()">
-                <div class="selection-item-content">
-                    <div class="selection-item-title">${account.name}</div>
-                    <div class="selection-item-details">
-                        ${account.account_type} | 残高 ¥${account.balance.toLocaleString()}
-                    </div>
-                </div>
-            </label>
-        `;
-    });
-    html += '</div>';
-    
-    accountList.innerHTML = html;
-    executeBtn.style.display = 'none';
-    executeBtn.textContent = currentAction === 'edit' ? '編集' : '削除';
-    executeBtn.onclick = executeSelectedAccountAction;
-    
-    modal.classList.add('show');
-}
-
-// 選択口座の更新
-function updateSelectedAccounts() {
-    const checkboxes = document.querySelectorAll('#accountSelectionList input[type="checkbox"]:checked');
-    selectedItems = Array.from(checkboxes).map(cb => parseInt(cb.value));
-    
-    const executeBtn = document.getElementById('executeAccountActionBtn');
-    executeBtn.style.display = selectedItems.length > 0 ? 'block' : 'none';
-}
-
-// 選択した口座アクションを実行
-async function executeSelectedAccountAction() {
-    if (selectedItems.length === 0) return;
-    
-    const actionText = currentAction === 'edit' ? '編集' : '削除';
-    const confirmMessage = `選択した${selectedItems.length}件の口座を${actionText}しますか？`;
-    
-    if (!confirm(confirmMessage)) return;
-    
-    try {
-        let successCount = 0;
-        
-        for (const id of selectedItems) {
-            let success = false;
-            
-            if (currentAction === 'edit') {
-                // 編集モーダルを表示
-                const account = accounts.find(acc => acc.id === id);
-                if (account) showEditAccountModal(account);
-                return; // 1件ずつ編集
-            } else if (currentAction === 'delete') {
-                const response = await fetch(`/api/accounts/${id}`, {
-                    method: 'DELETE'
-                });
-                const result = await response.json();
-                success = result.success;
-            }
-            
-            if (success) successCount++;
-        }
-        
-        if (successCount > 0) {
-            showToast(`${successCount}件の口座を${actionText}しました`, 'success');
-            loadAccounts(); // 一覧を再読み込み
-        }
-        
-        if (successCount < selectedItems.length) {
-            showToast(`${selectedItems.length - successCount}件の${actionText}に失敗しました`, 'error');
-        }
-        
-        closeAccountSelectionModal();
-        
-    } catch (error) {
-        console.error('Error:', error);
-        showToast(`${actionText}の実行中にエラーが発生しました`, 'error');
-    }
-}
-
-// 口座選択モーダルを閉じる
-function closeAccountSelectionModal() {
-    const modal = document.getElementById('accountSelectionModal');
-    modal.classList.remove('show');
-    selectedItems = [];
-}
-
 // 家計簿登録開始
 function initiateHouseholdEntry(accountElement, expenseElement) {
     const accountData = getElementData(accountElement);
@@ -1596,5 +1404,58 @@ document.getElementById('edit-account-btn').onclick = async function() {
         showToast('変更に失敗しました', 'error');
     }
 };
+
+// 選択UIの初期化
+function initializeSelectionUI() {
+    window.selectionUI = new SelectionUI({
+        onCopy: null, // アカウント管理ではコピー機能は不要
+        onDelete: handleDelete,
+        onEdit: handleEdit,
+        onCancel: handleCancel,
+        getItemId: (element) => element.dataset.accountId
+    });
+}
+
+// 削除処理
+async function handleDelete(selectedIds) {
+    const confirmMessage = `選択した${selectedIds.length}件の口座を削除しますか？`;
+    if (!confirm(confirmMessage)) return;
+    
+    try {
+        let successCount = 0;
+        
+        for (const id of selectedIds) {
+            const response = await fetch(`/api/accounts/${id}`, {
+                method: 'DELETE'
+            });
+            const result = await response.json();
+            if (result.success) successCount++;
+        }
+        
+        if (successCount > 0) {
+            showToast(`${successCount}件の口座を削除しました`, 'success');
+            loadAccounts();
+        } else {
+            showToast('口座の削除に失敗しました', 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting accounts:', error);
+        showToast('口座の削除中にエラーが発生しました', 'error');
+    }
+}
+
+// 編集処理
+async function handleEdit(accountId) {
+    const account = accounts.find(acc => acc.id === parseInt(accountId));
+    if (account) {
+        showEditAccountModal(account);
+    }
+}
+
+// キャンセル処理
+function handleCancel() {
+    // 選択モード終了時の処理
+    console.log('Selection mode cancelled');
+}
 </script>
 {% endblock %} 
