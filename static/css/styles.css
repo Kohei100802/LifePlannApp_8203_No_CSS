@@ -754,12 +754,6 @@ body.client-browser.client-mobile.client-ios .app-container {
 /* アプリ用フッター関連スタイル（フッター非表示なので不要） */
 
 /* ブラウザ経由の場合のアイコン・テキスト（小さめ） */
-.client-browser .footer-item .material-icons {
-    font-size: 24px; /* ブラウザ用に小さく */
-    margin-bottom: 4px;
-}
-
-.client-browser .footer-item span {
     font-size: 12px; /* ブラウザ用に小さく */
 }
 
