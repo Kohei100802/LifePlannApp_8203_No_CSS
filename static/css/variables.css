@@ -1,0 +1,62 @@
+/* Global design tokens shared across the app */
+:root {
+    /* Colors - Light Mode */
+    --color-primary: #007AFF;
+    --color-background: #FFFFFF;
+    --color-background-secondary: transparent;
+    --color-background-tertiary: #FFFFFF;
+    --color-text-primary: #1C1C1E;
+    --color-text-secondary: #6B7280;
+    --color-separator: #E5E7EB;
+    --color-accent: #007AFF;
+    --color-red: #FF3B30;
+    --color-green: #34C759;
+
+    /* Typography */
+    --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-size-base: 15px;
+    --font-size-small: 13px;
+    --font-size-large: 17px;
+    --font-size-title: 21px;
+    --font-weight-regular: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+
+    /* Spacing */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+
+    /* Border Radius */
+    --border-radius-sm: 8px;
+    --border-radius-md: 12px;
+    --border-radius-lg: 16px;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+
+    /* Transitions */
+    --transition-fast: 0.2s ease;
+    --transition-medium: 0.3s ease;
+}
+
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --color-primary: #0A84FF;
+        --color-background: #1C1C1E;
+        --color-background-secondary: transparent;
+        --color-background-tertiary: #3A3A3C;
+        --color-text-primary: #F2F2F7;
+        --color-text-secondary: #9CA3AF;
+        --color-separator: #374151;
+        --color-accent: #0A84FF;
+        --color-red: #FF453A;
+        --color-green: #32D74B;
+    }
+}
