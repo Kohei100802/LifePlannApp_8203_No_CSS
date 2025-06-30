@@ -1303,36 +1303,56 @@ function showHouseholdEntryModal(accountData, categoryData) {
     const modal = document.getElementById('householdEntryModal');
     
     // フォーム要素設定
-    document.getElementById('sourceAccountId').value = accountData.id;
-    document.getElementById('expenseCategoryId').value = categoryData.id;
+    const sourceAccountIdElement = document.getElementById('sourceAccountId');
+    const expenseCategoryIdElement = document.getElementById('expenseCategoryId');
+    const entryYearElement = document.getElementById('entryYear');
+    const entryMonthElement = document.getElementById('entryMonth');
+    const sourceAccountDisplayElement = document.getElementById('sourceAccountDisplay');
+    const sourceAccountNameElement = document.getElementById('sourceAccountName');
+    const targetCategoryDisplayElement = document.getElementById('targetCategoryDisplay');
+    const targetCategoryNameElement = document.getElementById('targetCategoryName');
+    const householdDateElement = document.getElementById('householdDate');
+    const householdAmountElement = document.getElementById('householdAmount');
+    const householdDescriptionElement = document.getElementById('householdDescription');
+    
+    // 要素の存在チェック
+    if (!sourceAccountIdElement || !expenseCategoryIdElement || !entryYearElement || !entryMonthElement ||
+        !sourceAccountDisplayElement || !sourceAccountNameElement || !targetCategoryDisplayElement || 
+        !targetCategoryNameElement || !householdDateElement || !householdAmountElement || !householdDescriptionElement) {
+        console.error('Required modal elements not found');
+        showToast('モーダルの初期化に失敗しました', 'error');
+        return;
+    }
+    
+    // フォーム要素設定
+    sourceAccountIdElement.value = accountData.id;
+    expenseCategoryIdElement.value = categoryData.id;
     
     // 現在の年月を設定
     const now = new Date();
-    document.getElementById('entryYear').value = now.getFullYear();
-    document.getElementById('entryMonth').value = now.getMonth() + 1;
+    entryYearElement.value = now.getFullYear();
+    entryMonthElement.value = now.getMonth() + 1;
     
     // 表示情報設定
-    const sourceAccountDisplay = document.getElementById('sourceAccountDisplay');
-    sourceAccountDisplay.innerHTML = `
+    sourceAccountDisplayElement.innerHTML = `
         <i class="material-icons" style="color: ${accountData.color}">${accountData.icon}</i>
         <span>${accountData.name}</span>
     `;
-    document.getElementById('sourceAccountName').textContent = accountData.name;
+    sourceAccountNameElement.textContent = accountData.name;
     
-    const targetCategoryDisplay = document.getElementById('targetCategoryDisplay');
-    targetCategoryDisplay.innerHTML = `
+    targetCategoryDisplayElement.innerHTML = `
         <i class="material-icons">${categoryData.icon}</i>
         <span>${categoryData.name}</span>
     `;
-    document.getElementById('targetCategoryName').textContent = categoryData.name;
+    targetCategoryNameElement.textContent = categoryData.name;
     
     // 日付を今日に設定
     const today = new Date().toISOString().split('T')[0];
-    document.getElementById('householdDate').value = today;
+    householdDateElement.value = today;
     
     // フォームリセット
-    document.getElementById('householdAmount').value = '';
-    document.getElementById('householdDescription').value = '';
+    householdAmountElement.value = '';
+    householdDescriptionElement.value = '';
     
     // モーダル表示
     modal.style.display = 'block';
